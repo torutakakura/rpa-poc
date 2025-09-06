@@ -4,7 +4,14 @@ from pydantic import BaseModel, HttpUrl, Field
 from typing import List, Union, Optional, Annotated, Literal, Dict, Any, Type
 from playwright.async_api import async_playwright, Browser, BrowserContext, Page
 import base64
+from pathlib import Path
 from abc import ABC, abstractmethod
+import os
+
+try:
+    import psycopg
+except Exception:
+    psycopg = None  # psycopg 未導入環境でもアプリ起動自体は可能にする
 
 
 app = FastAPI()
@@ -68,6 +75,50 @@ class ScreenshotStep(BaseModel):
     full_page: bool = True
 
 
+class EnsureStorageStateStep(BaseModel):
+    type: Literal["ensure_storage_state"]
+    profile_name: str
+    storage_dir: Optional[str] = ".storage_states"
+
+
+class SaveStorageStateStep(BaseModel):
+    type: Literal["save_storage_state"]
+    profile_name: str
+    storage_dir: Optional[str] = ".storage_states"
+
+
+class WaitForUrlStep(BaseModel):
+    type: Literal["wait_for_url"]
+    pattern: str
+    timeout_ms: int = 30000
+
+
+class PressStep(BaseModel):
+    type: Literal["press"]
+    key: str
+    selector: Optional[str] = None
+
+
+class TypeRichStep(BaseModel):
+    type: Literal["type_rich"]
+    selector: str
+    text: str
+    delay_ms: Optional[int] = None
+
+
+class SetFilesStep(BaseModel):
+    type: Literal["set_files"]
+    selector: str
+    files: List[str]
+
+
+class AssertToastStep(BaseModel):
+    type: Literal["assert_toast"]
+    selector: Optional[str] = None
+    text: Optional[str] = None
+    timeout_ms: int = 15000
+
+
 Step = Annotated[
     Union[
         OpenBrowserStep,
@@ -76,6 +127,13 @@ Step = Annotated[
         TypeStep,
         WaitForSelectorStep,
         ScreenshotStep,
+        EnsureStorageStateStep,
+        SaveStorageStateStep,
+        WaitForUrlStep,
+        PressStep,
+        TypeRichStep,
+        SetFilesStep,
+        AssertToastStep,
     ],
     Field(discriminator="type"),
 ]
@@ -111,8 +169,13 @@ class StepExecutor(ABC):
         if page is not None:
             return page
         browser: Browser = await p.chromium.launch(headless=True)
+        storage_state_path = state.get("storage_state_path")
+        storage_kw = {}
+        if storage_state_path and Path(storage_state_path).exists():
+            storage_kw["storage_state"] = storage_state_path
         context: BrowserContext = await browser.new_context(
-            viewport={"width": 1280, "height": 800}
+            viewport={"width": 1280, "height": 800},
+            **storage_kw,
         )
         new_page = await context.new_page()
         state["browser"] = browser
@@ -133,8 +196,13 @@ class OpenBrowserExecutor(StepExecutor):
     ) -> Dict[str, Any]:
         logs.append("Opening browser")
         browser: Browser = await p.chromium.launch(headless=step.headless)
+        storage_state_path = state.get("storage_state_path")
+        storage_kw = {}
+        if storage_state_path and Path(storage_state_path).exists():
+            storage_kw["storage_state"] = storage_state_path
         context: BrowserContext = await browser.new_context(
-            viewport={"width": step.viewport_width, "height": step.viewport_height}
+            viewport={"width": step.viewport_width, "height": step.viewport_height},
+            **storage_kw,
         )
         page: Page = await context.new_page()
         state["browser"] = browser
@@ -228,6 +296,93 @@ class ScreenshotExecutor(StepExecutor):
         }
 
 
+class EnsureStorageStateExecutor(StepExecutor):
+    async def execute(self, step: EnsureStorageStateStep, state: Dict[str, Any], logs: List[str], p: Any) -> Dict[str, Any]:
+        base = Path(step.storage_dir or ".storage_states")
+        base.mkdir(parents=True, exist_ok=True)
+        path = base / f"{step.profile_name}.json"
+        state["storage_state_path"] = str(path)
+        logs.append(f"Ensure storage state: {path}")
+        return {}
+
+
+class SaveStorageStateExecutor(StepExecutor):
+    async def execute(self, step: SaveStorageStateStep, state: Dict[str, Any], logs: List[str], p: Any) -> Dict[str, Any]:
+        await self.ensure_browser(state.get("page"), p, state)
+        base = Path(step.storage_dir or ".storage_states")
+        base.mkdir(parents=True, exist_ok=True)
+        path = base / f"{step.profile_name}.json"
+        await state["context"].storage_state(path=str(path))
+        state["storage_state_path"] = str(path)
+        logs.append(f"Saved storage state to: {path}")
+        return {}
+
+
+class WaitForUrlExecutor(StepExecutor):
+    async def execute(self, step: WaitForUrlStep, state: Dict[str, Any], logs: List[str], p: Any) -> Dict[str, Any]:
+        await self.ensure_browser(state.get("page"), p, state)
+        logs.append(f"Wait for URL: {step.pattern}")
+        await state["page"].wait_for_url(step.pattern, timeout=step.timeout_ms)
+        return {}
+
+
+class PressExecutor(StepExecutor):
+    async def execute(self, step: PressStep, state: Dict[str, Any], logs: List[str], p: Any) -> Dict[str, Any]:
+        await self.ensure_browser(state.get("page"), p, state)
+        if step.selector:
+            locator = state["page"].locator(step.selector)
+            await locator.focus()
+        logs.append(f"Press key: {step.key}")
+        await state["page"].keyboard.press(step.key)
+        return {}
+
+
+class TypeRichExecutor(StepExecutor):
+    async def execute(self, step: TypeRichStep, state: Dict[str, Any], logs: List[str], p: Any) -> Dict[str, Any]:
+        await self.ensure_browser(state.get("page"), p, state)
+        locator = state["page"].locator(step.selector)
+        await locator.click()
+        try:
+            await locator.evaluate("el => { el.textContent = ''; }")
+        except Exception:
+            pass
+        logs.append(f"Type rich into {step.selector}")
+        if step.delay_ms is not None:
+            await state["page"].keyboard.type(step.text, delay=step.delay_ms)
+        else:
+            await state["page"].keyboard.type(step.text)
+        return {}
+
+
+class SetFilesExecutor(StepExecutor):
+    async def execute(self, step: SetFilesStep, state: Dict[str, Any], logs: List[str], p: Any) -> Dict[str, Any]:
+        await self.ensure_browser(state.get("page"), p, state)
+        locator = state["page"].locator(step.selector)
+        paths = [str(Path(f)) for f in step.files]
+        logs.append(f"Set files on {step.selector}: {paths}")
+        await locator.set_input_files(paths)
+        return {}
+
+
+class AssertToastExecutor(StepExecutor):
+    async def execute(self, step: AssertToastStep, state: Dict[str, Any], logs: List[str], p: Any) -> Dict[str, Any]:
+        await self.ensure_browser(state.get("page"), p, state)
+        if step.selector:
+            locator = state["page"].locator(step.selector)
+            await locator.wait_for(state="visible", timeout=step.timeout_ms)
+            if step.text:
+                content = await locator.inner_text()
+                if step.text not in content:
+                    raise Exception("Toast text not matched")
+        elif step.text:
+            locator = state["page"].get_by_text(step.text)
+            await locator.wait_for(state="visible", timeout=step.timeout_ms)
+        else:
+            raise Exception("selector or text is required")
+        logs.append("Assert toast OK")
+        return {}
+
+
 # ========== Executor Registry ==========
 
 class ExecutorRegistry:
@@ -256,6 +411,13 @@ class ExecutorRegistry:
         registry.register(TypeStep, TypeExecutor())
         registry.register(WaitForSelectorStep, WaitForSelectorExecutor())
         registry.register(ScreenshotStep, ScreenshotExecutor())
+        registry.register(EnsureStorageStateStep, EnsureStorageStateExecutor())
+        registry.register(SaveStorageStateStep, SaveStorageStateExecutor())
+        registry.register(WaitForUrlStep, WaitForUrlExecutor())
+        registry.register(PressStep, PressExecutor())
+        registry.register(TypeRichStep, TypeRichExecutor())
+        registry.register(SetFilesStep, SetFilesExecutor())
+        registry.register(AssertToastStep, AssertToastExecutor())
         
         return registry
 
@@ -326,7 +488,7 @@ async def execute_scenario(steps: List[Step]) -> Dict[str, Any]:
     return await _scenario_executor.execute_scenario(steps)
 
 
-# ========== Step metadata for UI (変更なし) ==========
+# ========== Step metadata for UI (変更) ==========
 
 def _step_meta() -> List[Dict[str, Any]]:
     meta: List[Dict[str, Any]] = []
@@ -373,6 +535,55 @@ def _step_meta() -> List[Dict[str, Any]]:
             "schema": ScreenshotStep.model_json_schema(),
             "example": {"type": "screenshot", "full_page": True},
         },
+        {
+            "type": "ensure_storage_state",
+            "title": "Ensure Storage State",
+            "description": "プロファイルのストレージ状態ファイルを指定（次のコンテキスト作成で利用）",
+            "schema": EnsureStorageStateStep.model_json_schema(),
+            "example": {"type": "ensure_storage_state", "profile_name": "work"},
+        },
+        {
+            "type": "save_storage_state",
+            "title": "Save Storage State",
+            "description": "現在のストレージ状態を保存（手動ログイン後に実行）",
+            "schema": SaveStorageStateStep.model_json_schema(),
+            "example": {"type": "save_storage_state", "profile_name": "work"},
+        },
+        {
+            "type": "wait_for_url",
+            "title": "Wait For URL",
+            "description": "指定パターンのURLへ遷移するまで待機",
+            "schema": WaitForUrlStep.model_json_schema(),
+            "example": {"type": "wait_for_url", "pattern": "**/mail/**"},
+        },
+        {
+            "type": "press",
+            "title": "Press Key",
+            "description": "キー入力（例: Control+Enter）",
+            "schema": PressStep.model_json_schema(),
+            "example": {"type": "press", "key": "Control+Enter"},
+        },
+        {
+            "type": "type_rich",
+            "title": "Type Rich",
+            "description": "contenteditable の本文領域に入力",
+            "schema": TypeRichStep.model_json_schema(),
+            "example": {"type": "type_rich", "selector": "div[aria-label='メッセージ本文']", "text": "こんにちは"},
+        },
+        {
+            "type": "set_files",
+            "title": "Set Files",
+            "description": "input[type=file] にファイルパスを設定（添付）",
+            "schema": SetFilesStep.model_json_schema(),
+            "example": {"type": "set_files", "selector": "input[type='file']", "files": ["/tmp/a.pdf"]},
+        },
+        {
+            "type": "assert_toast",
+            "title": "Assert Toast",
+            "description": "トーストメッセージの表示やテキスト一致を検証",
+            "schema": AssertToastStep.model_json_schema(),
+            "example": {"type": "assert_toast", "text": "Message sent"},
+        },
     ]
     meta.extend(registry)
     return meta
@@ -389,3 +600,121 @@ async def list_steps():
 async def run_scenario(req: ScenarioRequest):
     result = await execute_scenario(req.steps)
     return result
+
+
+# =============================
+# DB: scenarios CRUD (name/description)
+# =============================
+
+def _db_conn():
+    if psycopg is None:
+        raise RuntimeError("psycopg is not installed. Please install 'psycopg[binary]'.")
+    host = os.getenv("PGHOST", "127.0.0.1")
+    port = int(os.getenv("PGPORT", "55432"))
+    user = os.getenv("PGUSER", "rpa")
+    password = os.getenv("PGPASSWORD", "rpa_password")
+    dbname = os.getenv("PGDATABASE", "rpa")
+    return psycopg.connect(host=host, port=port, user=user, password=password, dbname=dbname)
+
+
+class ScenarioItem(BaseModel):
+    id: str
+    name: str
+    description: Optional[str] = None
+    updated_at: Optional[str] = None
+    latest_version: Optional[int] = None
+
+
+class ScenarioUpdateRequest(BaseModel):
+    name: Optional[str] = None
+    description: Optional[str] = None
+
+
+@app.get("/scenarios")
+def list_scenarios() -> Dict[str, Any]:
+    sql = """
+    select s.id::text,
+           s.name,
+           s.description,
+           s.updated_at,
+           (select max(version) from scenario_versions sv where sv.scenario_id = s.id) as latest_version
+    from scenarios s
+    order by s.updated_at desc nulls last, s.created_at desc
+    """
+    with _db_conn() as conn:
+        with conn.cursor() as cur:
+            cur.execute(sql)
+            rows = cur.fetchall()
+    items = [
+        {
+            "id": r[0],
+            "name": r[1],
+            "description": r[2],
+            "updated_at": r[3].isoformat() if r[3] else None,
+            "latest_version": r[4],
+        }
+        for r in rows
+    ]
+    return {"ok": True, "items": items}
+
+
+@app.put("/scenarios/{scenario_id}")
+def update_scenario(scenario_id: str, body: ScenarioUpdateRequest) -> Dict[str, Any]:
+    sets = []
+    params: List[Any] = []
+    if body.name is not None:
+        sets.append("name = %s")
+        params.append(body.name)
+    if body.description is not None:
+        sets.append("description = %s")
+        params.append(body.description)
+    if not sets:
+        return {"ok": True}
+    sets.append("updated_at = now()")
+    sql = f"update scenarios set {' , '.join(sets)} where id = %s"
+    params.append(scenario_id)
+    with _db_conn() as conn:
+        with conn.cursor() as cur:
+            cur.execute(sql, params)
+            conn.commit()
+    return {"ok": True}
+
+
+@app.delete("/scenarios/{scenario_id}")
+def delete_scenario(scenario_id: str) -> Dict[str, Any]:
+    with _db_conn() as conn:
+        with conn.cursor() as cur:
+            cur.execute("delete from scenarios where id = %s", (scenario_id,))
+            conn.commit()
+    return {"ok": True}
+
+
+class ScenarioCreateRequest(BaseModel):
+    name: str
+    description: Optional[str] = None
+
+
+@app.post("/scenarios")
+def create_scenario(body: ScenarioCreateRequest) -> Dict[str, Any]:
+    """新しいシナリオを作成する"""
+    sql = """
+    insert into scenarios (name, description)
+    values (%s, %s)
+    returning id::text, name, description, created_at, updated_at
+    """
+    with _db_conn() as conn:
+        with conn.cursor() as cur:
+            cur.execute(sql, (body.name, body.description))
+            row = cur.fetchone()
+            conn.commit()
+    
+    scenario = {
+        "id": row[0],
+        "name": row[1],
+        "description": row[2],
+        "created_at": row[3].isoformat() if row[3] else None,
+        "updated_at": row[4].isoformat() if row[4] else None,
+        "latest_version": None  # 新規作成時はバージョンなし
+    }
+    
+    return {"ok": True, "scenario": scenario}

@@ -1,0 +1,24 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: rpa-postgres
+    environment:
+      POSTGRES_USER: rpa
+      POSTGRES_PASSWORD: rpa_password
+      POSTGRES_DB: rpa
+    ports:
+      - "55432:5432"
+    volumes:
+      - db-data:/var/lib/postgresql/data
+      - ./db/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U rpa -d rpa"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+volumes:
+  db-data:
+
+
