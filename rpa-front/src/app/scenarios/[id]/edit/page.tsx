@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -30,8 +30,11 @@ import { ExecutionLogModal } from "@/components/execution-log-modal";
 import { StepEditorModal } from "@/components/step-editor-modal";
 import { AIChat } from "@/components/ai-chat";
 
-export default function NewScenarioPage() {
+export default function EditScenarioPage() {
   const router = useRouter();
+  const params = useParams();
+  const scenarioId = params.id as string;
+  
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [loading, setLoading] = useState(false);
@@ -53,6 +56,28 @@ export default function NewScenarioPage() {
   const [executionResults, setExecutionResults] = useState<any[]>([]);
   const [executionLogs, setExecutionLogs] = useState<string[]>([]);
   const [showExecutionLog, setShowExecutionLog] = useState(false);
+
+  // 既存シナリオを取得
+  useEffect(() => {
+    const fetchScenario = async () => {
+      try {
+        setLoading(true);
+        const res = await fetch(`http://127.0.0.1:8000/scenarios/${scenarioId}`);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        setName(data.name ?? "");
+        setDescription(data.description ?? "");
+        setScenarioSteps(data.steps ?? []);
+      } catch (e: any) {
+        setError(e?.message ?? "シナリオの取得に失敗しました");
+      } finally {
+        setLoading(false);
+      }
+    };
+    if (scenarioId) {
+      fetchScenario();
+    }
+  }, [scenarioId]);
 
   // ステップ一覧を取得
   useEffect(() => {
@@ -164,8 +189,8 @@ export default function NewScenarioPage() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch("http://127.0.0.1:8000/scenarios", {
-        method: "POST",
+      const res = await fetch(`http://127.0.0.1:8000/scenarios/${scenarioId}`, {
+        method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ 
           name, 
@@ -176,11 +201,19 @@ export default function NewScenarioPage() {
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       await router.push("/scenarios");
     } catch (e: any) {
-      setError(e?.message ?? "作成に失敗しました");
+      setError(e?.message ?? "更新に失敗しました");
     } finally {
       setLoading(false);
     }
   };
+
+  if (loading && scenarioSteps.length === 0) {
+    return (
+      <div className="container mx-auto py-6 px-4">
+        <div className="text-center text-slate-500">読み込み中...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto py-6 px-4 flex flex-col h-screen">
@@ -194,7 +227,7 @@ export default function NewScenarioPage() {
           <ArrowLeft className="h-4 w-4 mr-2" />
           一覧へ戻る
         </Button>
-        <h1 className="text-3xl font-bold text-slate-900">シナリオを新規作成</h1>
+        <h1 className="text-3xl font-bold text-slate-900">シナリオを編集</h1>
       </div>
 
       {error && (
@@ -208,7 +241,7 @@ export default function NewScenarioPage() {
         <CardHeader>
           <CardTitle>基本情報</CardTitle>
           <CardDescription>
-            シナリオの名前と説明を入力してください
+            シナリオの名前と説明を編集してください
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -407,7 +440,7 @@ export default function NewScenarioPage() {
           size="lg"
         >
           <Save className="h-4 w-4 mr-2" />
-          {loading ? "作成中..." : "シナリオを作成"}
+          {loading ? "更新中..." : "変更を保存"}
         </Button>
       </div>
 
@@ -489,5 +522,3 @@ export default function NewScenarioPage() {
     </div>
   );
 }
-
-

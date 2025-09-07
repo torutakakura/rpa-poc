@@ -25,9 +25,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { MoreHorizontal, Plus, Pencil, Trash2 } from "lucide-react";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
 
 type ScenarioItem = {
   id: string;
@@ -41,9 +38,6 @@ export default function ScenariosPage() {
   const [items, setItems] = useState<ScenarioItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [editId, setEditId] = useState<string | null>(null);
-  const [editName, setEditName] = useState("");
-  const [editDesc, setEditDesc] = useState("");
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
   const fetchList = async () => {
@@ -64,32 +58,6 @@ export default function ScenariosPage() {
   useEffect(() => {
     fetchList();
   }, []);
-
-  const openEdit = (it: ScenarioItem) => {
-    setEditId(it.id);
-    setEditName(it.name);
-    setEditDesc(it.description ?? "");
-  };
-
-  const submitEdit = async () => {
-    if (!editId) return;
-    try {
-      setLoading(true);
-      setError(null);
-      const res = await fetch(`http://127.0.0.1:8000/scenarios/${editId}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: editName, description: editDesc }),
-      });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      setEditId(null);
-      await fetchList();
-    } catch (e: any) {
-      setError(e?.message ?? "更新に失敗しました");
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const confirmDelete = (id: string) => {
     setConfirmDeleteId(id);
@@ -172,9 +140,11 @@ export default function ScenariosPage() {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => openEdit(it)}>
-                          <Pencil className="mr-2 h-4 w-4" />
-                          編集
+                        <DropdownMenuItem asChild>
+                          <a href={`/scenarios/${it.id}/edit`}>
+                            <Pencil className="mr-2 h-4 w-4" />
+                            編集
+                          </a>
                         </DropdownMenuItem>
                         <DropdownMenuItem 
                           onClick={() => confirmDelete(it.id)}
@@ -198,45 +168,6 @@ export default function ScenariosPage() {
           読み込み中...
         </div>
       )}
-
-      {/* 編集ダイアログ */}
-      <Dialog open={!!editId} onOpenChange={(open) => !open && setEditId(null)}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>シナリオを編集</DialogTitle>
-            <DialogDescription>
-              シナリオの名前と説明を編集します
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <Label htmlFor="name">名前</Label>
-              <Input
-                id="name"
-                value={editName}
-                onChange={(e) => setEditName(e.target.value)}
-                placeholder="シナリオ名を入力"
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="description">説明</Label>
-              <Textarea
-                id="description"
-                value={editDesc}
-                onChange={(e) => setEditDesc(e.target.value)}
-                rows={4}
-                placeholder="シナリオの説明を入力"
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setEditId(null)}>
-              キャンセル
-            </Button>
-            <Button onClick={submitEdit}>保存</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
 
       {/* 削除確認ダイアログ */}
       <Dialog open={!!confirmDeleteId} onOpenChange={(open) => !open && setConfirmDeleteId(null)}>

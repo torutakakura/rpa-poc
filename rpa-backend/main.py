@@ -628,6 +628,7 @@ class ScenarioItem(BaseModel):
 class ScenarioUpdateRequest(BaseModel):
     name: Optional[str] = None
     description: Optional[str] = None
+    steps: Optional[List[Step]] = None
 
 
 @app.get("/scenarios")
@@ -658,25 +659,102 @@ def list_scenarios() -> Dict[str, Any]:
     return {"ok": True, "items": items}
 
 
-@app.put("/scenarios/{scenario_id}")
-def update_scenario(scenario_id: str, body: ScenarioUpdateRequest) -> Dict[str, Any]:
-    sets = []
-    params: List[Any] = []
-    if body.name is not None:
-        sets.append("name = %s")
-        params.append(body.name)
-    if body.description is not None:
-        sets.append("description = %s")
-        params.append(body.description)
-    if not sets:
-        return {"ok": True}
-    sets.append("updated_at = now()")
-    sql = f"update scenarios set {' , '.join(sets)} where id = %s"
-    params.append(scenario_id)
+@app.get("/scenarios/{scenario_id}")
+def get_scenario(scenario_id: str) -> Dict[str, Any]:
+    """特定のシナリオとそのステップを取得する"""
+    import json
+    
     with _db_conn() as conn:
         with conn.cursor() as cur:
-            cur.execute(sql, params)
+            # シナリオ情報を取得
+            cur.execute("""
+                select id::text, name, description, created_at, updated_at
+                from scenarios
+                where id = %s
+            """, (scenario_id,))
+            row = cur.fetchone()
+            
+            if not row:
+                return {"ok": False, "error": "Scenario not found"}
+            
+            # 最新バージョンのステップを取得
+            cur.execute("""
+                select version, steps_json
+                from scenario_versions
+                where scenario_id = %s
+                order by version desc
+                limit 1
+            """, (scenario_id,))
+            version_row = cur.fetchone()
+            
+            steps = []
+            latest_version = None
+            if version_row:
+                latest_version = version_row[0]
+                steps_json = version_row[1]
+                if steps_json:
+                    # PostgreSQLのJSONB型は自動的にPythonオブジェクトに変換される
+                    if isinstance(steps_json, str):
+                        steps = json.loads(steps_json)
+                    else:
+                        steps = steps_json
+            
+            scenario = {
+                "id": row[0],
+                "name": row[1],
+                "description": row[2],
+                "created_at": row[3].isoformat() if row[3] else None,
+                "updated_at": row[4].isoformat() if row[4] else None,
+                "latest_version": latest_version,
+                "steps": steps
+            }
+    
+    return {"ok": True, **scenario}
+
+
+@app.put("/scenarios/{scenario_id}")
+def update_scenario(scenario_id: str, body: ScenarioUpdateRequest) -> Dict[str, Any]:
+    """シナリオを更新し、ステップがあれば新しいバージョンとして保存する"""
+    import json
+    
+    with _db_conn() as conn:
+        with conn.cursor() as cur:
+            # シナリオのメタデータを更新
+            sets = []
+            params: List[Any] = []
+            if body.name is not None:
+                sets.append("name = %s")
+                params.append(body.name)
+            if body.description is not None:
+                sets.append("description = %s")
+                params.append(body.description)
+            
+            if sets:
+                sets.append("updated_at = now()")
+                sql = f"update scenarios set {' , '.join(sets)} where id = %s"
+                params.append(scenario_id)
+                cur.execute(sql, params)
+            
+            # ステップがあれば新しいバージョンとして保存
+            if body.steps is not None:
+                # 最新バージョンを取得
+                cur.execute("""
+                    select coalesce(max(version), 0) 
+                    from scenario_versions 
+                    where scenario_id = %s
+                """, (scenario_id,))
+                latest_version = cur.fetchone()[0]
+                new_version = latest_version + 1
+                
+                # 新しいバージョンとして保存
+                steps_json = json.dumps([step.model_dump(mode='json') for step in body.steps])
+                cur.execute("""
+                    insert into scenario_versions (scenario_id, version, steps_json)
+                    values (%s, %s, %s)
+                """, (scenario_id, new_version, steps_json))
+            
             conn.commit()
+    
     return {"ok": True}
 
 
@@ -692,29 +770,44 @@ def delete_scenario(scenario_id: str) -> Dict[str, Any]:
 class ScenarioCreateRequest(BaseModel):
     name: str
     description: Optional[str] = None
+    steps: Optional[List[Step]] = None
 
 
 @app.post("/scenarios")
 def create_scenario(body: ScenarioCreateRequest) -> Dict[str, Any]:
-    """新しいシナリオを作成する"""
-    sql = """
-    insert into scenarios (name, description)
-    values (%s, %s)
-    returning id::text, name, description, created_at, updated_at
-    """
+    """新しいシナリオを作成し、ステップがあれば一緒に保存する"""
+    import json
+    
     with _db_conn() as conn:
         with conn.cursor() as cur:
+            # シナリオを作成
+            sql = """
+            insert into scenarios (name, description)
+            values (%s, %s)
+            returning id, name, description, created_at, updated_at
+            """
             cur.execute(sql, (body.name, body.description))
             row = cur.fetchone()
+            scenario_id = row[0]
+            
+            # ステップがあれば保存
+            if body.steps:
+                steps_json = json.dumps([step.model_dump(mode='json') for step in body.steps])
+                version_sql = """
+                insert into scenario_versions (scenario_id, version, steps_json)
+                values (%s, 1, %s)
+                """
+                cur.execute(version_sql, (scenario_id, steps_json))
+            
             conn.commit()
     
     scenario = {
-        "id": row[0],
+        "id": str(scenario_id),
         "name": row[1],
         "description": row[2],
         "created_at": row[3].isoformat() if row[3] else None,
         "updated_at": row[4].isoformat() if row[4] else None,
-        "latest_version": None  # 新規作成時はバージョンなし
+        "latest_version": 1 if body.steps else None
     }
     
     return {"ok": True, "scenario": scenario}
