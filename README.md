@@ -36,18 +36,7 @@ git clone <repository-url>
 cd rpa-poc
 ```
 
-#### 2. 環境変数の設定
-
-```bash
-# バックエンド環境変数
-cp rpa-backend/.env.example rpa-backend/.env
-# 必要に応じて .env ファイルを編集
-
-# フロントエンド環境変数（必要な場合）
-cp rpa-front/.env.example rpa-front/.env
-```
-
-#### 3. Dockerコンテナの起動
+#### 2. Dockerコンテナの起動
 
 ```bash
 # 全サービスの起動
@@ -59,7 +48,7 @@ docker-compose up -d backend   # バックエンドのみ
 docker-compose up -d frontend  # フロントエンドのみ
 ```
 
-#### 4. データベースの初期化
+#### 3. データベースの初期化
 
 ```bash
 # データベースマイグレーションの実行
