@@ -1,1 +1,7 @@
 .serena/
+dist-electron/
+node_modules/
+dist/
+venv/
+build/
+.DS_Store
