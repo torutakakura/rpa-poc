@@ -2,6 +2,12 @@
 """
 RPA Agent - JSON-RPC over stdio server
 Electronからの要求を受けて、Python側でRPA処理を実行
+
+機能:
+1. 接続 (agent.ready通知)
+2. 接続の確認 (ping)
+3. 操作の実行 (execute)
+4. 操作可能一覧の取得 (listOperations)
 """
 
 import asyncio
@@ -10,19 +16,10 @@ import sys
 import threading
 import time
 import traceback
-import uuid
 from dataclasses import asdict, dataclass
 from typing import Any, Dict, Optional
 
 from operation_manager import OperationManager
-
-# Excel操作用（オプション）
-try:
-    import openpyxl
-
-    EXCEL_AVAILABLE = True
-except ImportError:
-    EXCEL_AVAILABLE = False
 
 
 @dataclass
@@ -61,12 +58,10 @@ class RPAAgent:
         """初期化"""
         self.running = True
         self.operation_manager = OperationManager()
-        self.current_task_id = None
-        self.task_status = {}
 
     def start(self):
         """エージェントを開始"""
-        # 初期化成功を通知
+        # 1. 接続: 初期化成功を通知
         self.send_notification("agent.ready", {"status": "ready"})
 
         # メインループ
@@ -82,17 +77,13 @@ class RPAAgent:
                     data = json.loads(line.strip())
                     request = JsonRpcRequest(**data)
                 except json.JSONDecodeError as e:
-                    self.send_error_response(
-                        None, -32700, f"Parse error: {str(e)}"
-                    )
+                    self.send_error_response(None, -32700, f"Parse error: {str(e)}")
                     continue
                 except Exception as e:
-                    self.send_error_response(
-                        None, -32600, f"Invalid Request: {str(e)}"
-                    )
+                    self.send_error_response(None, -32600, f"Invalid Request: {str(e)}")
                     continue
 
-                # リクエストを処理
+                # リクエストを処理（非同期）
                 threading.Thread(
                     target=self.handle_request, args=(request,), daemon=True
                 ).start()
@@ -101,7 +92,8 @@ class RPAAgent:
                 break
             except Exception as e:
                 self.send_notification(
-                    "agent.error", {"error": str(e), "traceback": traceback.format_exc()}
+                    "agent.error",
+                    {"error": str(e), "traceback": traceback.format_exc()},
                 )
 
     def handle_request(self, request: JsonRpcRequest):
@@ -109,51 +101,39 @@ class RPAAgent:
         try:
             # メソッドに応じて処理を振り分け
             if request.method == "ping":
+                # 2. 接続の確認
                 self.handle_ping(request)
             elif request.method == "execute":
+                # 3. 操作の実行
                 self.handle_execute(request)
-            elif request.method == "executeExcel":
-                self.handle_execute_excel(request)
             elif request.method == "listOperations":
+                # 4. 操作可能一覧の取得
                 self.handle_list_operations(request)
-            elif request.method == "getOperationTemplate":
-                self.handle_get_operation_template(request)
-            elif request.method == "cancelTask":
-                self.handle_cancel_task(request)
-            elif request.method == "getTaskStatus":
-                self.handle_get_task_status(request)
-            elif request.method == "shutdown":
-                self.handle_shutdown(request)
+            elif request.method == "getOperationTemplates":
+                # 5. 操作テンプレートの取得
+                self.handle_get_operation_templates(request)
+            elif request.method == "executeOperations":
+                # 6. 複数操作の一括実行（ワークフロー実行）
+                self.handle_execute_operations(request)
             else:
                 self.send_error_response(
                     request.id, -32601, f"Method not found: {request.method}"
                 )
         except Exception as e:
-            self.send_error_response(
-                request.id, -32603, f"Internal error: {str(e)}"
-            )
+            self.send_error_response(request.id, -32603, f"Internal error: {str(e)}")
 
     def handle_ping(self, request: JsonRpcRequest):
-        """pingリクエストを処理"""
+        """pingリクエストを処理 - 接続確認"""
         self.send_response(request.id, {"pong": True, "timestamp": time.time()})
 
     def handle_execute(self, request: JsonRpcRequest):
         """RPA操作を実行"""
         params = request.params or {}
 
-        # タスクIDを生成
-        task_id = str(uuid.uuid4())
-        self.current_task_id = task_id
-        self.task_status[task_id] = {
-            "status": "running",
-            "started_at": time.time(),
-            "operation": params,
-        }
-
         # 実行開始を通知
         self.send_notification(
             "task.started",
-            {"task_id": task_id, "operation": params.get("operation")},
+            {"operation": params.get("operation")},
         )
 
         try:
@@ -173,20 +153,11 @@ class RPAAgent:
                 )
             )
 
-            # タスク完了
-            self.task_status[task_id] = {
-                "status": "completed",
-                "completed_at": time.time(),
-                "result": result,
-            }
-
             # 完了を通知
-            self.send_notification(
-                "task.completed", {"task_id": task_id, "result": result}
-            )
+            self.send_notification("task.completed", {"result": result})
 
             # レスポンスを返す
-            self.send_response(request.id, {"task_id": task_id, "result": result})
+            self.send_response(request.id, result)
 
         except Exception as e:
             # エラー処理
@@ -195,201 +166,76 @@ class RPAAgent:
                 "traceback": traceback.format_exc(),
             }
 
-            self.task_status[task_id] = {
-                "status": "failed",
-                "failed_at": time.time(),
-                "error": error_info,
-            }
+            self.send_notification("task.failed", {"error": error_info})
 
-            self.send_notification(
-                "task.failed", {"task_id": task_id, "error": error_info}
-            )
-
-            self.send_error_response(
-                request.id, -32000, f"Execution failed: {str(e)}"
-            )
-
-    def handle_execute_excel(self, request: JsonRpcRequest):
-        """Excel操作を実行"""
-        if not EXCEL_AVAILABLE:
-            self.send_error_response(
-                request.id, -32001, "Excel support not available"
-            )
-            return
-
-        params = request.params or {}
-        action = params.get("action")
-
-        try:
-            if action == "readCell":
-                result = self.read_excel_cell(params)
-            elif action == "writeCell":
-                result = self.write_excel_cell(params)
-            elif action == "readRange":
-                result = self.read_excel_range(params)
-            elif action == "writeRange":
-                result = self.write_excel_range(params)
-            else:
-                self.send_error_response(
-                    request.id, -32602, f"Unknown Excel action: {action}"
-                )
-                return
-
-            self.send_response(request.id, result)
-
-        except Exception as e:
-            self.send_error_response(
-                request.id, -32000, f"Excel operation failed: {str(e)}"
-            )
-
-    def read_excel_cell(self, params: Dict[str, Any]) -> Dict[str, Any]:
-        """Excelセルを読み込む"""
-        file_path = params.get("file_path")
-        sheet_name = params.get("sheet_name")
-        cell = params.get("cell")
-
-        workbook = openpyxl.load_workbook(file_path, read_only=True)
-        sheet = (
-            workbook[sheet_name] if sheet_name else workbook.active
-        )
-        value = sheet[cell].value
-        workbook.close()
-
-        return {"value": value}
-
-    def write_excel_cell(self, params: Dict[str, Any]) -> Dict[str, Any]:
-        """Excelセルに書き込む"""
-        file_path = params.get("file_path")
-        sheet_name = params.get("sheet_name")
-        cell = params.get("cell")
-        value = params.get("value")
-
-        workbook = openpyxl.load_workbook(file_path)
-        sheet = (
-            workbook[sheet_name] if sheet_name else workbook.active
-        )
-        sheet[cell] = value
-        workbook.save(file_path)
-        workbook.close()
-
-        return {"success": True}
-
-    def read_excel_range(self, params: Dict[str, Any]) -> Dict[str, Any]:
-        """Excel範囲を読み込む"""
-        file_path = params.get("file_path")
-        sheet_name = params.get("sheet_name")
-
-        try:
-            workbook = openpyxl.load_workbook(file_path, read_only=True)
-            sheet = (
-                workbook[sheet_name] if sheet_name else workbook.active
-            )
-
-            # 全データを読み込む（効率化のため最大1000行x100列に制限）
-            data = []
-            for row in sheet.iter_rows(max_row=1000, max_col=100):
-                row_data = [cell.value for cell in row]
-                # 空の行は除外
-                if any(value is not None for value in row_data):
-                    data.append(row_data)
-
-            workbook.close()
-            return {"data": data}
-
-        except Exception as e:
-            return {"error": str(e)}
-
-    def write_excel_range(self, params: Dict[str, Any]) -> Dict[str, Any]:
-        """Excel範囲に書き込む"""
-        file_path = params.get("file_path")
-        sheet_name = params.get("sheet_name")
-        start_cell = params.get("start_cell", "A1")
-        data = params.get("data", [])
-
-        try:
-            workbook = openpyxl.load_workbook(file_path)
-            sheet = (
-                workbook[sheet_name] if sheet_name else workbook.active
-            )
-
-            # データを書き込む
-            from openpyxl.utils import column_index_from_string, get_column_letter
-
-            start_col_letter = "".join(
-                filter(str.isalpha, start_cell)
-            )
-            start_row = int("".join(filter(str.isdigit, start_cell)))
-            start_col = column_index_from_string(start_col_letter)
-
-            for row_idx, row_data in enumerate(data):
-                for col_idx, value in enumerate(row_data):
-                    cell = sheet.cell(
-                        row=start_row + row_idx,
-                        column=start_col + col_idx,
-                        value=value,
-                    )
-
-            workbook.save(file_path)
-            workbook.close()
-
-            return {"success": True}
-
-        except Exception as e:
-            return {"error": str(e)}
+            self.send_error_response(request.id, -32000, f"Execution failed: {str(e)}")
+        finally:
+            # イベントループをクリーンアップ
+            loop.close()
 
     def handle_list_operations(self, request: JsonRpcRequest):
         """利用可能な操作リストを返す"""
         operations = self.operation_manager.get_available_operations()
         self.send_response(request.id, {"operations": operations})
 
-    def handle_get_operation_template(self, request: JsonRpcRequest):
-        """操作テンプレートを返す"""
-        params = request.params or {}
-        category = params.get("category")
-        subcategory = params.get("subcategory")
-        operation = params.get("operation")
+    def handle_get_operation_templates(self, request: JsonRpcRequest):
+        """操作テンプレートを返す（rpa_operations.jsonの内容）"""
+        import json
+        import os
 
-        template = self.operation_manager.get_operation_template(
-            category, subcategory, operation
+        try:
+            # rpa_operations.jsonを読み込む
+            json_path = os.path.join(os.path.dirname(__file__), 'rpa_operations.json')
+            with open(json_path, encoding='utf-8') as f:
+                templates = json.load(f)
+            self.send_response(request.id, templates)
+        except Exception as e:
+            self.send_error_response(request.id, -32000, f"Failed to load operation templates: {str(e)}")
+
+    def handle_execute_operations(self, request: JsonRpcRequest):
+        """複数の操作を一括実行（ワークフロー実行）"""
+        params = request.params or {}
+        steps = params.get("steps", [])
+        mode = params.get("mode", "sequential")  # sequential or parallel (将来対応)
+
+        # ワークフロー開始を通知
+        self.send_notification(
+            "workflow.started",
+            {"steps": len(steps), "mode": mode},
         )
 
-        if template:
-            self.send_response(request.id, {"template": template})
-        else:
-            self.send_error_response(
-                request.id, -32002, f"Template not found for operation: {operation}"
+        try:
+            # 非同期処理を同期的に実行
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+
+            # ワークフローを実行
+            results = loop.run_until_complete(
+                self.operation_manager.execute_workflow_steps(steps)
             )
 
-    def handle_cancel_task(self, request: JsonRpcRequest):
-        """タスクをキャンセル"""
-        params = request.params or {}
-        task_id = params.get("task_id")
+            # 完了を通知
+            self.send_notification("workflow.completed", {"results": results})
 
-        if task_id in self.task_status:
-            self.task_status[task_id]["status"] = "cancelled"
-            self.send_response(request.id, {"cancelled": True})
-        else:
-            self.send_error_response(
-                request.id, -32003, f"Task not found: {task_id}"
-            )
+            # レスポンスを返す
+            self.send_response(request.id, {
+                "success": True,
+                "results": results,
+                "stepsExecuted": len(results)
+            })
 
-    def handle_get_task_status(self, request: JsonRpcRequest):
-        """タスクステータスを取得"""
-        params = request.params or {}
-        task_id = params.get("task_id")
+        except Exception as e:
+            # エラー処理
+            error_info = {
+                "error": str(e),
+                "traceback": traceback.format_exc(),
+            }
 
-        if task_id in self.task_status:
-            self.send_response(request.id, self.task_status[task_id])
-        else:
-            self.send_error_response(
-                request.id, -32003, f"Task not found: {task_id}"
-            )
-
-    def handle_shutdown(self, request: JsonRpcRequest):
-        """エージェントをシャットダウン"""
-        self.running = False
-        self.send_response(request.id, {"shutdown": True})
-        sys.exit(0)
+            self.send_notification("workflow.failed", {"error": error_info})
+            self.send_error_response(request.id, -32000, f"Workflow execution failed: {str(e)}")
+        finally:
+            # イベントループをクリーンアップ
+            loop.close()
 
     def send_response(self, request_id: Any, result: Any):
         """レスポンスを送信"""

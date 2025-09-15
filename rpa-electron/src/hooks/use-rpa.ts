@@ -27,13 +27,8 @@ export interface RPAStatus {
   capabilities: any | null
 }
 
-export interface TaskProgress {
-  taskId: string
-  progress: number
-  message: string
-}
 
-export function useRPA() {
+export function useRPA(autoConnect = false) {
   const [status, setStatus] = useState<RPAStatus>({
     connected: false,
     connecting: false,
@@ -41,7 +36,6 @@ export function useRPA() {
     capabilities: null
   })
 
-  const [tasks, setTasks] = useState<Map<string, TaskProgress>>(new Map())
   const [logs, setLogs] = useState<Array<{ level: string; message: string; timestamp: number }>>(
     []
   )
@@ -52,6 +46,12 @@ export function useRPA() {
   const connect = useCallback(async () => {
     if (!ipcRenderer) {
       setStatus((prev) => ({ ...prev, error: 'Electron IPC not available' }))
+      return false
+    }
+
+    // 既に接続中または接続済みの場合は何もしない
+    if (status.connecting) {
+      console.log('Already connecting, skipping...')
       return false
     }
 
@@ -70,6 +70,29 @@ export function useRPA() {
         })
         return true
       } else {
+        // "Already started"エラーの場合は、既に接続されているとみなす
+        if (result.error === 'Already started') {
+          try {
+            // 既存の接続を使って機能を取得
+            const capabilities = await ipcRenderer.invoke('rpa:getCapabilities')
+            setStatus({
+              connected: true,
+              connecting: false,
+              error: null,
+              capabilities
+            })
+            return true
+          } catch (innerError) {
+            setStatus({
+              connected: false,
+              connecting: false,
+              error: (innerError as Error).message,
+              capabilities: null
+            })
+            return false
+          }
+        }
+
         setStatus({
           connected: false,
           connecting: false,
@@ -87,7 +110,7 @@ export function useRPA() {
       })
       return false
     }
-  }, [ipcRenderer])
+  }, [ipcRenderer, status.connecting])
 
   // RPAクライアントを停止
   const disconnect = useCallback(async () => {
@@ -102,7 +125,6 @@ export function useRPA() {
           error: null,
           capabilities: null
         })
-        setTasks(new Map())
         return true
       }
       return false
@@ -118,32 +140,6 @@ export function useRPA() {
     return await ipcRenderer.invoke('rpa:ping')
   }, [ipcRenderer])
 
-  // タスク実行
-  const runTask = useCallback(
-    async (name: string, params?: any): Promise<string> => {
-      if (!ipcRenderer) throw new Error('Not connected')
-      const taskId = await ipcRenderer.invoke('rpa:runTask', name, params)
-      
-      // タスクを追跡
-      setTasks((prev) => {
-        const next = new Map(prev)
-        next.set(taskId, { taskId, progress: 0, message: 'Starting...' })
-        return next
-      })
-      
-      return taskId
-    },
-    [ipcRenderer]
-  )
-
-  // タスクキャンセル
-  const cancelTask = useCallback(
-    async (taskId: string) => {
-      if (!ipcRenderer) throw new Error('Not connected')
-      return await ipcRenderer.invoke('rpa:cancelTask', taskId)
-    },
-    [ipcRenderer]
-  )
 
 
   // 汎用メソッド呼び出し
@@ -168,6 +164,56 @@ export function useRPA() {
     [ipcRenderer]
   )
 
+  // ワークフロー実行（複数操作の一括実行）
+  const executeWorkflow = useCallback(
+    async (steps: Array<{
+      id: string
+      category: string
+      subcategory?: string
+      operation: string
+      params: any
+      description?: string
+    }>, mode: 'sequential' | 'parallel' = 'sequential') => {
+      if (!ipcRenderer) throw new Error('Not connected')
+      return await ipcRenderer.invoke('rpa:executeWorkflow', { steps, mode })
+    },
+    [ipcRenderer]
+  )
+
+
+  // 接続状態を確認
+  const checkStatus = useCallback(async () => {
+    if (!ipcRenderer) return
+
+    try {
+      // 既存の接続状態を確認
+      const currentStatus = await ipcRenderer.invoke('rpa:status')
+      if (currentStatus.connected) {
+        // 既に接続されている場合は機能を取得
+        const capabilities = await ipcRenderer.invoke('rpa:getCapabilities')
+        setStatus({
+          connected: true,
+          connecting: false,
+          error: null,
+          capabilities
+        })
+      }
+    } catch (error) {
+      console.error('Failed to check status:', error)
+    }
+  }, [ipcRenderer])
+
+  // 初回マウント時に接続状態を確認
+  useEffect(() => {
+    checkStatus()
+  }, [checkStatus])
+
+  // 自動接続
+  useEffect(() => {
+    if (autoConnect && !status.connected && !status.connecting) {
+      connect()
+    }
+  }, [autoConnect, status.connected, status.connecting, connect])
 
   // イベントリスナーを設定
   useEffect(() => {
@@ -177,46 +223,6 @@ export function useRPA() {
       setLogs((prev) => [...prev.slice(-99), params]) // 最新100件を保持
     }
 
-    const handleTaskStarted = (_event: any, params: any) => {
-      setTasks((prev) => {
-        const next = new Map(prev)
-        next.set(params.task_id, {
-          taskId: params.task_id,
-          progress: 0,
-          message: `Task ${params.name} started`
-        })
-        return next
-      })
-    }
-
-    const handleTaskProgress = (_event: any, params: any) => {
-      setTasks((prev) => {
-        const next = new Map(prev)
-        const task = next.get(params.task_id)
-        if (task) {
-          task.progress = params.progress
-          task.message = params.message
-        }
-        return next
-      })
-    }
-
-    const handleTaskCompleted = (_event: any, params: any) => {
-      setTasks((prev) => {
-        const next = new Map(prev)
-        next.delete(params.task_id)
-        return next
-      })
-    }
-
-    const handleTaskFailed = (_event: any, params: any) => {
-      setTasks((prev) => {
-        const next = new Map(prev)
-        next.delete(params.task_id)
-        return next
-      })
-      console.error('Task failed:', params)
-    }
 
     const handleError = (_event: any, params: any) => {
       console.error('RPA error:', params)
@@ -224,18 +230,10 @@ export function useRPA() {
     }
 
     ipcRenderer.on('rpa:log', handleLog)
-    ipcRenderer.on('rpa:task_started', handleTaskStarted)
-    ipcRenderer.on('rpa:task_progress', handleTaskProgress)
-    ipcRenderer.on('rpa:task_completed', handleTaskCompleted)
-    ipcRenderer.on('rpa:task_failed', handleTaskFailed)
     ipcRenderer.on('rpa:error', handleError)
 
     return () => {
       ipcRenderer.removeListener('rpa:log', handleLog)
-      ipcRenderer.removeListener('rpa:task_started', handleTaskStarted)
-      ipcRenderer.removeListener('rpa:task_progress', handleTaskProgress)
-      ipcRenderer.removeListener('rpa:task_completed', handleTaskCompleted)
-      ipcRenderer.removeListener('rpa:task_failed', handleTaskFailed)
       ipcRenderer.removeListener('rpa:error', handleError)
     }
   }, [ipcRenderer])
@@ -243,16 +241,14 @@ export function useRPA() {
   return {
     // 状態
     status,
-    tasks: Array.from(tasks.values()),
     logs,
 
     // メソッド
     connect,
     disconnect,
     ping,
-    runTask,
-    cancelTask,
     call,
-    executeOperation
+    executeOperation,
+    executeWorkflow
   }
 }

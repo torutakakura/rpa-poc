@@ -1,0 +1,62 @@
+{
+  "name": "Webブラウザ操作",
+  "description": "ブラウザを操作してWebサイトから情報を取得",
+  "version": "1.0.0",
+  "steps": [
+    {
+      "id": "step-001",
+      "category": "L_ウェブブラウザ",
+      "operation": "ブラウザ起動",
+      "params": {
+        "url": "https://www.google.com"
+      },
+      "description": "Googleを開く"
+    },
+    {
+      "id": "step-002",
+      "category": "B_待機・終了・エラー",
+      "operation": "待機",
+      "params": {
+        "seconds": 2
+      },
+      "description": "ページ読み込み待機"
+    },
+    {
+      "id": "step-003",
+      "category": "L_ウェブブラウザ",
+      "operation": "要素入力",
+      "params": {
+        "selector": "input[name='q']",
+        "text": "RPA automation"
+      },
+      "description": "検索ボックスにテキスト入力"
+    },
+    {
+      "id": "step-004",
+      "category": "D_キーボード",
+      "operation": "キー入力",
+      "params": {
+        "key": "Enter"
+      },
+      "description": "Enterキーで検索実行"
+    },
+    {
+      "id": "step-005",
+      "category": "B_待機・終了・エラー",
+      "operation": "待機",
+      "params": {
+        "seconds": 3
+      },
+      "description": "検索結果待機"
+    },
+    {
+      "id": "step-006",
+      "category": "A_アプリ・画面",
+      "operation": "スクリーンショット",
+      "params": {
+        "save_path": "C:/temp/search_result.png"
+      },
+      "description": "検索結果のスクリーンショットを保存"
+    }
+  ]
+}

@@ -5,7 +5,9 @@ I_ファイル・フォルダ カテゴリの操作
 import glob
 import os
 import shutil
-from typing import Any, Dict
+import subprocess
+import platform
+from typing import Any, Dict, List
 
 from .base import BaseOperation, OperationResult
 
@@ -379,4 +381,241 @@ class WriteFileOperation(BaseOperation):
         except Exception as e:
             return OperationResult(
                 status="failure", data={}, error=f"Failed to write file: {str(e)}"
+            )
+
+
+class OpenFileOperation(BaseOperation):
+    """ファイルを開く"""
+
+    async def execute(self, params: Dict[str, Any]) -> OperationResult:
+        file_path = params.get("file_path", "")
+        application = params.get("application", "default")
+        wait_for_open = params.get("wait_for_open", True)
+
+        error = self.validate_params(params, ["file_path"])
+        if error:
+            return OperationResult(status="failure", data={}, error=error)
+
+        try:
+            # パスを展開
+            file_path = os.path.expanduser(file_path)
+
+            # ファイルが存在するか確認
+            if not os.path.exists(file_path):
+                return OperationResult(
+                    status="failure",
+                    data={},
+                    error=f"File does not exist: {file_path}",
+                )
+
+            # OSごとにファイルを開く
+            system = platform.system()
+            if system == "Darwin":  # macOS
+                if application == "default":
+                    subprocess.run(["open", file_path], check=True)
+                else:
+                    subprocess.run(["open", "-a", application, file_path], check=True)
+            elif system == "Windows":
+                if application == "default":
+                    os.startfile(file_path)
+                else:
+                    subprocess.run([application, file_path], check=True)
+            else:  # Linux
+                if application == "default":
+                    subprocess.run(["xdg-open", file_path], check=True)
+                else:
+                    subprocess.run([application, file_path], check=True)
+
+            self.log(f"Opened file: {file_path} with {application}")
+
+            return OperationResult(
+                status="success",
+                data={
+                    "file_path": file_path,
+                    "application": application,
+                },
+            )
+        except Exception as e:
+            return OperationResult(
+                status="failure", data={}, error=f"Failed to open file: {str(e)}"
+            )
+
+
+class MoveFileOperation(BaseOperation):
+    """ファイルの移動"""
+
+    async def execute(self, params: Dict[str, Any]) -> OperationResult:
+        source_path = params.get("source_path", "")
+        destination_path = params.get("destination_path", "")
+        overwrite = params.get("overwrite", False)
+        create_directory = params.get("create_directory", True)
+
+        error = self.validate_params(params, ["source_path", "destination_path"])
+        if error:
+            return OperationResult(status="failure", data={}, error=error)
+
+        try:
+            # パスを展開
+            source_path = os.path.expanduser(source_path)
+            destination_path = os.path.expanduser(destination_path)
+
+            # ソースが存在するか確認
+            if not os.path.exists(source_path):
+                return OperationResult(
+                    status="failure",
+                    data={},
+                    error=f"Source does not exist: {source_path}",
+                )
+
+            # 上書き確認
+            if os.path.exists(destination_path) and not overwrite:
+                return OperationResult(
+                    status="failure",
+                    data={},
+                    error=f"Destination already exists: {destination_path}",
+                )
+
+            # ディレクトリ作成
+            if create_directory:
+                dest_dir = os.path.dirname(destination_path)
+                if dest_dir and not os.path.exists(dest_dir):
+                    os.makedirs(dest_dir, exist_ok=True)
+
+            # 移動実行
+            shutil.move(source_path, destination_path)
+            self.log(f"Moved: {source_path} -> {destination_path}")
+
+            return OperationResult(
+                status="success",
+                data={
+                    "source_path": source_path,
+                    "destination_path": destination_path,
+                },
+            )
+        except Exception as e:
+            return OperationResult(
+                status="failure", data={}, error=f"Failed to move file: {str(e)}"
+            )
+
+
+class OpenFolderOperation(BaseOperation):
+    """フォルダを開く"""
+
+    async def execute(self, params: Dict[str, Any]) -> OperationResult:
+        folder_path = params.get("folder_path", "")
+        explorer_window = params.get("explorer_window", True)
+
+        error = self.validate_params(params, ["folder_path"])
+        if error:
+            return OperationResult(status="failure", data={}, error=error)
+
+        try:
+            # パスを展開
+            folder_path = os.path.expanduser(folder_path)
+
+            # フォルダが存在するか確認
+            if not os.path.exists(folder_path):
+                return OperationResult(
+                    status="failure",
+                    data={},
+                    error=f"Folder does not exist: {folder_path}",
+                )
+
+            if not os.path.isdir(folder_path):
+                return OperationResult(
+                    status="failure",
+                    data={},
+                    error=f"Path is not a folder: {folder_path}",
+                )
+
+            # OSごとにフォルダを開く
+            system = platform.system()
+            if system == "Darwin":  # macOS
+                subprocess.run(["open", folder_path], check=True)
+            elif system == "Windows":
+                os.startfile(folder_path)
+            else:  # Linux
+                subprocess.run(["xdg-open", folder_path], check=True)
+
+            self.log(f"Opened folder: {folder_path}")
+
+            return OperationResult(
+                status="success",
+                data={"folder_path": folder_path},
+            )
+        except Exception as e:
+            return OperationResult(
+                status="failure", data={}, error=f"Failed to open folder: {str(e)}"
+            )
+
+
+class FolderLoopOperation(BaseOperation):
+    """フォルダ内のファイルをループ処理"""
+
+    async def execute(self, params: Dict[str, Any]) -> OperationResult:
+        folder_path = params.get("folder_path", "")
+        pattern = params.get("pattern", "*.*")
+        include_subfolders = params.get("include_subfolders", False)
+        file_storage_key = params.get("file_storage_key", "current_file")
+        path_storage_key = params.get("path_storage_key", "current_path")
+
+        error = self.validate_params(params, ["folder_path"])
+        if error:
+            return OperationResult(status="failure", data={}, error=error)
+
+        try:
+            # パスを展開
+            folder_path = os.path.expanduser(folder_path)
+
+            # フォルダが存在するか確認
+            if not os.path.exists(folder_path):
+                return OperationResult(
+                    status="failure",
+                    data={},
+                    error=f"Folder does not exist: {folder_path}",
+                )
+
+            # ファイルリストを取得
+            if include_subfolders:
+                search_pattern = os.path.join(folder_path, "**", pattern)
+                files = glob.glob(search_pattern, recursive=True)
+            else:
+                search_pattern = os.path.join(folder_path, pattern)
+                files = glob.glob(search_pattern)
+
+            # ファイルのみをフィルタリング
+            files = [f for f in files if os.path.isfile(f)]
+
+            self.log(f"Found {len(files)} files in {folder_path} matching '{pattern}'")
+
+            # 各ファイルの情報を収集
+            file_list = []
+            for file_path in files:
+                file_info = {
+                    "path": file_path,
+                    "name": os.path.basename(file_path),
+                    "directory": os.path.dirname(file_path),
+                    "size": os.path.getsize(file_path),
+                    "extension": os.path.splitext(file_path)[1],
+                }
+                file_list.append(file_info)
+
+            # 最初のファイルをストレージに設定（ループ処理の準備）
+            if file_list and file_storage_key:
+                self.set_storage(file_storage_key, file_list[0]["name"])
+                if path_storage_key:
+                    self.set_storage(path_storage_key, file_list[0]["path"])
+
+            return OperationResult(
+                status="success",
+                data={
+                    "folder_path": folder_path,
+                    "pattern": pattern,
+                    "files": file_list,
+                    "count": len(file_list),
+                },
+            )
+        except Exception as e:
+            return OperationResult(
+                status="failure", data={}, error=f"Failed to process folder loop: {str(e)}"
             )

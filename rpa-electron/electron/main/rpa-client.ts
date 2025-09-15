@@ -72,11 +72,13 @@ export class RPAClient extends EventEmitter {
         args.push('--debug')
       }
 
+      console.log('Spawning process:', this.options.pythonPath!, args)
       this.process = spawn(this.options.pythonPath!, args, {
         stdio: ['pipe', 'pipe', 'pipe']
       })
 
       this.process.stdout?.on('data', (data) => {
+        console.log('Agent stdout:', data.toString())
         this.handleData(data.toString())
       })
 
@@ -85,6 +87,7 @@ export class RPAClient extends EventEmitter {
       })
 
       this.process.on('error', (error) => {
+        console.error('Process error:', error)
         this.emit('error', error)
         reject(error)
       })
@@ -94,16 +97,16 @@ export class RPAClient extends EventEmitter {
         this.cleanup()
       })
 
-      // agent_ready 通知を待つ
+      // agent.ready 通知を待つ
       const readyHandler = () => {
-        this.off('agent_ready', readyHandler)
+        this.off('agent.ready', readyHandler)
         resolve()
       }
-      this.once('agent_ready', readyHandler)
+      this.once('agent.ready', readyHandler)
 
       // タイムアウト設定
       setTimeout(() => {
-        this.off('agent_ready', readyHandler)
+        this.off('agent.ready', readyHandler)
         reject(new Error('Agent startup timeout'))
       }, 5000)
     })
@@ -156,6 +159,7 @@ export class RPAClient extends EventEmitter {
       this.pendingRequests.set(id, { resolve, reject })
 
       const json = JSON.stringify(request)
+      console.log('Sending JSON-RPC request:', json)
       this.process!.stdin?.write(json + '\n')
 
       // タイムアウト設定
@@ -273,6 +277,13 @@ export class RPAClient extends EventEmitter {
    */
   async cancelTask(taskId: string): Promise<any> {
     return this.call('cancel_task', { task_id: taskId })
+  }
+
+  /**
+   * 便利メソッド：ワークフロー実行（複数操作の一括実行）
+   */
+  async executeWorkflow(steps: any[], mode: 'sequential' | 'parallel' = 'sequential'): Promise<any> {
+    return this.call('executeOperations', { steps, mode })
   }
 
   /**

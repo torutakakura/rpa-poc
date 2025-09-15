@@ -12,6 +12,7 @@ const electronAPI = {
     invoke: (channel: string, ...args: any[]) => {
       // 許可されたチャンネルのみ
       const validChannels = [
+        'rpa:status',
         'rpa:start',
         'rpa:stop',
         'rpa:ping',
@@ -19,6 +20,7 @@ const electronAPI = {
         'rpa:runTask',
         'rpa:cancelTask',
         'rpa:executeOperation',
+        'rpa:executeWorkflow',
         'rpa:call'
       ]
       if (validChannels.includes(channel)) {

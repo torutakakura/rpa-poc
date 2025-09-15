@@ -1488,6 +1488,176 @@
           }
         }
       }
+    },
+    "L_ウェブブラウザ": {
+      "ブラウザを開く": {
+        "common_params": {
+          "memo": "",
+          "timeout": 30,
+          "retry_count": 0,
+          "error_handling": "stop"
+        },
+        "specific_params": {
+          "url": "",
+          "browser": "chrome",
+          "incognito": false,
+          "maximize": true
+        }
+      },
+      "ブラウザを閉じる": {
+        "common_params": {
+          "memo": "",
+          "timeout": 30,
+          "retry_count": 0,
+          "error_handling": "stop"
+        },
+        "specific_params": {
+          "target": "current"
+        }
+      },
+      "ページ移動": {
+        "common_params": {
+          "memo": "",
+          "timeout": 30,
+          "retry_count": 0,
+          "error_handling": "stop"
+        },
+        "specific_params": {
+          "url": "",
+          "wait_for_load": true
+        }
+      },
+      "クリック": {
+        "common_params": {
+          "memo": "",
+          "timeout": 30,
+          "retry_count": 0,
+          "error_handling": "stop"
+        },
+        "specific_params": {
+          "selector": "",
+          "selector_type": "css",
+          "wait_before": 0
+        }
+      },
+      "入力": {
+        "common_params": {
+          "memo": "",
+          "timeout": 30,
+          "retry_count": 0,
+          "error_handling": "stop"
+        },
+        "specific_params": {
+          "selector": "",
+          "selector_type": "css",
+          "text": "",
+          "clear_before": true
+        }
+      },
+      "選択": {
+        "common_params": {
+          "memo": "",
+          "timeout": 30,
+          "retry_count": 0,
+          "error_handling": "stop"
+        },
+        "specific_params": {
+          "selector": "",
+          "selector_type": "css",
+          "value": "",
+          "by": "value"
+        }
+      },
+      "読み取り": {
+        "common_params": {
+          "memo": "",
+          "timeout": 30,
+          "retry_count": 0,
+          "error_handling": "stop"
+        },
+        "specific_params": {
+          "selector": "",
+          "selector_type": "css",
+          "storage_key": ""
+        }
+      },
+      "待機": {
+        "common_params": {
+          "memo": "",
+          "timeout": 30,
+          "retry_count": 0,
+          "error_handling": "stop"
+        },
+        "specific_params": {
+          "selector": "",
+          "selector_type": "css",
+          "timeout": 30,
+          "condition": "visible"
+        }
+      },
+      "スクロール": {
+        "common_params": {
+          "memo": "",
+          "timeout": 30,
+          "retry_count": 0,
+          "error_handling": "stop"
+        },
+        "specific_params": {
+          "direction": "down",
+          "amount": 300,
+          "element_selector": ""
+        }
+      },
+      "スクリーンショット": {
+        "common_params": {
+          "memo": "",
+          "timeout": 30,
+          "retry_count": 0,
+          "error_handling": "stop"
+        },
+        "specific_params": {
+          "save_path": "",
+          "full_page": false,
+          "element_selector": ""
+        }
+      },
+      "JavaScript実行": {
+        "common_params": {
+          "memo": "",
+          "timeout": 30,
+          "retry_count": 0,
+          "error_handling": "stop"
+        },
+        "specific_params": {
+          "script": "",
+          "return_value": false,
+          "storage_key": ""
+        }
+      },
+      "タブ切り替え": {
+        "common_params": {
+          "memo": "",
+          "timeout": 30,
+          "retry_count": 0,
+          "error_handling": "stop"
+        },
+        "specific_params": {
+          "tab_index": 0,
+          "tab_title": ""
+        }
+      },
+      "更新": {
+        "common_params": {
+          "memo": "",
+          "timeout": 30,
+          "retry_count": 0,
+          "error_handling": "stop"
+        },
+        "specific_params": {
+          "wait_for_load": true,
+          "hard_refresh": false
+        }
+      }
     }
   },
   "common_parameter_definitions": {

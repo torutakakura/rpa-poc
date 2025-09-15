@@ -1,0 +1,88 @@
+{
+  "name": "Excel自動処理",
+  "description": "Excelファイルの作成、データ入力、保存",
+  "version": "1.0.0",
+  "steps": [
+    {
+      "id": "step-001",
+      "category": "J_Excel",
+      "operation": "Excel開く",
+      "params": {
+        "file_path": "C:/temp/rpa_data.xlsx",
+        "create_if_not_exists": true
+      },
+      "description": "Excelファイルを開く（なければ作成）"
+    },
+    {
+      "id": "step-002",
+      "category": "J_Excel",
+      "operation": "セル書き込み",
+      "params": {
+        "cell": "A1",
+        "value": "項目名"
+      },
+      "description": "A1セルにヘッダーを書き込み"
+    },
+    {
+      "id": "step-003",
+      "category": "J_Excel",
+      "operation": "セル書き込み",
+      "params": {
+        "cell": "B1",
+        "value": "数値"
+      },
+      "description": "B1セルにヘッダーを書き込み"
+    },
+    {
+      "id": "step-004",
+      "category": "J_Excel",
+      "operation": "セル書き込み",
+      "params": {
+        "cell": "C1",
+        "value": "ステータス"
+      },
+      "description": "C1セルにヘッダーを書き込み"
+    },
+    {
+      "id": "step-005",
+      "category": "J_Excel",
+      "operation": "範囲書き込み",
+      "params": {
+        "start_cell": "A2",
+        "data": [
+          ["商品A", 100, "在庫あり"],
+          ["商品B", 50, "在庫少"],
+          ["商品C", 0, "在庫なし"],
+          ["商品D", 200, "在庫あり"]
+        ]
+      },
+      "description": "データを一括書き込み"
+    },
+    {
+      "id": "step-006",
+      "category": "J_Excel",
+      "operation": "セル書き込み",
+      "params": {
+        "cell": "B6",
+        "value": "=SUM(B2:B5)"
+      },
+      "description": "合計値の計算式を入力"
+    },
+    {
+      "id": "step-007",
+      "category": "J_Excel",
+      "operation": "Excel保存",
+      "params": {
+        "file_path": "C:/temp/rpa_data.xlsx"
+      },
+      "description": "ファイルを保存"
+    },
+    {
+      "id": "step-008",
+      "category": "J_Excel",
+      "operation": "Excel閉じる",
+      "params": {},
+      "description": "Excelを閉じる"
+    }
+  ]
+}

@@ -451,13 +451,9 @@ class WebBrowserWaitForElementOperation(BaseOperation):
             # 待機条件を設定
             wait = WebDriverWait(driver, wait_time)
             if wait_condition == "presence":
-                wait.until(
-                    EC.presence_of_element_located((by_type, selector))
-                )
+                wait.until(EC.presence_of_element_located((by_type, selector)))
             elif wait_condition == "visible":
-                wait.until(
-                    EC.visibility_of_element_located((by_type, selector))
-                )
+                wait.until(EC.visibility_of_element_located((by_type, selector)))
             elif wait_condition == "clickable":
                 wait.until(EC.element_to_be_clickable((by_type, selector)))
             else:
