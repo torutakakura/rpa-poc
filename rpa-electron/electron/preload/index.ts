@@ -18,8 +18,7 @@ const electronAPI = {
         'rpa:getCapabilities',
         'rpa:runTask',
         'rpa:cancelTask',
-        'rpa:excelRead',
-        'rpa:excelWrite',
+        'rpa:executeOperation',
         'rpa:call'
       ]
       if (validChannels.includes(channel)) {

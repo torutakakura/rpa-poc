@@ -274,22 +274,4 @@ export class RPAClient extends EventEmitter {
   async cancelTask(taskId: string): Promise<any> {
     return this.call('cancel_task', { task_id: taskId })
   }
-
-  /**
-   * 便利メソッド：Excel読み込み
-   */
-  async excelRead(filePath: string, sheetName?: string): Promise<any> {
-    return this.call('excel_read', { file_path: filePath, sheet_name: sheetName })
-  }
-
-  /**
-   * 便利メソッド：Excel書き込み
-   */
-  async excelWrite(filePath: string, data: any[][], sheetName?: string): Promise<any> {
-    return this.call('excel_write', {
-      file_path: filePath,
-      data,
-      sheet_name: sheetName || 'Sheet1'
-    })
-  }
 }

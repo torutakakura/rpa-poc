@@ -59,12 +59,4 @@ export declare class RPAClient extends EventEmitter {
      * 便利メソッド：タスクキャンセル
      */
     cancelTask(taskId: string): Promise<any>;
-    /**
-     * 便利メソッド：Excel読み込み
-     */
-    excelRead(filePath: string, sheetName?: string): Promise<any>;
-    /**
-     * 便利メソッド：Excel書き込み
-     */
-    excelWrite(filePath: string, data: any[][], sheetName?: string): Promise<any>;
 }

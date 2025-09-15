@@ -145,23 +145,6 @@ export function useRPA() {
     [ipcRenderer]
   )
 
-  // Excel読み込み
-  const excelRead = useCallback(
-    async (filePath: string, sheetName?: string) => {
-      if (!ipcRenderer) throw new Error('Not connected')
-      return await ipcRenderer.invoke('rpa:excelRead', filePath, sheetName)
-    },
-    [ipcRenderer]
-  )
-
-  // Excel書き込み
-  const excelWrite = useCallback(
-    async (filePath: string, data: any[][], sheetName?: string) => {
-      if (!ipcRenderer) throw new Error('Not connected')
-      return await ipcRenderer.invoke('rpa:excelWrite', filePath, data, sheetName)
-    },
-    [ipcRenderer]
-  )
 
   // 汎用メソッド呼び出し
   const call = useCallback(
@@ -171,6 +154,20 @@ export function useRPA() {
     },
     [ipcRenderer]
   )
+
+  // RPA操作の実行
+  const executeOperation = useCallback(
+    async (operation: {
+      category: string
+      operation: string
+      params: any
+    }) => {
+      if (!ipcRenderer) throw new Error('Not connected')
+      return await ipcRenderer.invoke('rpa:executeOperation', operation)
+    },
+    [ipcRenderer]
+  )
+
 
   // イベントリスナーを設定
   useEffect(() => {
@@ -255,8 +252,7 @@ export function useRPA() {
     ping,
     runTask,
     cancelTask,
-    excelRead,
-    excelWrite,
-    call
+    call,
+    executeOperation
   }
 }

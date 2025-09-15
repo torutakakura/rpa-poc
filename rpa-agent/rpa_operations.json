@@ -1,0 +1,1529 @@
+{
+  "operation_templates": {
+    "A_アプリ・画面": {
+      "アプリ": {
+        "起動": {
+          "common_params": {
+            "memo": "",
+            "timeout": 30,
+            "retry_count": 0,
+            "error_handling": "stop"
+          },
+          "specific_params": {
+            "app_path": "",
+            "wait_time": 5,
+            "maximize_window": false,
+            "arguments": "",
+            "working_directory": ""
+          }
+        },
+        "起動（終了待ち）": {
+          "common_params": {
+            "memo": "",
+            "timeout": 300,
+            "retry_count": 0,
+            "error_handling": "stop"
+          },
+          "specific_params": {
+            "app_path": "",
+            "maximize_window": false,
+            "arguments": "",
+            "working_directory": ""
+          }
+        }
+      },
+      "画面": {
+        "最前画面を覚える": {
+          "common_params": {
+            "memo": "",
+            "timeout": 30,
+            "retry_count": 0,
+            "error_handling": "stop"
+          },
+          "specific_params": {
+            "reference_id": ""
+          }
+        },
+        "画面を覚える（名前）": {
+          "common_params": {
+            "memo": "",
+            "timeout": 30,
+            "retry_count": 0,
+            "error_handling": "stop"
+          },
+          "specific_params": {
+            "window_name": "",
+            "reference_id": "",
+            "partial_match": false
+          }
+        },
+        "切り替え（参照ID）": {
+          "common_params": {
+            "memo": "",
+            "timeout": 30,
+            "retry_count": 0,
+            "error_handling": "stop"
+          },
+          "specific_params": {
+            "reference_id": ""
+          }
+        },
+        "切り替え（名前）": {
+          "common_params": {
+            "memo": "",
+            "timeout": 30,
+            "retry_count": 0,
+            "error_handling": "stop"
+          },
+          "specific_params": {
+            "window_name": "",
+            "partial_match": false
+          }
+        },
+        "画面の名前を取得": {
+          "common_params": {
+            "memo": "",
+            "timeout": 30,
+            "retry_count": 0,
+            "error_handling": "stop"
+          },
+          "specific_params": {
+            "storage_key": ""
+          }
+        },
+        "移動": {
+          "common_params": {
+            "memo": "",
+            "timeout": 30,
+            "retry_count": 0,
+            "error_handling": "stop"
+          },
+          "specific_params": {
+            "x": 0,
+            "y": 0,
+            "width": 800,
+            "height": 600
+          }
+        },
+        "最大化/最小化": {
+          "common_params": {
+            "memo": "",
+            "timeout": 30,
+            "retry_count": 0,
+            "error_handling": "stop"
+          },
+          "specific_params": {
+            "action": "maximize"
+          }
+        },
+        "スクリーンショットを撮る": {
+          "common_params": {
+            "memo": "",
+            "timeout": 30,
+            "retry_count": 0,
+            "error_handling": "stop"
+          },
+          "specific_params": {
+            "save_path": "",
+            "capture_area": "full_screen",
+            "coordinates": {
+              "x": 0,
+              "y": 0,
+              "width": 0,
+              "height": 0
+            }
+          }
+        }
+      }
+    },
+    "B_待機・終了・エラー": {
+      "秒": {
+        "common_params": {
+          "memo": "",
+          "timeout": 30,
+          "retry_count": 0,
+          "error_handling": "stop"
+        },
+        "specific_params": {
+          "wait_seconds": 1
+        }
+      },
+      "画像出現を待つ": {
+        "common_params": {
+          "memo": "",
+          "timeout": 60,
+          "retry_count": 0,
+          "error_handling": "stop"
+        },
+        "specific_params": {
+          "image_path": "",
+          "accuracy": 0.8,
+          "search_area": "full_screen",
+          "coordinates": {
+            "x": 0,
+            "y": 0,
+            "width": 0,
+            "height": 0
+          }
+        }
+      },
+      "続行確認": {
+        "common_params": {
+          "memo": "",
+          "timeout": 30,
+          "retry_count": 0,
+          "error_handling": "stop"
+        },
+        "specific_params": {
+          "message": "",
+          "title": "続行確認"
+        }
+      },
+      "タイマー付き続行確認（秒）": {
+        "common_params": {
+          "memo": "",
+          "timeout": 30,
+          "retry_count": 0,
+          "error_handling": "stop"
+        },
+        "specific_params": {
+          "message": "",
+          "title": "続行確認",
+          "countdown_seconds": 10
+        }
+      },
+      "コマンド間待機時間を変更": {
+        "common_params": {
+          "memo": "",
+          "timeout": 30,
+          "retry_count": 0,
+          "error_handling": "stop"
+        },
+        "specific_params": {
+          "interval_ms": 500
+        }
+      },
+      "作業強制終了": {
+        "common_params": {
+          "memo": "",
+          "timeout": 30,
+          "retry_count": 0,
+          "error_handling": "stop"
+        },
+        "specific_params": {
+          "exit_code": 0
+        }
+      },
+      "エラー発生": {
+        "common_params": {
+          "memo": "",
+          "timeout": 30,
+          "retry_count": 0,
+          "error_handling": "stop"
+        },
+        "specific_params": {
+          "error_message": "",
+          "error_code": ""
+        }
+      },
+      "エラー確認・処理": {
+        "common_params": {
+          "memo": "",
+          "timeout": 30,
+          "retry_count": 0,
+          "error_handling": "continue"
+        },
+        "specific_params": {
+          "on_error_steps": [],
+          "clear_error": true
+        }
+      },
+      "エラー確認・処理（リトライ前処理）": {
+        "common_params": {
+          "memo": "",
+          "timeout": 30,
+          "retry_count": 3,
+          "error_handling": "retry"
+        },
+        "specific_params": {
+          "retry_interval": 5,
+          "on_retry_steps": [],
+          "on_error_steps": []
+        }
+      }
+    },
+    "C_マウス": {
+      "移動": {
+        "座標": {
+          "common_params": {
+            "memo": "",
+            "timeout": 30,
+            "retry_count": 0,
+            "error_handling": "stop"
+          },
+          "specific_params": {
+            "x": 0,
+            "y": 0,
+            "move_speed": "normal"
+          }
+        },
+        "距離": {
+          "common_params": {
+            "memo": "",
+            "timeout": 30,
+            "retry_count": 0,
+            "error_handling": "stop"
+          },
+          "specific_params": {
+            "dx": 0,
+            "dy": 0,
+            "move_speed": "normal"
+          }
+        },
+        "画像認識": {
+          "common_params": {
+            "memo": "",
+            "timeout": 30,
+            "retry_count": 0,
+            "error_handling": "stop"
+          },
+          "specific_params": {
+            "image_path": "",
+            "accuracy": 0.8,
+            "click_position": "center",
+            "offset_x": 0,
+            "offset_y": 0
+          }
+        }
+      },
+      "ドラッグ＆ドロップ": {
+        "座標（D&D）": {
+          "common_params": {
+            "memo": "",
+            "timeout": 30,
+            "retry_count": 0,
+            "error_handling": "stop"
+          },
+          "specific_params": {
+            "start_x": 0,
+            "start_y": 0,
+            "end_x": 0,
+            "end_y": 0,
+            "drag_speed": "normal"
+          }
+        },
+        "距離（D&D）": {
+          "common_params": {
+            "memo": "",
+            "timeout": 30,
+            "retry_count": 0,
+            "error_handling": "stop"
+          },
+          "specific_params": {
+            "dx": 0,
+            "dy": 0,
+            "drag_speed": "normal"
+          }
+        },
+        "画像認識（D&D）": {
+          "common_params": {
+            "memo": "",
+            "timeout": 30,
+            "retry_count": 0,
+            "error_handling": "stop"
+          },
+          "specific_params": {
+            "start_image_path": "",
+            "end_image_path": "",
+            "accuracy": 0.8,
+            "drag_speed": "normal"
+          }
+        }
+      },
+      "マウスクリック": {
+        "common_params": {
+          "memo": "",
+          "timeout": 30,
+          "retry_count": 0,
+          "error_handling": "stop"
+        },
+        "specific_params": {
+          "button": "left",
+          "click_type": "single",
+          "x": null,
+          "y": null
+        }
+      },
+      "スクロール": {
+        "common_params": {
+          "memo": "",
+          "timeout": 30,
+          "retry_count": 0,
+          "error_handling": "stop"
+        },
+        "specific_params": {
+          "direction": "down",
+          "amount": 3
+        }
+      }
+    },
+    "D_キーボード": {
+      "入力": {
+        "文字": {
+          "common_params": {
+            "memo": "",
+            "timeout": 30,
+            "retry_count": 0,
+            "error_handling": "stop"
+          },
+          "specific_params": {
+            "text": "",
+            "typing_speed": "normal",
+            "clear_before": false
+          }
+        },
+        "文字（貼り付け）": {
+          "common_params": {
+            "memo": "",
+            "timeout": 30,
+            "retry_count": 0,
+            "error_handling": "stop"
+          },
+          "specific_params": {
+            "text": "",
+            "clear_before": false
+          }
+        },
+        "パスワード": {
+          "common_params": {
+            "memo": "",
+            "timeout": 30,
+            "retry_count": 0,
+            "error_handling": "stop"
+          },
+          "specific_params": {
+            "password_key": "",
+            "clear_before": false,
+            "encrypted": true
+          }
+        },
+        "ショートカットキー": {
+          "common_params": {
+            "memo": "",
+            "timeout": 30,
+            "retry_count": 0,
+            "error_handling": "stop"
+          },
+          "specific_params": {
+            "keys": [],
+            "hold_duration": 0
+          }
+        }
+      }
+    },
+    "E_記憶": {
+      "文字": {
+        "common_params": {
+          "memo": "",
+          "timeout": 30,
+          "retry_count": 0,
+          "error_handling": "stop"
+        },
+        "specific_params": {
+          "storage_key": "",
+          "value": ""
+        }
+      },
+      "パスワード": {
+        "common_params": {
+          "memo": "",
+          "timeout": 30,
+          "retry_count": 0,
+          "error_handling": "stop"
+        },
+        "specific_params": {
+          "storage_key": "",
+          "value": "",
+          "encrypted": true
+        }
+      },
+      "環境情報": {
+        "common_params": {
+          "memo": "",
+          "timeout": 30,
+          "retry_count": 0,
+          "error_handling": "stop"
+        },
+        "specific_params": {
+          "storage_key": "",
+          "info_type": "computer_name"
+        }
+      },
+      "日付": {
+        "common_params": {
+          "memo": "",
+          "timeout": 30,
+          "retry_count": 0,
+          "error_handling": "stop"
+        },
+        "specific_params": {
+          "storage_key": "",
+          "date_type": "today",
+          "format": "yyyy/MM/dd"
+        }
+      },
+      "日付（営業日）": {
+        "common_params": {
+          "memo": "",
+          "timeout": 30,
+          "retry_count": 0,
+          "error_handling": "stop"
+        },
+        "specific_params": {
+          "storage_key": "",
+          "business_days": 1,
+          "format": "yyyy/MM/dd",
+          "holiday_calendar": "japan"
+        }
+      },
+      "日付（曜日）": {
+        "common_params": {
+          "memo": "",
+          "timeout": 30,
+          "retry_count": 0,
+          "error_handling": "stop"
+        },
+        "specific_params": {
+          "storage_key": "",
+          "target_weekday": "monday",
+          "direction": "next",
+          "format": "yyyy/MM/dd"
+        }
+      },
+      "日付計算": {
+        "common_params": {
+          "memo": "",
+          "timeout": 30,
+          "retry_count": 0,
+          "error_handling": "stop"
+        },
+        "specific_params": {
+          "storage_key": "",
+          "base_date": "today",
+          "operation": "add",
+          "days": 0,
+          "months": 0,
+          "years": 0,
+          "format": "yyyy/MM/dd"
+        }
+      },
+      "曜日": {
+        "common_params": {
+          "memo": "",
+          "timeout": 30,
+          "retry_count": 0,
+          "error_handling": "stop"
+        },
+        "specific_params": {
+          "storage_key": "",
+          "date": "today",
+          "format": "japanese"
+        }
+      },
+      "時刻": {
+        "common_params": {
+          "memo": "",
+          "timeout": 30,
+          "retry_count": 0,
+          "error_handling": "stop"
+        },
+        "specific_params": {
+          "storage_key": "",
+          "format": "HH:mm:ss"
+        }
+      },
+      "時刻計算": {
+        "common_params": {
+          "memo": "",
+          "timeout": 30,
+          "retry_count": 0,
+          "error_handling": "stop"
+        },
+        "specific_params": {
+          "storage_key": "",
+          "base_time": "now",
+          "operation": "add",
+          "hours": 0,
+          "minutes": 0,
+          "seconds": 0,
+          "format": "HH:mm:ss"
+        }
+      },
+      "計算": {
+        "common_params": {
+          "memo": "",
+          "timeout": 30,
+          "retry_count": 0,
+          "error_handling": "stop"
+        },
+        "specific_params": {
+          "storage_key": "",
+          "expression": "",
+          "decimal_places": 2
+        }
+      },
+      "乱数": {
+        "common_params": {
+          "memo": "",
+          "timeout": 30,
+          "retry_count": 0,
+          "error_handling": "stop"
+        },
+        "specific_params": {
+          "storage_key": "",
+          "min": 0,
+          "max": 100,
+          "type": "integer"
+        }
+      },
+      "コピー内容": {
+        "common_params": {
+          "memo": "",
+          "timeout": 30,
+          "retry_count": 0,
+          "error_handling": "stop"
+        },
+        "specific_params": {
+          "storage_key": ""
+        }
+      },
+      "クリップボードへコピー": {
+        "common_params": {
+          "memo": "",
+          "timeout": 30,
+          "retry_count": 0,
+          "error_handling": "stop"
+        },
+        "specific_params": {
+          "value": ""
+        }
+      },
+      "実行中に入力": {
+        "common_params": {
+          "memo": "",
+          "timeout": 300,
+          "retry_count": 0,
+          "error_handling": "stop"
+        },
+        "specific_params": {
+          "storage_key": "",
+          "prompt": "",
+          "input_type": "text",
+          "default_value": ""
+        }
+      },
+      "ファイル更新日時": {
+        "common_params": {
+          "memo": "",
+          "timeout": 30,
+          "retry_count": 0,
+          "error_handling": "stop"
+        },
+        "specific_params": {
+          "storage_key": "",
+          "file_path": "",
+          "format": "yyyy/MM/dd HH:mm:ss"
+        }
+      },
+      "ファイルサイズ": {
+        "common_params": {
+          "memo": "",
+          "timeout": 30,
+          "retry_count": 0,
+          "error_handling": "stop"
+        },
+        "specific_params": {
+          "storage_key": "",
+          "file_path": "",
+          "unit": "bytes"
+        }
+      },
+      "最新ファイル・フォルダ": {
+        "common_params": {
+          "memo": "",
+          "timeout": 30,
+          "retry_count": 0,
+          "error_handling": "stop"
+        },
+        "specific_params": {
+          "storage_key": "",
+          "directory_path": "",
+          "target_type": "file",
+          "pattern": "*.*"
+        }
+      }
+    },
+    "F_文字抽出": {
+      "括弧・引用符号から": {
+        "common_params": {
+          "memo": "",
+          "timeout": 30,
+          "retry_count": 0,
+          "error_handling": "stop"
+        },
+        "specific_params": {
+          "storage_key": "",
+          "source_text": "",
+          "bracket_type": "parentheses",
+          "occurrence": 1
+        }
+      },
+      "区切り文字から": {
+        "common_params": {
+          "memo": "",
+          "timeout": 30,
+          "retry_count": 0,
+          "error_handling": "stop"
+        },
+        "specific_params": {
+          "storage_key": "",
+          "source_text": "",
+          "delimiter": ",",
+          "position": 1
+        }
+      },
+      "改行・空白を削除": {
+        "common_params": {
+          "memo": "",
+          "timeout": 30,
+          "retry_count": 0,
+          "error_handling": "stop"
+        },
+        "specific_params": {
+          "storage_key": "",
+          "source_text": "",
+          "remove_newlines": true,
+          "remove_spaces": true,
+          "remove_tabs": true
+        }
+      },
+      "ファイルパスから": {
+        "common_params": {
+          "memo": "",
+          "timeout": 30,
+          "retry_count": 0,
+          "error_handling": "stop"
+        },
+        "specific_params": {
+          "storage_key": "",
+          "file_path": "",
+          "extract_type": "filename"
+        }
+      },
+      "ルールにマッチ": {
+        "common_params": {
+          "memo": "",
+          "timeout": 30,
+          "retry_count": 0,
+          "error_handling": "stop"
+        },
+        "specific_params": {
+          "storage_key": "",
+          "source_text": "",
+          "pattern": "",
+          "regex": false,
+          "occurrence": 1
+        }
+      },
+      "置換": {
+        "common_params": {
+          "memo": "",
+          "timeout": 30,
+          "retry_count": 0,
+          "error_handling": "stop"
+        },
+        "specific_params": {
+          "storage_key": "",
+          "source_text": "",
+          "find": "",
+          "replace": "",
+          "replace_all": true
+        }
+      },
+      "文字変換": {
+        "common_params": {
+          "memo": "",
+          "timeout": 30,
+          "retry_count": 0,
+          "error_handling": "stop"
+        },
+        "specific_params": {
+          "storage_key": "",
+          "source_text": "",
+          "conversion_type": "uppercase"
+        }
+      },
+      "日付形式変換": {
+        "common_params": {
+          "memo": "",
+          "timeout": 30,
+          "retry_count": 0,
+          "error_handling": "stop"
+        },
+        "specific_params": {
+          "storage_key": "",
+          "source_date": "",
+          "source_format": "yyyy/MM/dd",
+          "target_format": "yyyy-MM-dd"
+        }
+      },
+      "1行ずつループ": {
+        "common_params": {
+          "memo": "",
+          "timeout": 30,
+          "retry_count": 0,
+          "error_handling": "stop"
+        },
+        "specific_params": {
+          "source_text": "",
+          "line_storage_key": "",
+          "index_storage_key": "",
+          "loop_steps": []
+        }
+      }
+    },
+    "G_分岐": {
+      "文字列": {
+        "common_params": {
+          "memo": "",
+          "timeout": 30,
+          "retry_count": 0,
+          "error_handling": "stop"
+        },
+        "specific_params": {
+          "left_value": "",
+          "operator": "equals",
+          "right_value": "",
+          "case_sensitive": true,
+          "true_steps": [],
+          "false_steps": []
+        }
+      },
+      "数値": {
+        "common_params": {
+          "memo": "",
+          "timeout": 30,
+          "retry_count": 0,
+          "error_handling": "stop"
+        },
+        "specific_params": {
+          "left_value": 0,
+          "operator": "equals",
+          "right_value": 0,
+          "true_steps": [],
+          "false_steps": []
+        }
+      },
+      "日付": {
+        "common_params": {
+          "memo": "",
+          "timeout": 30,
+          "retry_count": 0,
+          "error_handling": "stop"
+        },
+        "specific_params": {
+          "left_date": "",
+          "operator": "equals",
+          "right_date": "",
+          "date_format": "yyyy/MM/dd",
+          "true_steps": [],
+          "false_steps": []
+        }
+      },
+      "ファイル・フォルダの有/無を確認": {
+        "common_params": {
+          "memo": "",
+          "timeout": 30,
+          "retry_count": 0,
+          "error_handling": "stop"
+        },
+        "specific_params": {
+          "path": "",
+          "check_type": "exists",
+          "true_steps": [],
+          "false_steps": []
+        }
+      },
+      "画像": {
+        "common_params": {
+          "memo": "",
+          "timeout": 30,
+          "retry_count": 0,
+          "error_handling": "stop"
+        },
+        "specific_params": {
+          "image_path": "",
+          "accuracy": 0.8,
+          "search_area": "full_screen",
+          "found_steps": [],
+          "not_found_steps": []
+        }
+      }
+    },
+    "H_繰り返し": {
+      "繰り返し": {
+        "common_params": {
+          "memo": "",
+          "timeout": 30,
+          "retry_count": 0,
+          "error_handling": "stop"
+        },
+        "specific_params": {
+          "loop_type": "count",
+          "count": 10,
+          "condition": "",
+          "max_iterations": 1000,
+          "index_storage_key": "",
+          "loop_steps": []
+        }
+      },
+      "繰り返しを抜ける": {
+        "common_params": {
+          "memo": "",
+          "timeout": 30,
+          "retry_count": 0,
+          "error_handling": "stop"
+        },
+        "specific_params": {
+          "condition": ""
+        }
+      },
+      "繰り返しの最初に戻る": {
+        "common_params": {
+          "memo": "",
+          "timeout": 30,
+          "retry_count": 0,
+          "error_handling": "stop"
+        },
+        "specific_params": {
+          "condition": ""
+        }
+      }
+    },
+    "I_ファイル・フォルダ": {
+      "ファイル": {
+        "開く": {
+          "common_params": {
+            "memo": "",
+            "timeout": 30,
+            "retry_count": 0,
+            "error_handling": "stop"
+          },
+          "specific_params": {
+            "file_path": "",
+            "application": "default",
+            "wait_for_open": true
+          }
+        },
+        "移動": {
+          "common_params": {
+            "memo": "",
+            "timeout": 30,
+            "retry_count": 0,
+            "error_handling": "stop"
+          },
+          "specific_params": {
+            "source_path": "",
+            "destination_path": "",
+            "overwrite": false,
+            "create_directory": true
+          }
+        },
+        "読み込む": {
+          "common_params": {
+            "memo": "",
+            "timeout": 30,
+            "retry_count": 0,
+            "error_handling": "stop"
+          },
+          "specific_params": {
+            "file_path": "",
+            "encoding": "utf-8",
+            "storage_key": "",
+            "read_mode": "text"
+          }
+        },
+        "書き込む": {
+          "common_params": {
+            "memo": "",
+            "timeout": 30,
+            "retry_count": 0,
+            "error_handling": "stop"
+          },
+          "specific_params": {
+            "file_path": "",
+            "content": "",
+            "encoding": "utf-8",
+            "write_mode": "overwrite",
+            "create_directory": true
+          }
+        }
+      },
+      "フォルダ": {
+        "開く": {
+          "common_params": {
+            "memo": "",
+            "timeout": 30,
+            "retry_count": 0,
+            "error_handling": "stop"
+          },
+          "specific_params": {
+            "folder_path": "",
+            "explorer_window": true
+          }
+        },
+        "作成": {
+          "common_params": {
+            "memo": "",
+            "timeout": 30,
+            "retry_count": 0,
+            "error_handling": "stop"
+          },
+          "specific_params": {
+            "folder_path": "",
+            "create_parents": true,
+            "exist_ok": true
+          }
+        },
+        "ループ": {
+          "common_params": {
+            "memo": "",
+            "timeout": 30,
+            "retry_count": 0,
+            "error_handling": "stop"
+          },
+          "specific_params": {
+            "folder_path": "",
+            "pattern": "*.*",
+            "include_subfolders": false,
+            "file_storage_key": "",
+            "path_storage_key": "",
+            "loop_steps": []
+          }
+        }
+      },
+      "ファイル・フォルダ名の変更": {
+        "common_params": {
+          "memo": "",
+          "timeout": 30,
+          "retry_count": 0,
+          "error_handling": "stop"
+        },
+        "specific_params": {
+          "target_path": "",
+          "new_name": "",
+          "keep_extension": true
+        }
+      },
+      "ファイル・フォルダをコピー": {
+        "common_params": {
+          "memo": "",
+          "timeout": 30,
+          "retry_count": 0,
+          "error_handling": "stop"
+        },
+        "specific_params": {
+          "source_path": "",
+          "destination_path": "",
+          "overwrite": false,
+          "copy_permissions": true
+        }
+      },
+      "ファイル・フォルダを削除": {
+        "common_params": {
+          "memo": "",
+          "timeout": 30,
+          "retry_count": 0,
+          "error_handling": "stop"
+        },
+        "specific_params": {
+          "target_path": "",
+          "move_to_trash": true,
+          "confirm": true
+        }
+      },
+      "圧縮・解凍": {
+        "ファイル・フォルダを圧縮": {
+          "common_params": {
+            "memo": "",
+            "timeout": 30,
+            "retry_count": 0,
+            "error_handling": "stop"
+          },
+          "specific_params": {
+            "source_paths": [],
+            "archive_path": "",
+            "compression_type": "zip",
+            "compression_level": 6,
+            "password": ""
+          }
+        },
+        "ファイル・フォルダに解凍": {
+          "common_params": {
+            "memo": "",
+            "timeout": 30,
+            "retry_count": 0,
+            "error_handling": "stop"
+          },
+          "specific_params": {
+            "archive_path": "",
+            "destination_path": "",
+            "password": "",
+            "create_folder": true,
+            "overwrite": false
+          }
+        }
+      },
+      "ファイル名変更（挿入）": {
+        "文字": {
+          "common_params": {
+            "memo": "",
+            "timeout": 30,
+            "retry_count": 0,
+            "error_handling": "stop"
+          },
+          "specific_params": {
+            "target_path": "",
+            "insert_text": "",
+            "position": "prefix",
+            "separator": "_"
+          }
+        },
+        "日付": {
+          "common_params": {
+            "memo": "",
+            "timeout": 30,
+            "retry_count": 0,
+            "error_handling": "stop"
+          },
+          "specific_params": {
+            "target_path": "",
+            "date_format": "yyyyMMdd",
+            "position": "prefix",
+            "separator": "_"
+          }
+        },
+        "参照ID": {
+          "common_params": {
+            "memo": "",
+            "timeout": 30,
+            "retry_count": 0,
+            "error_handling": "stop"
+          },
+          "specific_params": {
+            "target_path": "",
+            "reference_id": "",
+            "position": "prefix",
+            "separator": "_"
+          }
+        }
+      }
+    },
+    "J_エクセル・CSV": {
+      "ブック": {
+        "ブックを開く": {
+          "common_params": {
+            "memo": "",
+            "timeout": 30,
+            "retry_count": 0,
+            "error_handling": "stop"
+          },
+          "specific_params": {
+            "file_path": "",
+            "reference_id": "",
+            "read_only": false,
+            "password": "",
+            "update_links": false
+          }
+        },
+        "ブックを覚える": {
+          "common_params": {
+            "memo": "",
+            "timeout": 30,
+            "retry_count": 0,
+            "error_handling": "stop"
+          },
+          "specific_params": {
+            "reference_id": "",
+            "workbook_name": ""
+          }
+        },
+        "ブックを保存": {
+          "common_params": {
+            "memo": "",
+            "timeout": 30,
+            "retry_count": 0,
+            "error_handling": "stop"
+          },
+          "specific_params": {
+            "reference_id": "",
+            "save_as": false,
+            "file_path": "",
+            "file_format": "xlsx"
+          }
+        },
+        "ブックを閉じる": {
+          "common_params": {
+            "memo": "",
+            "timeout": 30,
+            "retry_count": 0,
+            "error_handling": "stop"
+          },
+          "specific_params": {
+            "reference_id": "",
+            "save_changes": true
+          }
+        }
+      },
+      "シート操作": {
+        "新規作成": {
+          "common_params": {
+            "memo": "",
+            "timeout": 30,
+            "retry_count": 0,
+            "error_handling": "stop"
+          },
+          "specific_params": {
+            "reference_id": "",
+            "sheet_name": "",
+            "position": "last"
+          }
+        },
+        "削除": {
+          "common_params": {
+            "memo": "",
+            "timeout": 30,
+            "retry_count": 0,
+            "error_handling": "stop"
+          },
+          "specific_params": {
+            "reference_id": "",
+            "sheet_name": ""
+          }
+        },
+        "切り替え": {
+          "common_params": {
+            "memo": "",
+            "timeout": 30,
+            "retry_count": 0,
+            "error_handling": "stop"
+          },
+          "specific_params": {
+            "reference_id": "",
+            "sheet_name": "",
+            "sheet_index": null
+          }
+        },
+        "移動・コピー": {
+          "common_params": {
+            "memo": "",
+            "timeout": 30,
+            "retry_count": 0,
+            "error_handling": "stop"
+          },
+          "specific_params": {
+            "reference_id": "",
+            "source_sheet": "",
+            "action": "move",
+            "position": "last",
+            "new_name": ""
+          }
+        },
+        "名前取得": {
+          "common_params": {
+            "memo": "",
+            "timeout": 30,
+            "retry_count": 0,
+            "error_handling": "stop"
+          },
+          "specific_params": {
+            "reference_id": "",
+            "storage_key": "",
+            "sheet_index": null
+          }
+        },
+        "名前変更": {
+          "common_params": {
+            "memo": "",
+            "timeout": 30,
+            "retry_count": 0,
+            "error_handling": "stop"
+          },
+          "specific_params": {
+            "reference_id": "",
+            "old_name": "",
+            "new_name": ""
+          }
+        }
+      },
+      "セル操作": {
+        "範囲指定": {
+          "common_params": {
+            "memo": "",
+            "timeout": 30,
+            "retry_count": 0,
+            "error_handling": "stop"
+          },
+          "specific_params": {
+            "reference_id": "",
+            "range": "A1",
+            "select": true
+          }
+        },
+        "指定範囲の移動": {
+          "common_params": {
+            "memo": "",
+            "timeout": 30,
+            "retry_count": 0,
+            "error_handling": "stop"
+          },
+          "specific_params": {
+            "reference_id": "",
+            "source_range": "A1",
+            "target_range": "B1",
+            "cut": true
+          }
+        },
+        "指定範囲の削除": {
+          "common_params": {
+            "memo": "",
+            "timeout": 30,
+            "retry_count": 0,
+            "error_handling": "stop"
+          },
+          "specific_params": {
+            "reference_id": "",
+            "range": "A1",
+            "shift": "up"
+          }
+        },
+        "指定範囲にセルを挿入": {
+          "common_params": {
+            "memo": "",
+            "timeout": 30,
+            "retry_count": 0,
+            "error_handling": "stop"
+          },
+          "specific_params": {
+            "reference_id": "",
+            "range": "A1",
+            "shift": "down"
+          }
+        },
+        "値を取得": {
+          "common_params": {
+            "memo": "",
+            "timeout": 30,
+            "retry_count": 0,
+            "error_handling": "stop"
+          },
+          "specific_params": {
+            "reference_id": "",
+            "range": "A1",
+            "storage_key": "",
+            "value_type": "value"
+          }
+        },
+        "値を入力": {
+          "common_params": {
+            "memo": "",
+            "timeout": 30,
+            "retry_count": 0,
+            "error_handling": "stop"
+          },
+          "specific_params": {
+            "reference_id": "",
+            "range": "A1",
+            "value": "",
+            "value_type": "value"
+          }
+        },
+        "セルをコピー": {
+          "common_params": {
+            "memo": "",
+            "timeout": 30,
+            "retry_count": 0,
+            "error_handling": "stop"
+          },
+          "specific_params": {
+            "reference_id": "",
+            "range": "A1"
+          }
+        },
+        "セルを貼り付け": {
+          "common_params": {
+            "memo": "",
+            "timeout": 30,
+            "retry_count": 0,
+            "error_handling": "stop"
+          },
+          "specific_params": {
+            "reference_id": "",
+            "range": "A1",
+            "paste_type": "all"
+          }
+        },
+        "位置を取得": {
+          "common_params": {
+            "memo": "",
+            "timeout": 30,
+            "retry_count": 0,
+            "error_handling": "stop"
+          },
+          "specific_params": {
+            "reference_id": "",
+            "search_value": "",
+            "search_range": "",
+            "row_storage_key": "",
+            "column_storage_key": ""
+          }
+        },
+        "最終行取得": {
+          "common_params": {
+            "memo": "",
+            "timeout": 30,
+            "retry_count": 0,
+            "error_handling": "stop"
+          },
+          "specific_params": {
+            "reference_id": "",
+            "column": "A",
+            "storage_key": ""
+          }
+        },
+        "最終列取得": {
+          "common_params": {
+            "memo": "",
+            "timeout": 30,
+            "retry_count": 0,
+            "error_handling": "stop"
+          },
+          "specific_params": {
+            "reference_id": "",
+            "row": 1,
+            "storage_key": ""
+          }
+        },
+        "列計算": {
+          "common_params": {
+            "memo": "",
+            "timeout": 30,
+            "retry_count": 0,
+            "error_handling": "stop"
+          },
+          "specific_params": {
+            "reference_id": "",
+            "range": "A:A",
+            "operation": "sum",
+            "storage_key": ""
+          }
+        },
+        "マクロ実行": {
+          "common_params": {
+            "memo": "",
+            "timeout": 60,
+            "retry_count": 0,
+            "error_handling": "stop"
+          },
+          "specific_params": {
+            "reference_id": "",
+            "macro_name": "",
+            "arguments": []
+          }
+        },
+        "行ループ": {
+          "common_params": {
+            "memo": "",
+            "timeout": 30,
+            "retry_count": 0,
+            "error_handling": "stop"
+          },
+          "specific_params": {
+            "reference_id": "",
+            "start_row": 1,
+            "end_row": null,
+            "row_storage_key": "",
+            "loop_steps": []
+          }
+        },
+        "列ループ": {
+          "common_params": {
+            "memo": "",
+            "timeout": 30,
+            "retry_count": 0,
+            "error_handling": "stop"
+          },
+          "specific_params": {
+            "reference_id": "",
+            "start_column": "A",
+            "end_column": null,
+            "column_storage_key": "",
+            "loop_steps": []
+          }
+        },
+        "CSV読込ループ": {
+          "common_params": {
+            "memo": "",
+            "timeout": 30,
+            "retry_count": 0,
+            "error_handling": "stop"
+          },
+          "specific_params": {
+            "file_path": "",
+            "encoding": "utf-8",
+            "delimiter": ",",
+            "has_header": true,
+            "row_storage_keys": {},
+            "loop_steps": []
+          }
+        }
+      }
+    }
+  },
+  "common_parameter_definitions": {
+    "memo": {
+      "type": "string",
+      "description": "ステップに関するメモやコメント",
+      "required": false,
+      "default": ""
+    },
+    "timeout": {
+      "type": "integer",
+      "description": "タイムアウト時間（秒）",
+      "required": false,
+      "default": 30,
+      "min": 1,
+      "max": 3600
+    },
+    "retry_count": {
+      "type": "integer",
+      "description": "リトライ回数",
+      "required": false,
+      "default": 0,
+      "min": 0,
+      "max": 10
+    },
+    "error_handling": {
+      "type": "string",
+      "description": "エラー時の処理方法",
+      "required": false,
+      "default": "stop",
+      "enum": [
+        "stop",
+        "continue",
+        "retry",
+        "skip"
+      ]
+    }
+  }
+}

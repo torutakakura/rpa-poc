@@ -112,20 +112,16 @@ export function initRPABridge(): void {
     return await rpaClient.cancelTask(taskId)
   })
 
-  // Excel読み込み
-  ipcMain.handle('rpa:excelRead', async (_event, filePath: string, sheetName?: string) => {
+  // RPA操作の実行
+  ipcMain.handle('rpa:executeOperation', async (_event, operation: {
+    category: string
+    operation: string
+    params: any
+  }) => {
     if (!rpaClient) {
       throw new Error('RPA client not started')
     }
-    return await rpaClient.excelRead(filePath, sheetName)
-  })
-
-  // Excel書き込み
-  ipcMain.handle('rpa:excelWrite', async (_event, filePath: string, data: any[][], sheetName?: string) => {
-    if (!rpaClient) {
-      throw new Error('RPA client not started')
-    }
-    return await rpaClient.excelWrite(filePath, data, sheetName)
+    return await rpaClient.call('execute_operation', operation)
   })
 
   // 汎用メソッド呼び出し

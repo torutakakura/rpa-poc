@@ -242,21 +242,5 @@ class RPAClient extends events_1.EventEmitter {
     async cancelTask(taskId) {
         return this.call('cancel_task', { task_id: taskId });
     }
-    /**
-     * 便利メソッド：Excel読み込み
-     */
-    async excelRead(filePath, sheetName) {
-        return this.call('excel_read', { file_path: filePath, sheet_name: sheetName });
-    }
-    /**
-     * 便利メソッド：Excel書き込み
-     */
-    async excelWrite(filePath, data, sheetName) {
-        return this.call('excel_write', {
-            file_path: filePath,
-            data,
-            sheet_name: sheetName || 'Sheet1'
-        });
-    }
 }
 exports.RPAClient = RPAClient;
