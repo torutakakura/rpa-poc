@@ -4,10 +4,10 @@ I_ファイル・フォルダ カテゴリの操作
 
 import glob
 import os
+import platform
 import shutil
 import subprocess
-import platform
-from typing import Any, Dict, List
+from typing import Any, Dict
 
 from .base import BaseOperation, OperationResult
 
@@ -390,7 +390,7 @@ class OpenFileOperation(BaseOperation):
     async def execute(self, params: Dict[str, Any]) -> OperationResult:
         file_path = params.get("file_path", "")
         application = params.get("application", "default")
-        wait_for_open = params.get("wait_for_open", True)
+        params.get("wait_for_open", True)
 
         error = self.validate_params(params, ["file_path"])
         if error:
@@ -503,7 +503,7 @@ class OpenFolderOperation(BaseOperation):
 
     async def execute(self, params: Dict[str, Any]) -> OperationResult:
         folder_path = params.get("folder_path", "")
-        explorer_window = params.get("explorer_window", True)
+        params.get("explorer_window", True)
 
         error = self.validate_params(params, ["folder_path"])
         if error:
@@ -617,5 +617,7 @@ class FolderLoopOperation(BaseOperation):
             )
         except Exception as e:
             return OperationResult(
-                status="failure", data={}, error=f"Failed to process folder loop: {str(e)}"
+                status="failure",
+                data={},
+                error=f"Failed to process folder loop: {str(e)}",
             )

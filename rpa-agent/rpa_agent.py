@@ -185,12 +185,14 @@ class RPAAgent:
 
         try:
             # rpa_operations.jsonを読み込む
-            json_path = os.path.join(os.path.dirname(__file__), 'rpa_operations.json')
-            with open(json_path, encoding='utf-8') as f:
+            json_path = os.path.join(os.path.dirname(__file__), "rpa_operations.json")
+            with open(json_path, encoding="utf-8") as f:
                 templates = json.load(f)
             self.send_response(request.id, templates)
         except Exception as e:
-            self.send_error_response(request.id, -32000, f"Failed to load operation templates: {str(e)}")
+            self.send_error_response(
+                request.id, -32000, f"Failed to load operation templates: {str(e)}"
+            )
 
     def handle_execute_operations(self, request: JsonRpcRequest):
         """複数の操作を一括実行（ワークフロー実行）"""
@@ -218,11 +220,10 @@ class RPAAgent:
             self.send_notification("workflow.completed", {"results": results})
 
             # レスポンスを返す
-            self.send_response(request.id, {
-                "success": True,
-                "results": results,
-                "stepsExecuted": len(results)
-            })
+            self.send_response(
+                request.id,
+                {"success": True, "results": results, "stepsExecuted": len(results)},
+            )
 
         except Exception as e:
             # エラー処理
@@ -232,7 +233,9 @@ class RPAAgent:
             }
 
             self.send_notification("workflow.failed", {"error": error_info})
-            self.send_error_response(request.id, -32000, f"Workflow execution failed: {str(e)}")
+            self.send_error_response(
+                request.id, -32000, f"Workflow execution failed: {str(e)}"
+            )
         finally:
             # イベントループをクリーンアップ
             loop.close()

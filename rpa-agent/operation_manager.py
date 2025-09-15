@@ -7,128 +7,107 @@ import sys
 from typing import Any, Dict, List, Optional
 
 from operations.app_screen import (
+    GetWindowNameOperation,
     LaunchAppOperation,
     LaunchAppWaitOperation,
+    MaximizeMinimizeOperation,
+    MoveWindowOperation,
     RememberFrontWindowOperation,
     RememberWindowByNameOperation,
     SwitchWindowByIdOperation,
     SwitchWindowByNameOperation,
-    GetWindowNameOperation,
-    MoveWindowOperation,
-    MaximizeMinimizeOperation,
     TakeScreenshotOperation,
 )
 from operations.datetime_ops import (
-    GetCurrentDateTimeOperation,
     AddSubtractTimeOperation,
-    CompareDateTimeOperation,
     FormatDateTimeOperation,
+    GetCurrentDateTimeOperation,
     GetWeekdayOperation,
 )
 from operations.email import (
-    EmailSendOperation,
-    EmailReceiveOperation,
     EmailDeleteOperation,
     EmailMoveOperation,
+    EmailReceiveOperation,
     EmailSearchOperation,
+    EmailSendOperation,
 )
 from operations.excel import (
+    ExcelCloseOperation,
     ExcelOpenOperation,
     ExcelReadCellOperation,
-    ExcelWriteCellOperation,
     ExcelReadRangeOperation,
-    ExcelWriteRangeOperation,
     ExcelSaveOperation,
-    ExcelCloseOperation,
+    ExcelWriteCellOperation,
+    ExcelWriteRangeOperation,
 )
 from operations.file_folder import (
-    RenameFileFolderOperation,
     CopyFileFolderOperation,
-    DeleteFileFolderOperation,
     CreateFolderOperation,
-    ListFilesOperation,
-    GetFileInfoOperation,
-    ReadFileOperation,
-    WriteFileOperation,
-    OpenFileOperation,
-    MoveFileOperation,
-    OpenFolderOperation,
+    DeleteFileFolderOperation,
     FolderLoopOperation,
+    GetFileInfoOperation,
+    ListFilesOperation,
+    MoveFileOperation,
+    OpenFileOperation,
+    OpenFolderOperation,
+    ReadFileOperation,
+    RenameFileFolderOperation,
+    WriteFileOperation,
 )
 from operations.keyboard import (
-    TypeTextOperation,
-    PressKeyOperation,
     HotkeyOperation,
-    CopyOperation,
     PasteOperation,
-    CutOperation,
-    SelectAllOperation,
-    UndoOperation,
-    RedoOperation,
-    TabOperation,
-    EnterOperation,
-    EscapeOperation,
+    TypeTextOperation,
 )
 from operations.memory import (
     EnvironmentInfoOperation,
-    StoreValueOperation,
     GetStoredValueOperation,
-    ClearStoredValueOperation,
-    ListStoredValuesOperation,
-    IncrementValueOperation,
-    AppendToListOperation,
+    StoreValueOperation,
 )
 from operations.mouse import (
+    ClickOperation,
+    DragDropCoordinateOperation,
+    DragDropDistanceOperation,
     MouseMoveCoordinateOperation,
     MouseMoveDistanceOperation,
     MouseMoveImageOperation,
-    DragDropCoordinateOperation,
-    DragDropDistanceOperation,
-    ClickOperation,
-    RightClickOperation,
     ScrollOperation,
 )
 from operations.text import (
-    TextConcatOperation,
-    TextSplitOperation,
-    TextReplaceOperation,
-    TextExtractOperation,
-    TextLengthOperation,
-    TextCaseOperation,
-    TextTrimOperation,
     RegexMatchOperation,
+    TextCaseOperation,
+    TextExtractOperation,
+    TextReplaceOperation,
+    TextSplitOperation,
+    TextTrimOperation,
 )
 from operations.wait import (
     WaitSecondsOperation,
-    WaitMillisecondsOperation,
-    WaitUntilTimeOperation,
-    WaitForConditionOperation,
-    RandomWaitOperation,
 )
 from operations.wait_control import (
-    WaitImageOperation,
-    ContinueConfirmOperation,
-    TimerContinueConfirmOperation,
     ChangeCommandIntervalOperation,
-    ForceExitOperation,
-    RaiseErrorOperation,
+    ContinueConfirmOperation,
     ErrorCheckProcessOperation,
     ErrorCheckRetryOperation,
+    ForceExitOperation,
+    RaiseErrorOperation,
+    TimerContinueConfirmOperation,
+    WaitImageOperation,
 )
 from operations.web_browser import (
-    WebBrowserOpenOperation,
-    WebBrowserCloseOperation,
-    WebBrowserNavigateOperation,
     WebBrowserClickOperation,
-    WebBrowserInputTextOperation,
-    WebBrowserSelectDropdownOperation,
-    WebBrowserGetTextOperation,
-    WebBrowserWaitForElementOperation,
-    WebBrowserScrollOperation,
-    WebBrowserTakeScreenshotOperation,
+    WebBrowserCloseOperation,
     WebBrowserExecuteJavaScriptOperation,
-    WebBrowserSwitchTabOperation,
+    WebBrowserGetTextOperation,
+    WebBrowserInputTextOperation,
+    WebBrowserNavigateOperation,
+    WebBrowserOpenOperation,
     WebBrowserRefreshOperation,
+    WebBrowserScrollOperation,
+    WebBrowserSelectDropdownOperation,
+    WebBrowserSwitchTabOperation,
+    WebBrowserTakeScreenshotOperation,
+    WebBrowserWaitForElementOperation,
 )
 
 
@@ -285,12 +264,18 @@ class OperationManager:
         }
 
     async def execute_operation(
-        self, category: str, subcategory: Optional[str], operation: str, params: Dict[str, Any]
+        self,
+        category: str,
+        subcategory: Optional[str],
+        operation: str,
+        params: Dict[str, Any],
     ) -> Dict[str, Any]:
         """操作を実行する"""
         try:
             # 操作クラスを取得
-            operation_class = self._get_operation_class(category, subcategory, operation)
+            operation_class = self._get_operation_class(
+                category, subcategory, operation
+            )
             if not operation_class:
                 return {
                     "status": "failure",
@@ -312,7 +297,9 @@ class OperationManager:
                 "error": str(e),
             }
 
-    def _get_operation_class(self, category: str, subcategory: Optional[str], operation: str):
+    def _get_operation_class(
+        self, category: str, subcategory: Optional[str], operation: str
+    ):
         """操作クラスを取得する"""
         if category not in self.operations:
             return None
@@ -342,7 +329,7 @@ class OperationManager:
             for key, value in ops.items():
                 if isinstance(value, dict):
                     # サブカテゴリがある場合
-                    for op_name in value.keys():
+                    for op_name in value:
                         category_list.append(f"{key}/{op_name}")
                 else:
                     # 直接操作の場合
@@ -350,11 +337,13 @@ class OperationManager:
             available_ops[category] = category_list
         return available_ops
 
-    def get_operation_template(self, category: str, operation: str) -> Optional[Dict[str, Any]]:
+    def get_operation_template(
+        self, category: str, operation: str
+    ) -> Optional[Dict[str, Any]]:
         """操作のテンプレートを取得する"""
         # rpa_operations.jsonからテンプレートを読み込む
         try:
-            with open("rpa_operations.json", "r", encoding="utf-8") as f:
+            with open("rpa_operations.json", encoding="utf-8") as f:
                 templates = json.load(f)
                 if category in templates and operation in templates[category]:
                     return templates[category][operation]
@@ -362,7 +351,9 @@ class OperationManager:
             pass
         return None
 
-    async def execute_workflow_steps(self, steps: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    async def execute_workflow_steps(
+        self, steps: List[Dict[str, Any]]
+    ) -> List[Dict[str, Any]]:
         """複数のステップを一括実行する（ワークフロー実行）
 
         Args:
@@ -395,25 +386,25 @@ class OperationManager:
                 params = step.get("params", {})
 
                 # 操作を実行
-                result = await self.execute_operation(category, subcategory, operation, params)
+                result = await self.execute_operation(
+                    category, subcategory, operation, params
+                )
 
                 # 結果を記録
-                results.append({
-                    "id": step_id,
-                    "status": "completed",
-                    "result": result,
-                    "index": i
-                })
+                results.append(
+                    {"id": step_id, "status": "completed", "result": result, "index": i}
+                )
 
             except Exception as e:
                 # エラーが発生した場合
                 import traceback
+
                 error_info = {
                     "id": step_id,
                     "status": "error",
                     "error": str(e),
                     "traceback": traceback.format_exc(),
-                    "index": i
+                    "index": i,
                 }
                 results.append(error_info)
 
@@ -423,12 +414,14 @@ class OperationManager:
                 # 残りのステップをスキップ済みとしてマーク
                 for j in range(i + 1, len(steps)):
                     skipped_step = steps[j]
-                    results.append({
-                        "id": skipped_step.get("id", f"step-{j}"),
-                        "status": "skipped",
-                        "reason": f"Skipped due to error in step {step_id}",
-                        "index": j
-                    })
+                    results.append(
+                        {
+                            "id": skipped_step.get("id", f"step-{j}"),
+                            "status": "skipped",
+                            "reason": f"Skipped due to error in step {step_id}",
+                            "index": j,
+                        }
+                    )
                 break
 
         return results

@@ -78,6 +78,4 @@ class WebBrowserOperations:
             },
         }
 
-        return OperationTemplate(
-            specific_params=templates.get(operation_type, {})
-        )
+        return OperationTemplate(specific_params=templates.get(operation_type, {}))
