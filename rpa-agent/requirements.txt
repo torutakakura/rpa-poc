@@ -1,6 +1,10 @@
 # JSON-RPC
 jsonrpc-base==1.1.0
 
+# MCP関連
+deepmcpagent>=0.4.0
+fastmcp>=0.1.0
+
 # Excel操作（必要に応じて）
 openpyxl==3.1.2
 # xlwings==0.30.10  # macOS/Windowsで実際のExcel操作が必要な場合
