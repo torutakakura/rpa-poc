@@ -9,7 +9,6 @@ import json
 from typing import Dict, Any, List, Optional
 from deepmcpagent import HTTPServerSpec, build_deep_agent
 from langchain_openai import ChatOpenAI
-from langchain.schema import HumanMessage, AIMessage
 import os
 
 
@@ -348,7 +347,7 @@ class RPAWorkflowBuilder:
 
 
 async def main():
-    """メイン関数 - サンプル使用例"""
+    """メイン関数"""
 
     # ワークフロービルダーの初期化
     builder = RPAWorkflowBuilder(
@@ -359,55 +358,9 @@ async def main():
     print("=" * 60)
     print("📌 RPA ワークフロー生成システム")
     print("=" * 60)
-    print()
     
-    # モード選択
-    print("実行モードを選択してください:")
-    print("1. サンプルワークフロー生成")
-    print("2. 対話的ワークフロービルダー")
-    print("3. 終了")
-    
-    mode = input("\n選択 (1-3): ").strip()
-    
-    if mode == "1":
-        # サンプル: Excel処理ワークフロー生成
-        print("\n" + "=" * 60)
-        print("📌 サンプル: Excel処理ワークフロー")
-        print("=" * 60)
-
-        user_story = """
-        毎朝9時にExcelファイルを開いて、
-        売上データを集計し、
-        結果をメールで送信したい
-        """
-
-        print(f"\nユーザーストーリー:\n{user_story}")
-        print("\n⏳ ワークフローを生成中...")
-        
-        workflow = await builder.build_workflow(
-            user_story, 
-            workflow_name="売上データ自動処理"
-        )
-        
-        # 生成されたワークフローを表示
-        print("\n✨ 生成されたワークフロー:")
-        print("=" * 60)
-        print(json.dumps(workflow, ensure_ascii=False, indent=2))
-        print("=" * 60)
-        
-        # ファイル保存
-        save = input("\n💾 ワークフローをファイルに保存しますか？ (y/n): ").strip().lower()
-        if save == 'y':
-            builder.save_workflow_to_file(workflow, "generated_excel_workflow.json")
-    
-    elif mode == "2":
-        # 対話的なワークフロービルダー
-        await builder.interactive_workflow_builder()
-    
-    elif mode == "3":
-        print("👋 システムを終了します。")
-    else:
-        print("❌ 無効な選択です。")
+    # 対話的ワークフロービルダーを直接実行
+    await builder.interactive_workflow_builder()
 
 
 if __name__ == "__main__":
