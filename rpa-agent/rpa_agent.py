@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
 RPA Agent - JSON-RPC over stdio server
 Electronからの要求を受けて、Python側でRPA処理を実行
@@ -18,6 +19,17 @@ import time
 import traceback
 from dataclasses import asdict, dataclass
 from typing import Any, Dict, Optional
+import io
+import os
+
+# Windows環境での文字エンコーディングを修正
+if sys.platform == "win32":
+    # 標準入出力をUTF-8に設定
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
+    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8')
+    sys.stdin = io.TextIOWrapper(sys.stdin.buffer, encoding='utf-8')
+    # 環境変数でもUTF-8を指定
+    os.environ['PYTHONIOENCODING'] = 'utf-8'
 
 from operation_manager import OperationManager
 

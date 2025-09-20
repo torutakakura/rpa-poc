@@ -75,15 +75,32 @@ export class RPAClient extends EventEmitter {
       }
 
       console.log('Spawning process:', this.options.pythonPath!, args)
-      this.process = spawn(this.options.pythonPath!, args, {
+      
+      // Windows環境用のエンコーディング設定
+      const spawnOptions: any = {
         stdio: ['pipe', 'pipe', 'pipe'],
         shell: process.platform === 'win32',  // Windows環境ではshell経由で実行
         windowsHide: true  // Windowsでコンソールウィンドウを非表示
-      } as any)
+      }
+      
+      // Windows環境では環境変数でUTF-8を指定
+      if (process.platform === 'win32') {
+        spawnOptions.env = {
+          ...process.env,
+          PYTHONIOENCODING: 'utf-8',
+          PYTHONUTF8: '1'
+        }
+      }
+      
+      this.process = spawn(this.options.pythonPath!, args, spawnOptions)
 
       this.process.stdout?.on('data', (data) => {
-        console.log('Agent stdout:', data.toString())
-        this.handleData(data.toString())
+        // Windows環境では明示的にUTF-8として処理
+        const output = process.platform === 'win32'
+          ? data.toString('utf8')
+          : data.toString()
+        console.log('Agent stdout:', output)
+        this.handleData(output)
       })
 
       this.process.stderr?.on('data', (data) => {
