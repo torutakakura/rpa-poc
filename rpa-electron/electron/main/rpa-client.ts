@@ -76,8 +76,10 @@ export class RPAClient extends EventEmitter {
 
       console.log('Spawning process:', this.options.pythonPath!, args)
       this.process = spawn(this.options.pythonPath!, args, {
-        stdio: ['pipe', 'pipe', 'pipe']
-      })
+        stdio: ['pipe', 'pipe', 'pipe'],
+        shell: process.platform === 'win32',  // Windows環境ではshell経由で実行
+        windowsHide: true  // Windowsでコンソールウィンドウを非表示
+      } as any)
 
       this.process.stdout?.on('data', (data) => {
         console.log('Agent stdout:', data.toString())
@@ -88,10 +90,22 @@ export class RPAClient extends EventEmitter {
         console.error('Agent stderr:', data.toString())
       })
 
-      this.process.on('error', (error) => {
+      this.process.on('error', (error: any) => {
         console.error('Process error:', error)
+        
+        // Windows特有のエラー処理
+        if (error.code === 'ENOENT') {
+          const errorMsg = process.platform === 'win32'
+            ? `Pythonが見つかりません: ${this.options.pythonPath}\n` +
+              'Pythonがインストールされ、PATHに追加されているか確認してください。\n' +
+              'コマンドプロンプトで "python --version" を実行して確認できます。'
+            : `Python executable not found: ${this.options.pythonPath}`
+          reject(new Error(errorMsg))
+        } else {
+          reject(error)
+        }
+        
         this.emit('error', error)
-        reject(error)
       })
 
       this.process.on('exit', (code, signal) => {
@@ -128,7 +142,12 @@ export class RPAClient extends EventEmitter {
       }
       this.once('exit', exitHandler)
 
-      this.process!.kill('SIGTERM')
+      // Windows環境では異なるシグナルを使用
+      if (process.platform === 'win32') {
+        this.process!.kill()
+      } else {
+        this.process!.kill('SIGTERM')
+      }
 
       // 強制終了タイムアウト
       setTimeout(() => {
@@ -162,7 +181,9 @@ export class RPAClient extends EventEmitter {
 
       const json = JSON.stringify(request)
       console.log('Sending JSON-RPC request:', json)
-      this.process!.stdin?.write(json + '\n')
+      // Windows環境での改行コード処理
+      const lineEnding = process.platform === 'win32' ? '\r\n' : '\n'
+      this.process!.stdin?.write(json + lineEnding)
 
       // タイムアウト設定
       setTimeout(() => {
@@ -197,7 +218,8 @@ export class RPAClient extends EventEmitter {
    */
   private handleData(data: string): void {
     this.buffer += data
-    const lines = this.buffer.split('\n')
+    // Windows環境では\r\nも考慮
+    const lines = this.buffer.split(/\r?\n/)
     
     // 最後の不完全な行を保持
     this.buffer = lines.pop() || ''
