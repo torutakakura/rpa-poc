@@ -59,7 +59,6 @@ import {
   Globe,
   Upload,
   Download,
-  FileJson,
 } from 'lucide-react'
 
 // カテゴリアイコンのマッピング
