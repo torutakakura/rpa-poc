@@ -48,7 +48,7 @@ pnpm run dist
 #### プラットフォーム別
 ```bash
 pnpm run dist:mac    # macOS (.dmg, .zip)
-pnpm run dist:win    # Windows (.exe installer)
+pnpm run dist:win    # Windows (.exe installer・Python Agent ビルド込み)
 pnpm run dist:linux  # Linux (.AppImage, .deb, .rpm)
 ```
 

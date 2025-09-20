@@ -1,3 +1,0 @@
-@echo off
-echo Starting RPA Agent...
-python rpa_agent.py %*

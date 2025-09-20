@@ -51,8 +51,10 @@ export class RPAClient extends EventEmitter {
 
   constructor(options: RPAClientOptions = {}) {
     super()
+    const defaultPython = process.platform === 'win32' ? 'python' : 'python3'
+
     this.options = {
-      pythonPath: options.pythonPath || 'python3',
+      pythonPath: options.pythonPath || defaultPython,
       agentPath: options.agentPath || path.join(__dirname, '../../rpa-agent/rpa_agent.py'),
       debug: options.debug || false
     }

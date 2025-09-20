@@ -11,7 +11,8 @@
     "build": "tsc && vite build && tsc -p tsconfig.electron.json",
     "preview": "vite preview",
     "dist": "pnpm build && electron-builder",
-    "dist:win": "pnpm build && electron-builder --win",
+    "dist:win": "node ./scripts/dist-win.mjs",
+    "dist:win:builder": "pnpm build && electron-builder --win",
     "dist:mac": "pnpm build && electron-builder --mac",
     "dist:linux": "pnpm build && electron-builder --linux"
   },

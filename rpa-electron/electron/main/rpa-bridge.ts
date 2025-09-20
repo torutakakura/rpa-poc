@@ -31,16 +31,17 @@ export function initRPABridge(): void {
     try {
       // 開発環境と本番環境でパスを切り替え
       const isDev = process.env.NODE_ENV === 'development'
+      const agentExecutableName = process.platform === 'win32' ? 'rpa_agent.exe' : 'rpa_agent'
       const agentPath = isDev
         ? path.join(__dirname, '../../../rpa-agent/rpa_agent.py')
-        : path.join(process.resourcesPath, 'rpa-agent', 'rpa_agent')  // PyInstallerでビルドした場合
+        : path.join(process.resourcesPath, 'rpa-agent', agentExecutableName)  // PyInstallerでビルドした場合
 
       console.log('Starting RPA client with path:', agentPath)
-      console.log('Python path:', isDev ? 'python3' : 'bundled')
+      console.log('Python path:', isDev ? (process.platform === 'win32' ? 'python' : 'python3') : 'bundled')
       console.log('__dirname:', __dirname)
 
       rpaClient = new RPAClient({
-        pythonPath: isDev ? 'python3' : undefined,  // 本番環境では実行ファイル直接
+        pythonPath: isDev ? (process.platform === 'win32' ? 'python' : 'python3') : undefined,  // 本番環境では実行ファイル直接
         agentPath,
         debug: isDev
       })
