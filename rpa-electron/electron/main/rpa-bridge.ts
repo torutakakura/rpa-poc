@@ -15,17 +15,53 @@ let rpaClient: RPAClient | null = null
 export function initRPABridge(): void {
   // 接続状態を確認
   ipcMain.handle('rpa:status', async () => {
-    return {
-      connected: !!rpaClient,
-      ready: !!rpaClient // TODO: より詳細な状態チェックを実装
+    // rpaClientの存在だけでなく、実際の動作状態も確認
+    if (!rpaClient) {
+      return {
+        connected: false,
+        ready: false
+      }
+    }
+    
+    // 実際にpingして動作確認
+    try {
+      await rpaClient.ping()
+      return {
+        connected: true,
+        ready: true
+      }
+    } catch (e) {
+      console.log('RPA client exists but not responding:', e)
+      // クライアントは存在するが応答しない場合は、クリーンアップ
+      rpaClient = null
+      return {
+        connected: false,
+        ready: false,
+        error: 'Client not responding'
+      }
     }
   })
 
   // RPAクライアントの起動
   ipcMain.handle('rpa:start', async (event: IpcMainInvokeEvent) => {
+    // 既存のクライアントがある場合、実際に動作しているか確認
     if (rpaClient) {
-      console.log('RPA client already started, returning existing connection')
-      return { success: false, error: 'Already started' }
+      console.log('Checking existing RPA client...')
+      try {
+        // pingして動作確認
+        await rpaClient.ping()
+        console.log('Existing RPA client is working')
+        return { success: true, message: 'Already connected and working' }
+      } catch (e) {
+        console.log('Existing RPA client is not responding, cleaning up...', e)
+        // 応答しない場合はクリーンアップして再起動
+        try {
+          await rpaClient.stop()
+        } catch (stopError) {
+          console.log('Error stopping old client:', stopError)
+        }
+        rpaClient = null
+      }
     }
 
     try {
@@ -36,9 +72,43 @@ export function initRPABridge(): void {
         ? path.join(__dirname, '../../../rpa-agent/rpa_agent.py')
         : path.join(process.resourcesPath, 'rpa-agent', agentExecutableName)  // PyInstallerでビルドした場合
 
-      console.log('Starting RPA client with path:', agentPath)
-      console.log('Python path:', isDev ? (process.platform === 'win32' ? 'python' : 'python3') : 'bundled')
+      console.log('=== RPA Bridge Debug Info ===')
+      console.log('Environment:', isDev ? 'development' : 'production')
+      console.log('Platform:', process.platform)
+      console.log('Agent path:', agentPath)
+      console.log('Python path:', isDev ? (process.platform === 'win32' ? 'python' : 'python3') : 'none (using executable)')
       console.log('__dirname:', __dirname)
+      console.log('process.resourcesPath:', process.resourcesPath)
+      
+      // ファイルの存在確認
+      const fs = require('fs')
+      if (fs.existsSync(agentPath)) {
+        const stats = fs.statSync(agentPath)
+        console.log('Agent file found:', {
+          size: stats.size,
+          isFile: stats.isFile(),
+          mode: stats.mode.toString(8)
+        })
+      } else {
+        console.error('Agent file NOT found at:', agentPath)
+        
+        // デバッグのために近くのディレクトリを探索
+        if (!isDev && process.resourcesPath) {
+          const resourcesPath = process.resourcesPath
+          console.log('Checking resources directory:', resourcesPath)
+          if (fs.existsSync(resourcesPath)) {
+            const items = fs.readdirSync(resourcesPath)
+            console.log('Resources directory contents:', items)
+            
+            const agentDir = path.join(resourcesPath, 'rpa-agent')
+            if (fs.existsSync(agentDir)) {
+              const agentItems = fs.readdirSync(agentDir)
+              console.log('rpa-agent directory contents:', agentItems)
+            }
+          }
+        }
+      }
+      console.log('=============================')
 
       rpaClient = new RPAClient({
         pythonPath: isDev ? (process.platform === 'win32' ? 'python' : 'python3') : undefined,  // 本番環境では実行ファイル直接
@@ -91,6 +161,17 @@ export function initRPABridge(): void {
     if (!rpaClient) {
       throw new Error('RPA client not started')
     }
+    
+    // クライアントが実際に動作しているか確認
+    try {
+      await rpaClient.ping()
+    } catch (e) {
+      console.error('RPA client not responding in getCapabilities:', e)
+      // 応答しない場合はクリーンアップ
+      rpaClient = null
+      throw new Error('RPA client not responding. Please restart the connection.')
+    }
+    
     // listOperationsを呼び出して操作一覧を取得
     const operations = await rpaClient.call('listOperations')
     return {

@@ -63,6 +63,25 @@ try {
 
   console.log(`\n[dist-win] Using Python: ${pythonCmd.join(" ")}`);
 
+  // enum34パッケージの問題を事前に解決（PyInstallerと非互換）
+  console.log("\n[dist-win] PyInstaller非互換パッケージをチェック中...");
+  try {
+    const checkEnum34 = spawnSync(pythonCmd[0], 
+      [...pythonCmd.slice(1), "-m", "pip", "show", "enum34"], 
+      { stdio: "pipe", cwd: agentDir, shell: process.platform === "win32" }
+    );
+    
+    if (checkEnum34.status === 0) {
+      console.log("[dist-win] enum34パッケージを削除中（PyInstallerとの互換性問題）...");
+      run(pythonCmd[0], 
+        [...pythonCmd.slice(1), "-m", "pip", "uninstall", "-y", "enum34"], 
+        { cwd: agentDir }
+      );
+    }
+  } catch (e) {
+    // enum34が存在しない場合は何もしない
+  }
+
   // 依存関係をインストール
   run(
     pythonCmd[0],

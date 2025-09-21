@@ -11,6 +11,8 @@
     "build": "tsc && vite build && tsc -p tsconfig.electron.json",
     "preview": "vite preview",
     "dist": "node ./scripts/dist-win.mjs",
+    "dist:win": "node ./scripts/dist-win.mjs",
+    "dist:mac": "node ./scripts/dist-mac.mjs",
     "dist:electron-only": "pnpm build && electron-builder --win"
   },
   "keywords": [
@@ -78,6 +80,33 @@
         ]
       }
     ],
+    "mac": {
+      "category": "public.app-category.productivity",
+      "icon": "build/icon.icns",
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        }
+      ]
+    },
+    "dmg": {
+      "contents": [
+        {
+          "x": 130,
+          "y": 220
+        },
+        {
+          "x": 410,
+          "y": 220,
+          "type": "link",
+          "path": "/Applications"
+        }
+      ]
+    },
     "win": {
       "icon": "build/icon.ico",
       "target": [

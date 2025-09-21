@@ -69,12 +69,45 @@ export class RPAClient extends EventEmitter {
     }
 
     return new Promise((resolve, reject) => {
-      const args = [this.options.agentPath!]
+      // pythonPathがundefinedの場合は直接実行ファイルとして扱う
+      const isDirectExecutable = !this.options.pythonPath
+      let command: string
+      let args: string[]
+      
+      if (isDirectExecutable) {
+        // PyInstallerでビルドされた実行ファイルを直接実行
+        command = this.options.agentPath!
+        args = []
+        console.log('Running as direct executable:', command)
+        
+        // ファイルの存在確認
+        const fs = require('fs')
+        if (!fs.existsSync(command)) {
+          reject(new Error(`Executable not found: ${command}`))
+          return
+        }
+        
+        // 実行権限の確認（macOS/Linux）
+        if (process.platform !== 'win32') {
+          try {
+            fs.accessSync(command, fs.constants.X_OK)
+          } catch (e) {
+            reject(new Error(`File is not executable: ${command}. Run: chmod +x "${command}"`))
+            return
+          }
+        }
+      } else {
+        // Pythonスクリプトとして実行
+        command = this.options.pythonPath!
+        args = [this.options.agentPath!]
+        console.log('Running via Python:', command, args)
+      }
+      
       if (this.options.debug) {
         args.push('--debug')
       }
 
-      console.log('Spawning process:', this.options.pythonPath!, args)
+      console.log('Spawning process:', command, args)
       
       // Windows環境用のエンコーディング設定
       const spawnOptions: any = {
@@ -92,7 +125,7 @@ export class RPAClient extends EventEmitter {
         }
       }
       
-      this.process = spawn(this.options.pythonPath!, args, spawnOptions)
+      this.process = spawn(command, args, spawnOptions)
 
       this.process.stdout?.on('data', (data) => {
         // Windows環境では明示的にUTF-8として処理
@@ -112,11 +145,15 @@ export class RPAClient extends EventEmitter {
         
         // Windows特有のエラー処理
         if (error.code === 'ENOENT') {
-          const errorMsg = process.platform === 'win32'
-            ? `Pythonが見つかりません: ${this.options.pythonPath}\n` +
-              'Pythonがインストールされ、PATHに追加されているか確認してください。\n' +
-              'コマンドプロンプトで "python --version" を実行して確認できます。'
-            : `Python executable not found: ${this.options.pythonPath}`
+          const isDirectExecutable = !this.options.pythonPath
+          const errorMsg = isDirectExecutable
+            ? `実行ファイルが見つかりません: ${this.options.agentPath}\n` +
+              '配布版のビルドに問題がある可能性があります。'
+            : process.platform === 'win32'
+              ? `Pythonが見つかりません: ${this.options.pythonPath}\n` +
+                'Pythonがインストールされ、PATHに追加されているか確認してください。\n' +
+                'コマンドプロンプトで "python --version" を実行して確認できます。'
+              : `Python executable not found: ${this.options.pythonPath}`
           reject(new Error(errorMsg))
         } else {
           reject(error)
@@ -295,7 +332,53 @@ export class RPAClient extends EventEmitter {
    * 便利メソッド：ping
    */
   async ping(): Promise<any> {
-    return this.call('ping')
+    // プロセスが存在するか確認
+    if (!this.process) {
+      throw new Error('Agent process not started')
+    }
+    
+    // プロセスが実際に生きているか確認
+    if (this.process.killed) {
+      throw new Error('Agent process has been killed')
+    }
+    
+    // pingを短いタイムアウトで実行（3秒）
+    return this.callWithTimeout('ping', undefined, 3000)
+  }
+  
+  /**
+   * タイムアウト付きでRPCメソッドを呼び出す
+   */
+  async callWithTimeout(method: string, params?: any, timeout: number = 30000): Promise<any> {
+    if (!this.process) {
+      throw new Error('Agent not started')
+    }
+
+    const id = ++this.requestId
+    const request: JsonRpcRequest = {
+      jsonrpc: '2.0',
+      method,
+      params,
+      id
+    }
+
+    return new Promise((resolve, reject) => {
+      this.pendingRequests.set(id, { resolve, reject })
+
+      const json = JSON.stringify(request)
+      console.log('Sending JSON-RPC request:', json)
+      // Windows環境での改行コード処理
+      const lineEnding = process.platform === 'win32' ? '\r\n' : '\n'
+      this.process!.stdin?.write(json + lineEnding)
+
+      // カスタムタイムアウト設定
+      setTimeout(() => {
+        if (this.pendingRequests.has(id)) {
+          this.pendingRequests.delete(id)
+          reject(new Error(`Request timeout (${timeout}ms): ${method}`))
+        }
+      }, timeout)
+    })
   }
 
   /**
