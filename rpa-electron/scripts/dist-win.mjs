@@ -103,7 +103,7 @@ try {
   const pnpmCmd = process.platform === "win32" ? "pnpm.cmd" : "pnpm";
   // 依存関係をインストール
   run(pnpmCmd, ["install"], { cwd: electronDir });
-  run(pnpmCmd, ["run", "dist:win:builder"], { cwd: electronDir });
+  run(pnpmCmd, ["run", "dist:electron-only"], { cwd: electronDir });
 
   console.log("\n[dist-win] Windows インストーラーの作成が完了しました。");
 } catch (error) {
