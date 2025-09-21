@@ -6,8 +6,14 @@ echo "🐍 Setting up Python RPA Agent..."
 
 # Python仮想環境を作成
 if [ ! -d "venv" ]; then
-    echo "Creating virtual environment..."
-    python3 -m venv venv
+    echo "Creating virtual environment with Python 3.12..."
+    if command -v python3.12 &> /dev/null; then
+        python3.12 -m venv venv
+    elif command -v python3 &> /dev/null; then
+        python3 -m venv venv
+    else
+        python -m venv venv
+    fi
 fi
 
 # 仮想環境をアクティベート

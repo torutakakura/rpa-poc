@@ -1,15 +1,16 @@
-import { BrowserRouter } from 'react-router-dom'
-import { AppSidebar } from '@/components/layout/AppSidebar'
-import { MainLayout } from '@/components/layout/MainLayout'
-import { SidebarProvider } from '@/components/ui/sidebar'
-import { ResponsiveSidebarController } from '@/components/layout/ResponsiveSidebar'
-import AppRouter from '@/router'
+import { BrowserRouter, HashRouter } from "react-router-dom";
+import { AppSidebar } from "@/components/layout/AppSidebar";
+import { MainLayout } from "@/components/layout/MainLayout";
+import { SidebarProvider } from "@/components/ui/sidebar";
+import { ResponsiveSidebarController } from "@/components/layout/ResponsiveSidebar";
+import AppRouter from "@/router";
 
 function App() {
   // 初期状態を画面幅に応じて設定
-  const initialOpen = typeof window !== 'undefined' ? window.innerWidth > 1024 : true
+  const initialOpen =
+    typeof window !== "undefined" ? window.innerWidth > 1024 : true;
 
-  return (
+  return import.meta.env.DEV ? (
     <BrowserRouter>
       <div className="min-h-screen bg-gray-50">
         <SidebarProvider defaultOpen={initialOpen}>
@@ -21,7 +22,19 @@ function App() {
         </SidebarProvider>
       </div>
     </BrowserRouter>
-  )
+  ) : (
+    <HashRouter>
+      <div className="min-h-screen bg-gray-50">
+        <SidebarProvider defaultOpen={initialOpen}>
+          <ResponsiveSidebarController />
+          <AppSidebar />
+          <MainLayout>
+            <AppRouter />
+          </MainLayout>
+        </SidebarProvider>
+      </div>
+    </HashRouter>
+  );
 }
 
-export default App
+export default App;

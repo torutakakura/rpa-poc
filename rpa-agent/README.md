@@ -4,16 +4,20 @@ Electron アプリケーションと JSON-RPC over stdio で通信する Python 
 
 ## 🚀 セットアップ
 
-### 1. Python環境の準備
+### 1. Python 環境の準備
+
+**必要な環境**: Python 3.12 以上
 
 ```bash
 # セットアップスクリプトを実行
-./setup.sh
+./setup.sh                # macOS/Linux
+setup.bat                 # Windows
 
 # または手動でセットアップ
-python3 -m venv venv
+python3.12 -m venv venv   # macOS/Linux
+py -3.12 -m venv venv     # Windows
 source venv/bin/activate  # macOS/Linux
-# venv\Scripts\activate  # Windows
+venv\Scripts\activate.bat # Windows
 pip install -r requirements.txt
 ```
 
@@ -30,16 +34,19 @@ python rpa_agent.py --debug
 ## 📋 機能
 
 ### 基本機能
+
 - ✅ ping - 接続確認
 - ✅ get_capabilities - 利用可能な機能の取得
 - ✅ run_task - 非同期タスクの実行
 - ✅ cancel_task - タスクのキャンセル
 
-### Excel操作
-- ✅ excel_read - Excelファイルの読み込み
-- ✅ excel_write - Excelファイルの書き込み
+### Excel 操作
+
+- ✅ excel_read - Excel ファイルの読み込み
+- ✅ excel_write - Excel ファイルの書き込み
 
 ### 通知イベント
+
 - log - ログメッセージ
 - task_started - タスク開始
 - task_progress - タスク進捗
@@ -49,6 +56,7 @@ python rpa_agent.py --debug
 ## 🔧 JSON-RPC プロトコル
 
 ### リクエスト形式
+
 ```json
 {
   "jsonrpc": "2.0",
@@ -59,15 +67,17 @@ python rpa_agent.py --debug
 ```
 
 ### レスポンス形式
+
 ```json
 {
   "jsonrpc": "2.0",
-  "result": {"status": "pong", "timestamp": 1234567890},
+  "result": { "status": "pong", "timestamp": 1234567890 },
   "id": 1
 }
 ```
 
 ### 通知形式（レスポンス不要）
+
 ```json
 {
   "jsonrpc": "2.0",
@@ -82,7 +92,7 @@ python rpa_agent.py --debug
 
 ## 📦 ビルド（配布用）
 
-### PyInstallerで単一実行ファイル化
+### PyInstaller で単一実行ファイル化
 
 ```bash
 source venv/bin/activate
@@ -90,12 +100,13 @@ pyinstaller --onefile --name rpa_agent rpa_agent.py
 ```
 
 生成されたファイル：
+
 - `dist/rpa_agent` - 実行ファイル（依存関係すべて含む）
 
-### Electronアプリへの組み込み
+### Electron アプリへの組み込み
 
 1. ビルドした実行ファイルを Electron の resources ディレクトリにコピー
-2. Electron側から child_process.spawn で起動
+2. Electron 側から child_process.spawn で起動
 
 ## 🧪 テスト用コマンド
 
@@ -126,19 +137,24 @@ def method_your_method_name(self, params: Dict[str, Any]) -> Dict[str, Any]:
 ```
 
 メソッド名の規則：
+
 - `method_` プレフィックスが必要
 - ドット記法は アンダースコアに変換（例：`file.read` → `method_file_read`）
 
 ## 🔍 トラブルシューティング
 
-### Pythonが見つからない
-- `python3` コマンドが利用可能か確認
+### Python が見つからない
+
+- Python 3.12 がインストールされているか確認: `py -3.12 --version` (Windows) または `python3.12 --version` (macOS/Linux)
+- `py -0` コマンドでインストール済みバージョンを確認 (Windows)
 - 仮想環境がアクティブか確認
 
-### openpyxlエラー
+### openpyxl エラー
+
 - `pip install openpyxl` で手動インストール
-- Excel機能が不要な場合は無視可能
+- Excel 機能が不要な場合は無視可能
 
 ### Permission denied
+
 - `chmod +x setup.sh` で実行権限を付与
 - `chmod +x dist/rpa_agent` でビルド後のファイルに実行権限を付与

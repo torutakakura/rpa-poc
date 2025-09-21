@@ -7,7 +7,7 @@
     "dev": "concurrently \"pnpm dev:vite\" \"pnpm dev:electron-watch\" \"pnpm dev:electron\"",
     "dev:vite": "vite",
     "dev:electron-watch": "tsc -p tsconfig.electron.json --watch",
-    "dev:electron": "wait-on http://localhost:5173 && wait-on dist-electron/preload/index.js && cross-env NODE_ENV=development electron .",
+    "dev:electron": "wait-on http://localhost:5173; wait-on dist-electron/preload/index.js; cross-env NODE_ENV=development electron .",
     "build": "tsc && vite build && tsc -p tsconfig.electron.json",
     "preview": "vite preview",
     "dist": "pnpm build && electron-builder",
@@ -16,7 +16,10 @@
     "dist:mac": "pnpm build && electron-builder --mac",
     "dist:linux": "pnpm build && electron-builder --linux"
   },
-  "keywords": ["rpa", "automation"],
+  "keywords": [
+    "rpa",
+    "automation"
+  ],
   "author": "Devote RPA Team",
   "license": "ISC",
   "packageManager": "pnpm@10.15.0",
@@ -73,7 +76,9 @@
       {
         "from": "../rpa-agent/dist/",
         "to": "rpa-agent/",
-        "filter": ["**/*"]
+        "filter": [
+          "**/*"
+        ]
       }
     ],
     "mac": {
@@ -87,7 +92,10 @@
       "target": [
         {
           "target": "nsis",
-          "arch": ["x64", "ia32"]
+          "arch": [
+            "x64",
+            "ia32"
+          ]
         }
       ]
     },
@@ -96,11 +104,15 @@
       "target": [
         {
           "target": "AppImage",
-          "arch": ["x64"]
+          "arch": [
+            "x64"
+          ]
         },
         {
           "target": "deb",
-          "arch": ["x64"]
+          "arch": [
+            "x64"
+          ]
         }
       ],
       "category": "Utility"
