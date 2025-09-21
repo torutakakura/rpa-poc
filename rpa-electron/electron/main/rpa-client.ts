@@ -116,30 +116,63 @@ export class RPAClient extends EventEmitter {
       // spawn オプションの設定
       const spawnOptions: any = {
         stdio: ['pipe', 'pipe', 'pipe'],
-        windowsHide: true,  // Windowsでコンソールウィンドウを非表示
-        // スペースを含むパスの問題を回避するためshellは使わない
-        shell: false,
-        // Windows特有の設定
-        ...(process.platform === 'win32' && {
-          detached: false,
-          windowsVerbatimArguments: false  // 引数の自動エスケープを有効にする
-        })
+        // 環境変数でUTF-8を指定
+        env: {
+          ...process.env,
+          PYTHONIOENCODING: 'utf-8',
+          PYTHONUTF8: '1',
+          PYTHONUNBUFFERED: '1'  // バッファリングを無効化
+        }
       }
       
-      // 環境変数でUTF-8を指定
-      spawnOptions.env = {
-        ...process.env,
-        PYTHONIOENCODING: 'utf-8',
-        PYTHONUTF8: '1',
-        PYTHONUNBUFFERED: '1'  // バッファリングを無効化
-      }
-      
-      try {
-        this.process = spawn(command, args, spawnOptions)
-      } catch (spawnError) {
-        console.error('Failed to spawn process:', spawnError)
-        reject(spawnError)
-        return
+      // Windows環境での特別な処理
+      if (process.platform === 'win32' && isDirectExecutable) {
+        // Windows環境で実行ファイルを直接実行する場合
+        // execFileを使用してスペースを含むパスを正しく処理
+        const { execFile } = require('child_process')
+        
+        console.log('Using execFile for Windows executable:', command)
+        
+        this.process = execFile(
+          command,
+          args,
+          {
+            ...spawnOptions,
+            windowsHide: true,
+            encoding: 'utf8',
+            maxBuffer: 10 * 1024 * 1024  // 10MB
+          },
+          (error: Error | null) => {
+            if (error && !this.process?.killed) {
+              console.error('execFile error:', error)
+              reject(error)
+            }
+          }
+        )
+        
+        // execFileの場合もstdio streamは利用可能
+        if (!this.process || !this.process.stdout || !this.process.stderr) {
+          reject(new Error('Failed to create process with stdio streams'))
+          return
+        }
+      } else {
+        // その他の場合は通常のspawn
+        if (process.platform === 'win32') {
+          spawnOptions.windowsHide = true
+          spawnOptions.shell = false  // shellは使わない
+        } else {
+          spawnOptions.shell = false
+        }
+        
+        console.log('Using spawn with options:', JSON.stringify(spawnOptions, null, 2))
+        
+        try {
+          this.process = spawn(command, args, spawnOptions)
+        } catch (spawnError) {
+          console.error('Failed to spawn process:', spawnError)
+          reject(spawnError)
+          return
+        }
       }
 
       this.process.stdout?.on('data', (data) => {

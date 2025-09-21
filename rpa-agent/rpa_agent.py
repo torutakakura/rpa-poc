@@ -25,22 +25,34 @@ import os
 # 標準出力のバッファリングを無効化（重要！）
 # PyInstallerでビルドされたバイナリとElectronの通信を確実にするため
 os.environ['PYTHONUNBUFFERED'] = '1'
-if hasattr(sys.stdout, 'fileno'):
-    try:
-        sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', 1)  # line buffering
-        sys.stderr = os.fdopen(sys.stderr.fileno(), 'w', 1)
-    except:
-        # fdopenが失敗した場合はflushを使用
-        pass
 
-# Windows環境での文字エンコーディングを修正
+# Windows環境での特別な処理
 if sys.platform == "win32":
-    # 標準入出力をUTF-8に設定
-    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', line_buffering=True)
-    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', line_buffering=True)
-    sys.stdin = io.TextIOWrapper(sys.stdin.buffer, encoding='utf-8')
-    # 環境変数でもUTF-8を指定
+    # Windows環境でUTF-8を強制
+    import locale
+    locale.setlocale(locale.LC_ALL, '')
     os.environ['PYTHONIOENCODING'] = 'utf-8'
+    
+    # PyInstallerでビルドされている場合の特別な処理
+    if hasattr(sys, '_MEIPASS'):
+        # 標準入出力を明示的にバイナリモードで再オープンし、UTF-8でラップ
+        import msvcrt
+        msvcrt.setmode(sys.stdout.fileno(), os.O_BINARY)
+        msvcrt.setmode(sys.stdin.fileno(), os.O_BINARY)
+        
+        # UTF-8でラップ（行バッファリング有効）
+        sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', line_buffering=True)
+        sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', line_buffering=True)
+        sys.stdin = io.TextIOWrapper(sys.stdin.buffer, encoding='utf-8')
+else:
+    # Unix系の環境
+    if hasattr(sys.stdout, 'fileno'):
+        try:
+            sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', 1)  # line buffering
+            sys.stderr = os.fdopen(sys.stderr.fileno(), 'w', 1)
+        except:
+            # fdopenが失敗した場合はflushを使用
+            pass
 
 from operation_manager import OperationManager
 
@@ -84,8 +96,27 @@ class RPAAgent:
 
     def start(self):
         """エージェントを開始"""
+        # デバッグ用: Windows環境でログファイルに出力
+        if sys.platform == "win32" and hasattr(sys, '_MEIPASS'):
+            import tempfile
+            log_path = os.path.join(tempfile.gettempdir(), 'rpa_agent_debug.log')
+            with open(log_path, 'a') as f:
+                f.write(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] Agent starting...\n")
+                f.write(f"Python version: {sys.version}\n")
+                f.write(f"Platform: {sys.platform}\n")
+                f.write(f"_MEIPASS: {getattr(sys, '_MEIPASS', 'Not PyInstaller')}\n")
+                f.write(f"stdout: {sys.stdout}\n")
+                f.write(f"stdin: {sys.stdin}\n")
+                f.flush()
+        
         # 1. 接続: 初期化成功を通知（重い処理の前に送信）
         self.send_notification("agent.ready", {"status": "ready"})
+        
+        # デバッグ: Windows環境でログファイルに記録
+        if sys.platform == "win32" and hasattr(sys, '_MEIPASS'):
+            with open(log_path, 'a') as f:
+                f.write(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] agent.ready sent\n")
+                f.flush()
         
         # 必要になったら初期化（最初のリクエスト時）
 
