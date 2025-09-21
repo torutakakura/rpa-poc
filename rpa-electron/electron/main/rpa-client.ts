@@ -54,7 +54,8 @@ export class RPAClient extends EventEmitter {
     const defaultPython = process.platform === 'win32' ? 'python' : 'python3'
 
     this.options = {
-      pythonPath: options.pythonPath || defaultPython,
+      // undefinedの場合のみデフォルト値を使用（nullは明示的な指定として扱う）
+      pythonPath: options.pythonPath !== undefined ? options.pythonPath : defaultPython,
       agentPath: options.agentPath || path.join(__dirname, '../../rpa-agent/rpa_agent.py'),
       debug: options.debug || false
     }
@@ -69,10 +70,13 @@ export class RPAClient extends EventEmitter {
     }
 
     return new Promise((resolve, reject) => {
-      // pythonPathがundefinedの場合は直接実行ファイルとして扱う
+      // pythonPathがnull/undefined/空文字の場合は直接実行ファイルとして扱う
       const isDirectExecutable = !this.options.pythonPath
       let command: string
       let args: string[]
+      
+      console.log('pythonPath value:', this.options.pythonPath)
+      console.log('isDirectExecutable:', isDirectExecutable)
       
       if (isDirectExecutable) {
         // PyInstallerでビルドされた実行ファイルを直接実行
@@ -128,6 +132,10 @@ export class RPAClient extends EventEmitter {
       this.process = spawn(command, args, spawnOptions)
 
       this.process.stdout?.on('data', (data) => {
+        // デバッグ用の生データログを追加
+        console.log('Raw stdout data:', data)
+        console.log('Raw stdout hex:', data.toString('hex'))
+        
         // Windows環境では明示的にUTF-8として処理
         const output = process.platform === 'win32'
           ? data.toString('utf8')
@@ -167,18 +175,30 @@ export class RPAClient extends EventEmitter {
         this.cleanup()
       })
 
-      // agent.ready 通知を待つ
-      const readyHandler = () => {
-        this.off('agent.ready', readyHandler)
-        resolve()
-      }
-      this.once('agent.ready', readyHandler)
+      // agent.ready 通知を待つ処理
+      const waitForReady = () => {
+        const readyHandler = () => {
+          this.off('agent.ready', readyHandler)
+          resolve()
+        }
+        this.once('agent.ready', readyHandler)
 
-      // タイムアウト設定
-      setTimeout(() => {
-        this.off('agent.ready', readyHandler)
-        reject(new Error('Agent startup timeout'))
-      }, 5000)
+        // タイムアウト設定（バイナリの場合は長めに設定）
+        const timeoutMs = isDirectExecutable ? 20000 : 10000  // バイナリ: 20秒, スクリプト: 10秒
+        setTimeout(() => {
+          this.off('agent.ready', readyHandler)
+          reject(new Error(`Agent startup timeout (${timeoutMs/1000}s)`))
+        }, timeoutMs)
+      }
+
+      // PyInstallerバイナリの場合は初期展開のための待機時間を設ける
+      if (isDirectExecutable) {
+        // 本番環境のバイナリは初回起動時に展開が必要
+        console.log('Waiting for PyInstaller binary to extract...')
+        setTimeout(waitForReady, 1000)  // 1秒待機してからready待ち
+      } else {
+        waitForReady()  // すぐにready待ち
+      }
     })
   }
 
@@ -328,6 +348,13 @@ export class RPAClient extends EventEmitter {
     this.pendingRequests.clear()
   }
 
+  /**
+   * プロセスが存在しているかを確認（非同期処理なし）
+   */
+  hasProcess(): boolean {
+    return this.process !== null && !this.process.killed
+  }
+  
   /**
    * 便利メソッド：ping
    */

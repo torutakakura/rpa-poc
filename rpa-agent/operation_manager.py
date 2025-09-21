@@ -3,6 +3,7 @@
 """
 
 import json
+import os
 import sys
 from typing import Any, Dict, List, Optional
 
@@ -343,7 +344,14 @@ class OperationManager:
         """操作のテンプレートを取得する"""
         # rpa_operations.jsonからテンプレートを読み込む
         try:
-            with open("rpa_operations.json", encoding="utf-8") as f:
+            # PyInstallerでビルドされている場合は sys._MEIPASS を使用
+            if hasattr(sys, '_MEIPASS'):
+                json_path = os.path.join(sys._MEIPASS, "rpa_operations.json")
+            else:
+                # 開発環境ではファイルの相対パス
+                json_path = os.path.join(os.path.dirname(__file__), "rpa_operations.json")
+            
+            with open(json_path, encoding="utf-8") as f:
                 templates = json.load(f)
                 if category in templates and operation in templates[category]:
                     return templates[category][operation]

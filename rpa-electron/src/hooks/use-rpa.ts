@@ -60,27 +60,80 @@ export function useRPA(autoConnect = false) {
     try {
       const result = await ipcRenderer.invoke('rpa:start')
       if (result.success) {
-        // 機能を取得
-        const capabilities = await ipcRenderer.invoke('rpa:getCapabilities')
-        setStatus({
-          connected: true,
-          connecting: false,
-          error: null,
-          capabilities
-        })
+        // 接続成功 - プロセスが起動中の場合は待機
+        if (result.message === 'Process starting, please wait...') {
+          // プロセス起動中なので少し待つ
+          setStatus({
+            connected: false,
+            connecting: true,
+            error: null,
+            capabilities: null
+          })
+          
+          // 2秒待ってから機能を取得
+          setTimeout(async () => {
+            try {
+              const capabilities = await ipcRenderer.invoke('rpa:getCapabilities')
+              setStatus({
+                connected: true,
+                connecting: false,
+                error: null,
+                capabilities
+              })
+            } catch (error) {
+              setStatus({
+                connected: true,
+                connecting: false,
+                error: null,
+                capabilities: null
+              })
+            }
+          }, 2000)
+        } else {
+          // すでに接続済み - 少し待って機能を取得
+          setTimeout(async () => {
+            try {
+              const capabilities = await ipcRenderer.invoke('rpa:getCapabilities')
+              setStatus({
+                connected: true,
+                connecting: false,
+                error: null,
+                capabilities
+              })
+            } catch (error) {
+              setStatus({
+                connected: true,
+                connecting: false,
+                error: null,
+                capabilities: null
+              })
+            }
+          }, 500)
+        }
         return true
       } else {
         // "Already started"エラーの場合は、既に接続されているとみなす
         if (result.error === 'Already started') {
           try {
-            // 既存の接続を使って機能を取得
-            const capabilities = await ipcRenderer.invoke('rpa:getCapabilities')
-            setStatus({
-              connected: true,
-              connecting: false,
-              error: null,
-              capabilities
-            })
+            // 既存の接続を使って機能を取得（少し待つ）
+            setTimeout(async () => {
+              try {
+                const capabilities = await ipcRenderer.invoke('rpa:getCapabilities')
+                setStatus({
+                  connected: true,
+                  connecting: false,
+                  error: null,
+                  capabilities
+                })
+              } catch (error) {
+                setStatus({
+                  connected: true,
+                  connecting: false,
+                  error: null,
+                  capabilities: null
+                })
+              }
+            }, 500)
             return true
           } catch (innerError) {
             setStatus({
@@ -189,14 +242,27 @@ export function useRPA(autoConnect = false) {
       // 既存の接続状態を確認
       const currentStatus = await ipcRenderer.invoke('rpa:status')
       if (currentStatus.connected) {
-        // 既に接続されている場合は機能を取得
-        const capabilities = await ipcRenderer.invoke('rpa:getCapabilities')
-        setStatus({
-          connected: true,
-          connecting: false,
-          error: null,
-          capabilities
-        })
+        // 接続されている場合、少し待ってから機能を取得
+        // （エージェントが完全に起動するまで待機）
+        setTimeout(async () => {
+          try {
+            const capabilities = await ipcRenderer.invoke('rpa:getCapabilities')
+            setStatus({
+              connected: true,
+              connecting: false,
+              error: null,
+              capabilities
+            })
+          } catch (error) {
+            // 機能取得に失敗してもエラーにはしない（接続は成功している）
+            setStatus({
+              connected: true,
+              connecting: false,
+              error: null,
+              capabilities: null
+            })
+          }
+        }, 1000)  // 1秒待機してから機能を取得
       }
     } catch (error) {
       console.error('Failed to check status:', error)

@@ -22,11 +22,22 @@ from typing import Any, Dict, Optional
 import io
 import os
 
+# 標準出力のバッファリングを無効化（重要！）
+# PyInstallerでビルドされたバイナリとElectronの通信を確実にするため
+os.environ['PYTHONUNBUFFERED'] = '1'
+if hasattr(sys.stdout, 'fileno'):
+    try:
+        sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', 1)  # line buffering
+        sys.stderr = os.fdopen(sys.stderr.fileno(), 'w', 1)
+    except:
+        # fdopenが失敗した場合はflushを使用
+        pass
+
 # Windows環境での文字エンコーディングを修正
 if sys.platform == "win32":
     # 標準入出力をUTF-8に設定
-    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
-    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8')
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', line_buffering=True)
+    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', line_buffering=True)
     sys.stdin = io.TextIOWrapper(sys.stdin.buffer, encoding='utf-8')
     # 環境変数でもUTF-8を指定
     os.environ['PYTHONIOENCODING'] = 'utf-8'
@@ -69,12 +80,14 @@ class RPAAgent:
     def __init__(self):
         """初期化"""
         self.running = True
-        self.operation_manager = OperationManager()
+        self._operation_manager = None  # 遅延初期化
 
     def start(self):
         """エージェントを開始"""
-        # 1. 接続: 初期化成功を通知
+        # 1. 接続: 初期化成功を通知（重い処理の前に送信）
         self.send_notification("agent.ready", {"status": "ready"})
+        
+        # 必要になったら初期化（最初のリクエスト時）
 
         # メインループ
         while self.running:
@@ -107,6 +120,13 @@ class RPAAgent:
                     "agent.error",
                     {"error": str(e), "traceback": traceback.format_exc()},
                 )
+
+    @property
+    def operation_manager(self):
+        """OperationManagerの遅延初期化"""
+        if self._operation_manager is None:
+            self._operation_manager = OperationManager()
+        return self._operation_manager
 
     def handle_request(self, request: JsonRpcRequest):
         """リクエストを処理"""
@@ -194,10 +214,16 @@ class RPAAgent:
         """操作テンプレートを返す（rpa_operations.jsonの内容）"""
         import json
         import os
+        import sys
 
         try:
-            # rpa_operations.jsonを読み込む
-            json_path = os.path.join(os.path.dirname(__file__), "rpa_operations.json")
+            # PyInstallerでビルドされている場合は sys._MEIPASS を使用
+            if hasattr(sys, '_MEIPASS'):
+                json_path = os.path.join(sys._MEIPASS, "rpa_operations.json")
+            else:
+                # 開発環境ではファイルの相対パス
+                json_path = os.path.join(os.path.dirname(__file__), "rpa_operations.json")
+            
             with open(json_path, encoding="utf-8") as f:
                 templates = json.load(f)
             self.send_response(request.id, templates)

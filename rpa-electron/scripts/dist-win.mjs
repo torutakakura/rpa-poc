@@ -105,6 +105,8 @@ try {
       "--noconfirm",
       "--name",
       "rpa_agent",
+      "--add-data",
+      process.platform === "win32" ? "rpa_operations.json;." : "rpa_operations.json:.",  // JSONファイルを含める
       "rpa_agent.py",
     ],
     { cwd: agentDir }

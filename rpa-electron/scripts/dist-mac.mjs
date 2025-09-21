@@ -78,6 +78,8 @@ try {
       "--noconfirm",
       "--name",
       "rpa_agent",
+      "--add-data",
+      "rpa_operations.json:.",  // JSONファイルを含める
       "rpa_agent.py",
     ],
     { cwd: agentDir }

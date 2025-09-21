@@ -23,43 +23,44 @@ export function initRPABridge(): void {
       }
     }
     
-    // 実際にpingして動作確認
-    try {
-      await rpaClient.ping()
+    // プロセスが存在しているかだけ確認（初回起動時はpingを避ける）
+    // 初回起動時はまだagent.readyを受信していない可能性があるため
+    const hasProcess = rpaClient.hasProcess()
+    if (hasProcess) {
       return {
         connected: true,
-        ready: true
+        ready: true  // プロセスがあれば準備完了とみなす
       }
-    } catch (e) {
-      console.log('RPA client exists but not responding:', e)
-      // クライアントは存在するが応答しない場合は、クリーンアップ
+    } else {
+      console.log('RPA client exists but no process found')
+      // プロセスがない場合はクリーンアップ
       rpaClient = null
       return {
         connected: false,
-        ready: false,
-        error: 'Client not responding'
+        ready: false
       }
     }
   })
 
   // RPAクライアントの起動
   ipcMain.handle('rpa:start', async (event: IpcMainInvokeEvent) => {
-    // 既存のクライアントがある場合、実際に動作しているか確認
+    // 既存のクライアントがある場合、プロセスの存在だけチェック（pingは避ける）
     if (rpaClient) {
-      console.log('Checking existing RPA client...')
-      try {
-        // pingして動作確認
-        await rpaClient.ping()
-        console.log('Existing RPA client is working')
-        return { success: true, message: 'Already connected and working' }
-      } catch (e) {
-        console.log('Existing RPA client is not responding, cleaning up...', e)
-        // 応答しない場合はクリーンアップして再起動
+      // プロセスが存在しているかだけ確認（非同期処理なし）
+      if (rpaClient.hasProcess()) {
+        console.log('RPA client process already exists')
+        // すでに起動済みの場合は高速でpingして確認
         try {
-          await rpaClient.stop()
-        } catch (stopError) {
-          console.log('Error stopping old client:', stopError)
+          await rpaClient.callWithTimeout('ping', undefined, 1000)  // 1秒の短いタイムアウト
+          console.log('Existing RPA client is working')
+          return { success: true, message: 'Already connected and working' }
+        } catch (e) {
+          console.log('Existing process not responding yet, continuing...')
+          // プロセスはあるが応答しない場合は、そのまま続行（再起動はしない）
+          return { success: true, message: 'Process starting, please wait...' }
         }
+      } else {
+        console.log('No RPA client process found, cleaning up...')
         rpaClient = null
       }
     }
@@ -110,8 +111,12 @@ export function initRPABridge(): void {
       }
       console.log('=============================')
 
+      // pythonPathを明示的に設定（本番環境ではnullで直接実行）
+      const pythonPath = isDev ? (process.platform === 'win32' ? 'python' : 'python3') : null
+      console.log('Using pythonPath:', pythonPath)
+      
       rpaClient = new RPAClient({
-        pythonPath: isDev ? (process.platform === 'win32' ? 'python' : 'python3') : undefined,  // 本番環境では実行ファイル直接
+        pythonPath: pythonPath as any,  // 本番環境では実行ファイル直接
         agentPath,
         debug: isDev
       })
