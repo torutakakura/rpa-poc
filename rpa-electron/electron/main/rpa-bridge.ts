@@ -5,9 +5,48 @@
 
 import { ipcMain, IpcMainInvokeEvent } from 'electron'
 import { RPAClient } from './rpa-client'
+import { RPAClientWindowsFix } from './rpa-client-windows-fix'
 import * as path from 'path'
+import * as fs from 'fs'
 
 let rpaClient: RPAClient | null = null
+
+/**
+ * 実行可能ファイル（または開発用スクリプト）を探す
+ */
+function findExecutable(): { path: string; type: 'exe' | 'script' } | null {
+  const isDev = process.env.NODE_ENV === 'development'
+  const isWin = process.platform === 'win32'
+  const execName = isWin ? 'rpa_agent.exe' : 'rpa_agent'
+
+  const searchPaths = [
+    ...(isDev ? [
+      path.join(__dirname, '../../../rpa-agent/rpa_agent.py')
+    ] : []),
+
+    path.join(process.resourcesPath, 'rpa-agent', execName),
+    path.join(process.resourcesPath, '..', 'rpa-agent', execName),
+    path.join(__dirname, '../../rpa-agent/dist', execName),
+    path.join(__dirname, '../../temp-resources/rpa-agent', execName),
+
+    path.join(process.cwd(), 'rpa-agent', execName),
+    path.join(process.cwd(), 'resources', 'rpa-agent', execName),
+
+    ...(isWin ? [
+      path.join(process.env.APPDATA || '', 'rpa-electron', 'rpa-agent', execName),
+      path.join(process.env.LOCALAPPDATA || '', 'Programs', 'rpa-electron', 'resources', 'rpa-agent', execName)
+    ] : [])
+  ]
+
+  for (const p of searchPaths) {
+    if (fs.existsSync(p)) {
+      const isScript = p.endsWith('.py')
+      return { path: p, type: isScript ? 'script' : 'exe' }
+    }
+  }
+
+  return null
+}
 
 /**
  * RPAブリッジを初期化
@@ -15,30 +54,20 @@ let rpaClient: RPAClient | null = null
 export function initRPABridge(): void {
   // 接続状態を確認
   ipcMain.handle('rpa:status', async () => {
-    // rpaClientの存在だけでなく、実際の動作状態も確認
     if (!rpaClient) {
-      return {
-        connected: false,
-        ready: false
-      }
+      return { connected: false, ready: false, version: 'unified' }
     }
-    
-    // プロセスが存在しているかだけ確認（初回起動時はpingを避ける）
-    // 初回起動時はまだagent.readyを受信していない可能性があるため
-    const hasProcess = rpaClient.hasProcess()
-    if (hasProcess) {
-      return {
-        connected: true,
-        ready: true  // プロセスがあれば準備完了とみなす
+
+    if (rpaClient.hasProcess()) {
+      try {
+        await rpaClient.callWithTimeout('ping', undefined, 1000)
+        return { connected: true, ready: true, version: 'unified' }
+      } catch {
+        return { connected: true, ready: false, version: 'unified' }
       }
     } else {
-      console.log('RPA client exists but no process found')
-      // プロセスがない場合はクリーンアップ
       rpaClient = null
-      return {
-        connected: false,
-        ready: false
-      }
+      return { connected: false, ready: false, version: 'unified' }
     }
   })
 
@@ -66,71 +95,54 @@ export function initRPABridge(): void {
     }
 
     try {
-      // 開発環境と本番環境でパスを切り替え
-      const isDev = process.env.NODE_ENV === 'development'
-      const agentExecutableName = process.platform === 'win32' ? 'rpa_agent.exe' : 'rpa_agent'
-      const agentPath = isDev
-        ? path.join(__dirname, '../../../rpa-agent/rpa_agent.py')
-        : path.join(process.resourcesPath, 'rpa-agent', agentExecutableName)  // PyInstallerでビルドした場合
+      const executable = findExecutable()
+      if (!executable) {
+        throw new Error(
+          'RPA実行ファイルが見つかりません。ビルドが成功しているか、アンチウイルスでブロックされていないかを確認してください。'
+        )
+      }
+
+      const isWindows = process.platform === 'win32'
+      const useExecutable = executable.type === 'exe'
 
       console.log('=== RPA Bridge Debug Info ===')
-      console.log('Environment:', isDev ? 'development' : 'production')
+      console.log('Environment:', process.env.NODE_ENV || 'production')
       console.log('Platform:', process.platform)
-      console.log('Agent path:', agentPath)
-      console.log('Python path:', isDev ? (process.platform === 'win32' ? 'python' : 'python3') : 'none (using executable)')
+      console.log('Agent path:', executable.path)
+      console.log('Agent type:', executable.type)
       console.log('__dirname:', __dirname)
       console.log('process.resourcesPath:', process.resourcesPath)
-      
-      // ファイルの存在確認
-      const fs = require('fs')
-      if (fs.existsSync(agentPath)) {
-        const stats = fs.statSync(agentPath)
-        console.log('Agent file found:', {
-          size: stats.size,
-          isFile: stats.isFile(),
-          mode: stats.mode.toString(8)
-        })
-      } else {
-        console.error('Agent file NOT found at:', agentPath)
-        
-        // デバッグのために近くのディレクトリを探索
-        if (!isDev && process.resourcesPath) {
-          const resourcesPath = process.resourcesPath
-          console.log('Checking resources directory:', resourcesPath)
-          if (fs.existsSync(resourcesPath)) {
-            const items = fs.readdirSync(resourcesPath)
-            console.log('Resources directory contents:', items)
-            
-            const agentDir = path.join(resourcesPath, 'rpa-agent')
-            if (fs.existsSync(agentDir)) {
-              const agentItems = fs.readdirSync(agentDir)
-              console.log('rpa-agent directory contents:', agentItems)
-            }
-          }
-        }
-      }
       console.log('=============================')
 
-      // pythonPathを明示的に設定（本番環境ではnullで直接実行）
-      const pythonPath = isDev ? (process.platform === 'win32' ? 'python' : 'python3') : null
-      console.log('Using pythonPath:', pythonPath)
-      
-      rpaClient = new RPAClient({
-        pythonPath: pythonPath as any,  // 本番環境では実行ファイル直接
-        agentPath,
-        debug: isDev
-      })
+      if (isWindows && useExecutable) {
+        // Windows + 実行ファイルは改良版クライアント
+        rpaClient = new (RPAClientWindowsFix as any)({
+          pythonPath: null,
+          agentPath: executable.path,
+          debug: process.env.NODE_ENV === 'development'
+        })
+      } else {
+        // それ以外は標準クライアント（scriptの場合はpython経由）
+        const pythonPath = executable.type === 'script'
+          ? (isWindows ? 'python' : 'python3')
+          : null
+        rpaClient = new RPAClient({
+          pythonPath: pythonPath as any,
+          agentPath: executable.path,
+          debug: process.env.NODE_ENV === 'development'
+        })
+      }
 
       // イベントリスナーを設定
-      rpaClient.on('log', (params) => {
+      rpaClient!.on('log', (params) => {
         event.sender.send('rpa:log', params)
       })
 
-      rpaClient.on('error', (error) => {
+      rpaClient!.on('error', (error) => {
         event.sender.send('rpa:error', { error: error.message })
       })
 
-      await rpaClient.start()
+      await rpaClient!.start()
       return { success: true }
     } catch (error) {
       rpaClient = null

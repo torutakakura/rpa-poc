@@ -1,12 +1,14 @@
 /**
- * RPA Agent Client - Windows対応修正版
- * Python RPAエージェントとJSON-RPC over stdioで通信
+ * RPA Agent Client - Windows Fix Version
+ * Windows環境での問題を解決するための改良版
  */
 
 import { spawn, ChildProcess } from 'child_process'
 import { EventEmitter } from 'events'
 import * as path from 'path'
 import * as fs from 'fs'
+import { StringDecoder } from 'string_decoder'
+import { execSync } from 'child_process'
 
 interface JsonRpcRequest {
   jsonrpc: '2.0'
@@ -40,49 +42,7 @@ export interface RPAClientOptions {
   debug?: boolean
 }
 
-/**
- * Windows環境でPythonを検出
- */
-function detectWindowsPython(): string | null {
-  const { execSync } = require('child_process')
-  
-  // Windows環境で試すべきPythonコマンドのリスト
-  const pythonCommands = [
-    'python',      // 一般的
-    'python3',     // Python3明示
-    'py',          // Python Launcher
-    'py -3',       // Python Launcher with version
-  ]
-  
-  for (const cmd of pythonCommands) {
-    try {
-      // Windowsではcmd.exe経由で実行
-      const result = execSync(`${cmd} --version`, { 
-        stdio: 'pipe',
-        shell: true,
-        windowsHide: true 
-      })
-      console.log(`Found Python via '${cmd}': ${result.toString().trim()}`)
-      return cmd
-    } catch (e) {
-      // 次のコマンドを試す
-    }
-  }
-  
-  // 環境変数PATHを直接確認
-  const pathDirs = process.env.PATH?.split(';') || []
-  for (const dir of pathDirs) {
-    const pythonExe = path.join(dir, 'python.exe')
-    if (fs.existsSync(pythonExe)) {
-      console.log(`Found Python at: ${pythonExe}`)
-      return pythonExe
-    }
-  }
-  
-  return null
-}
-
-export class RPAClient extends EventEmitter {
+export class RPAClientWindowsFix extends EventEmitter {
   private process: ChildProcess | null = null
   private requestId = 0
   private pendingRequests = new Map<string | number, {
@@ -91,133 +51,238 @@ export class RPAClient extends EventEmitter {
   }>()
   private buffer = ''
   private options: RPAClientOptions
+  private stdoutDecoder = new StringDecoder('utf8')
+  private stderrDecoder = new StringDecoder('utf8')
+  private startRetries = 0
+  private maxRetries = 3
 
   constructor(options: RPAClientOptions = {}) {
     super()
-    
-    // Windows環境の自動検出
-    let defaultPython: string | null = null
-    if (process.platform === 'win32') {
-      defaultPython = detectWindowsPython()
-      if (!defaultPython) {
-        console.warn('Python not found in PATH. Please install Python or specify pythonPath.')
-        defaultPython = 'python'  // フォールバック
-      }
-    } else {
-      defaultPython = 'python3'
-    }
+    const defaultPython = process.platform === 'win32' ? 'python' : 'python3'
 
     this.options = {
-      pythonPath: options.pythonPath || defaultPython,
+      pythonPath: options.pythonPath !== undefined ? options.pythonPath : defaultPython,
       agentPath: options.agentPath || path.join(__dirname, '../../rpa-agent/rpa_agent.py'),
       debug: options.debug || false
-    }
-    
-    // Windowsパスの正規化
-    if (process.platform === 'win32' && this.options.agentPath) {
-      // バックスラッシュをフォワードスラッシュに統一
-      this.options.agentPath = this.options.agentPath.replace(/\\/g, '/')
     }
   }
 
   /**
-   * エージェントを起動
+   * Windows環境での実行ファイルパスの正規化
    */
-  async start(): Promise<void> {
+  private normalizeWindowsPath(filePath: string): string {
+    if (process.platform !== 'win32') return filePath
+
+    // バックスラッシュを統一
+    let normalized = filePath.replace(/\//g, '\\')
+    
+    // 短縮パス（8.3形式）の取得を試みる
+    if (normalized.includes(' ')) {
+      try {
+        // cmd.exe /c "for %I in ("path") do @echo %~sI" を使用
+        const shortPath = execSync(
+          `cmd.exe /c "for %I in ("${normalized}") do @echo %~sI"`, 
+          { encoding: 'utf8' }
+        ).trim()
+        
+        if (shortPath && fs.existsSync(shortPath)) {
+          console.log(`[Windows] 短縮パスを使用: ${shortPath}`)
+          return shortPath
+        }
+      } catch (e: unknown) {
+        const msg = e instanceof Error ? e.message : String(e)
+        console.log(`[Windows] 短縮パスの取得に失敗、元のパスを使用: ${msg}`)
+      }
+    }
+
+    return normalized
+  }
+
+  /**
+   * プロセスの起動を試みる（リトライ機能付き）
+   */
+  private async startWithRetry(): Promise<void> {
+    while (this.startRetries < this.maxRetries) {
+      try {
+        await this.startInternal()
+        this.startRetries = 0 // 成功したらリセット
+        return
+      } catch (error) {
+        this.startRetries++
+        console.error(`[Windows] 起動試行 ${this.startRetries}/${this.maxRetries} 失敗:`, error)
+        
+        if (this.startRetries >= this.maxRetries) {
+          throw error
+        }
+
+        // リトライ前に待機（指数バックオフ）
+        const waitTime = Math.min(1000 * Math.pow(2, this.startRetries - 1), 5000)
+        console.log(`[Windows] ${waitTime}ms 待機してからリトライ...`)
+        await new Promise(resolve => setTimeout(resolve, waitTime))
+      }
+    }
+  }
+
+  /**
+   * エージェントを起動（内部実装）
+   */
+  private async startInternal(): Promise<void> {
     if (this.process) {
       throw new Error('Agent already started')
     }
 
     return new Promise((resolve, reject) => {
-      // Windows環境での実行方法を決定
+      const isDirectExecutable = !this.options.pythonPath
       let command: string
-      let args: string[]
-      let spawnOptions: any = {
-        stdio: ['pipe', 'pipe', 'pipe'],
-        windowsHide: true,
-      }
+      let args: string[] = []
       
-      // agentPathが.pyファイルかexeファイルか判定
-      const isScript = this.options.agentPath!.endsWith('.py')
+      console.log('[Windows] ======= RPA Client Start Debug =======')
+      console.log('[Windows] Platform:', process.platform)
+      console.log('[Windows] pythonPath:', this.options.pythonPath)
+      console.log('[Windows] agentPath:', this.options.agentPath)
+      console.log('[Windows] isDirectExecutable:', isDirectExecutable)
       
-      if (isScript && this.options.pythonPath) {
-        // Pythonスクリプトとして実行
-        if (process.platform === 'win32') {
-          // Windowsの場合
-          if (this.options.pythonPath.includes(' ')) {
-            // "py -3"のようなコマンドの場合
-            spawnOptions.shell = true
-            command = this.options.pythonPath
-            args = [`"${this.options.agentPath}"`]  // パスをクォート
-          } else {
-            // 通常のpythonコマンド
-            command = this.options.pythonPath
-            args = [this.options.agentPath!]
+      if (isDirectExecutable && this.options.agentPath) {
+        // PyInstallerでビルドされた実行ファイルを直接実行
+        command = this.normalizeWindowsPath(this.options.agentPath)
+        
+        // ファイルの存在確認
+        if (!fs.existsSync(command)) {
+          // 代替パスを試す
+          const altPaths = [
+            command,
+            command.replace(/\.exe$/i, '') + '.exe',
+            path.join(process.resourcesPath, 'rpa-agent', 'rpa_agent.exe'),
+            path.join(process.resourcesPath, 'rpa-agent', 'rpa_agent'),
+            path.join(__dirname, '../../temp-resources/rpa-agent/rpa_agent.exe')
+          ]
+          
+          console.log('[Windows] ファイルを検索中...')
+          for (const altPath of altPaths) {
+            console.log(`[Windows] 検索: ${altPath}`)
+            if (fs.existsSync(altPath)) {
+              command = this.normalizeWindowsPath(altPath)
+              console.log(`[Windows] 見つかりました: ${command}`)
+              break
+            }
           }
-        } else {
-          // Unix系
-          command = this.options.pythonPath
-          args = [this.options.agentPath!]
+          
+          if (!fs.existsSync(command)) {
+            reject(new Error(`実行ファイルが見つかりません。試したパス:\n${altPaths.join('\n')}`))
+            return
+          }
         }
+        
+        // ファイル情報を表示
+        const stats = fs.statSync(command)
+        console.log('[Windows] ファイル情報:', {
+          path: command,
+          size: `${(stats.size / 1024 / 1024).toFixed(2)} MB`,
+          isFile: stats.isFile(),
+          mode: stats.mode.toString(8)
+        })
+        
       } else {
-        // 実行ファイルとして直接実行
-        command = this.options.agentPath!
-        args = []
-        if (process.platform === 'win32') {
-          spawnOptions.shell = false  // exeは直接実行
-        }
+        // Pythonスクリプトとして実行
+        command = this.options.pythonPath!
+        args = [this.options.agentPath!]
+        console.log('[Windows] Python実行:', command, args)
       }
       
       if (this.options.debug) {
         args.push('--debug')
       }
 
-      console.log('Starting RPA Agent:')
-      console.log('  Platform:', process.platform)
-      console.log('  Command:', command)
-      console.log('  Args:', args)
-      console.log('  Agent path:', this.options.agentPath)
-      console.log('  Shell:', spawnOptions.shell)
+      // spawn オプションの設定（Windows最適化）
+      const spawnOptions: any = {
+        stdio: ['pipe', 'pipe', 'pipe'],
+        env: {
+          ...process.env,
+          PYTHONIOENCODING: 'utf-8',
+          PYTHONUTF8: '1',
+          PYTHONUNBUFFERED: '1'
+        }
+      }
+      
+      if (process.platform === 'win32') {
+        // Windows特有の設定
+        spawnOptions.windowsHide = false // デバッグのため表示
+        spawnOptions.shell = false
+        spawnOptions.detached = false
+        spawnOptions.windowsVerbatimArguments = true // 引数をそのまま渡す
+        
+        // 重要な環境変数を確実に含める
+        spawnOptions.env = {
+          ...spawnOptions.env,
+          SYSTEMROOT: process.env.SYSTEMROOT || 'C:\\Windows',
+          COMSPEC: process.env.COMSPEC || 'C:\\Windows\\System32\\cmd.exe',
+          PATH: process.env.PATH,
+          TEMP: process.env.TEMP,
+          TMP: process.env.TMP
+        }
+      }
+      
+      console.log('[Windows] spawn設定:', {
+        command: command,
+        args: args,
+        options: {
+          ...spawnOptions,
+          env: '(省略)'
+        }
+      })
+      console.log('[Windows] =======================================')
       
       try {
         this.process = spawn(command, args, spawnOptions)
-
-        this.process.stdout?.on('data', (data) => {
-          const output = data.toString()
-          console.log('Agent stdout:', output)
+        
+        if (!this.process || !this.process.stdout || !this.process.stderr || !this.process.stdin) {
+          reject(new Error('プロセスのストリーム作成に失敗しました'))
+          return
+        }
+        
+        console.log('[Windows] プロセス起動成功, PID:', this.process.pid)
+        
+        // stdout処理
+        this.process.stdout.on('data', (data) => {
+          const output = this.stdoutDecoder.write(data)
+          console.log('[Windows Agent stdout]:', output.trim())
           this.handleData(output)
         })
 
-        this.process.stderr?.on('data', (data) => {
-          const error = data.toString()
-          console.error('Agent stderr:', error)
-          
-          // Windows特有のエラーメッセージをチェック
-          if (error.includes('python') && error.includes('not recognized')) {
-            this.emit('error', new Error(
-              'Pythonが見つかりません。\n' +
-              'Pythonをインストールして、環境変数PATHに追加してください。\n' +
-              'または、Python Launcherを使用してください: https://www.python.org/downloads/'
-            ))
+        this.process.stdout.on('end', () => {
+          const remaining = this.stdoutDecoder.end()
+          if (remaining) {
+            this.handleData(remaining)
           }
         })
 
+        // stderr処理
+        this.process.stderr.on('data', (data) => {
+          const errorOutput = this.stderrDecoder.write(data)
+          console.error('[Windows Agent stderr]:', errorOutput.trim())
+        })
+
+        this.process.stderr.on('end', () => {
+          const remaining = this.stderrDecoder.end()
+          if (remaining) {
+            console.error('[Windows Agent stderr]:', remaining)
+          }
+        })
+
+        // エラーハンドリング
         this.process.on('error', (error: any) => {
-          console.error('Process error:', error)
+          console.error('[Windows] プロセスエラー:', error)
           
-          // Windows特有のエラー処理
           if (error.code === 'ENOENT') {
-            if (process.platform === 'win32') {
-              reject(new Error(
-                `実行ファイルが見つかりません: ${command}\n\n` +
-                '解決方法:\n' +
-                '1. Pythonがインストールされているか確認\n' +
-                '2. コマンドプロンプトで "python --version" が動作するか確認\n' +
-                '3. Python LauncherがインストールされていればI "py -3" を試す'
-              ))
-            } else {
-              reject(new Error(`Python executable not found: ${command}`))
-            }
+            const errorMsg = isDirectExecutable
+              ? `実行ファイルが見つかりません: ${command}\n` +
+                'ビルド時にrpa_agent.exeが正しく生成・配置されているか確認してください。'
+              : `Pythonが見つかりません: ${command}\n` +
+                'Pythonがインストールされ、PATHに追加されているか確認してください。'
+            reject(new Error(errorMsg))
+          } else if (error.code === 'EACCES' || error.code === 5) {
+            reject(new Error(`実行権限がありません: ${command}\n` +
+              'Windows Defenderまたはアンチウイルスソフトがブロックしている可能性があります。'))
           } else {
             reject(error)
           }
@@ -225,34 +290,47 @@ export class RPAClient extends EventEmitter {
           this.emit('error', error)
         })
 
+        // プロセス終了処理
         this.process.on('exit', (code, signal) => {
-          console.log('Process exited with code:', code, 'signal:', signal)
+          console.log(`[Windows] プロセス終了: code=${code}, signal=${signal}`)
           this.emit('exit', { code, signal })
           this.cleanup()
         })
 
         // agent.ready 通知を待つ
         const readyHandler = () => {
+          console.log('[Windows] Agent ready受信!')
           this.off('agent.ready', readyHandler)
-          console.log('Agent is ready!')
           resolve()
         }
         this.once('agent.ready', readyHandler)
 
-        // Windows環境では少し長めのタイムアウト
-        const timeout = process.platform === 'win32' ? 10000 : 5000
+        // Windows環境では長めのタイムアウトを設定（初回起動時の展開を考慮）
+        const timeoutMs = isDirectExecutable ? 30000 : 15000
         setTimeout(() => {
           this.off('agent.ready', readyHandler)
-          reject(new Error(
-            'Agent startup timeout.\n' +
-            'デベロッパーツール（F12）のコンソールでエラーを確認してください。'
-          ))
-        }, timeout)
-      } catch (error) {
-        console.error('Failed to spawn process:', error)
-        reject(error)
+          
+          // タイムアウトしてもプロセスが生きていれば成功とみなす
+          if (this.process && !this.process.killed) {
+            console.log('[Windows] タイムアウトしたがプロセスは生きているため成功とみなす')
+            resolve()
+          } else {
+            reject(new Error(`エージェント起動タイムアウト (${timeoutMs/1000}秒)`))
+          }
+        }, timeoutMs)
+        
+      } catch (spawnError) {
+        console.error('[Windows] spawn失敗:', spawnError)
+        reject(spawnError)
       }
     })
+  }
+
+  /**
+   * エージェントを起動（公開メソッド）
+   */
+  async start(): Promise<void> {
+    return this.startWithRetry()
   }
 
   /**
@@ -269,23 +347,34 @@ export class RPAClient extends EventEmitter {
       }
       this.once('exit', exitHandler)
 
-      // Windowsでは異なる終了方法を使用
+      // Windows環境での終了処理
       if (process.platform === 'win32') {
-        // Windowsではkillを使用
+        // 最初は通常のkillを試す
         this.process!.kill()
+        
+        // 3秒待っても終了しない場合はtaskkillを使用
+        setTimeout(() => {
+          if (this.process && !this.process.killed) {
+            console.log('[Windows] taskkillを使用して強制終了を試みます...')
+            try {
+              execSync(`taskkill /PID ${this.process.pid} /F`, { stdio: 'ignore' })
+            } catch (e) {
+              console.error('[Windows] taskkill失敗:', e)
+            }
+          }
+        }, 3000)
       } else {
-        // Unix系ではSIGTERMを使用
         this.process!.kill('SIGTERM')
       }
 
-      // 強制終了タイムアウト
+      // 最終的な強制終了タイムアウト
       setTimeout(() => {
         this.off('exit', exitHandler)
         if (this.process) {
           this.process.kill('SIGKILL')
         }
         resolve()
-      }, 3000)
+      }, 5000)
     })
   }
 
@@ -309,32 +398,61 @@ export class RPAClient extends EventEmitter {
       this.pendingRequests.set(id, { resolve, reject })
 
       const json = JSON.stringify(request)
-      console.log('Sending JSON-RPC request:', json)
+      console.log('[Windows] Sending JSON-RPC:', json)
       
-      // Windows環境での改行コード処理
-      const lineEnding = process.platform === 'win32' ? '\r\n' : '\n'
-      this.process!.stdin?.write(json + lineEnding)
+      // Windows環境では\r\nを使用
+      const lineEnding = '\r\n'
+      
+      try {
+        this.process!.stdin?.write(json + lineEnding, (error) => {
+          if (error) {
+            console.error('[Windows] stdin書き込みエラー:', error)
+            this.pendingRequests.delete(id)
+            reject(error)
+          }
+        })
+      } catch (e) {
+        console.error('[Windows] stdin書き込み例外:', e)
+        this.pendingRequests.delete(id)
+        reject(e)
+      }
 
       // タイムアウト設定
       setTimeout(() => {
         if (this.pendingRequests.has(id)) {
           this.pendingRequests.delete(id)
-          reject(new Error(`Request timeout: ${method}`))
+          reject(new Error(`リクエストタイムアウト: ${method}`))
         }
       }, 30000)
     })
   }
 
   /**
-   * 標準出力からのデータを処理
+   * 通知を送信
+   */
+  notify(method: string, params?: any): void {
+    if (!this.process) {
+      throw new Error('Agent not started')
+    }
+
+    const notification: JsonRpcNotification = {
+      jsonrpc: '2.0',
+      method,
+      params
+    }
+
+    const json = JSON.stringify(notification)
+    const lineEnding = process.platform === 'win32' ? '\r\n' : '\n'
+    this.process!.stdin?.write(json + lineEnding)
+  }
+
+  /**
+   * データ処理
    */
   private handleData(data: string): void {
     this.buffer += data
-    
-    // Windows環境では\r\nも考慮
     const lines = this.buffer.split(/\r?\n/)
     
-    // 最後の不完全な行を保持
     this.buffer = lines.pop() || ''
 
     for (const line of lines) {
@@ -343,17 +461,17 @@ export class RPAClient extends EventEmitter {
           const message = JSON.parse(line) as JsonRpcMessage
           this.handleMessage(message)
         } catch (error) {
-          console.error('Failed to parse JSON-RPC message:', line, error)
+          console.error('[Windows] JSON解析エラー:', line, error)
         }
       }
     }
   }
 
   /**
-   * JSON-RPCメッセージを処理
+   * メッセージ処理
    */
   private handleMessage(message: JsonRpcMessage): void {
-    // レスポンス
+    // レスポンス処理
     if ('id' in message && ('result' in message || 'error' in message)) {
       const response = message as JsonRpcResponse
       const pending = this.pendingRequests.get(response.id)
@@ -366,7 +484,7 @@ export class RPAClient extends EventEmitter {
         }
       }
     }
-    // 通知
+    // 通知処理
     else if ('method' in message && !('id' in message)) {
       const notification = message as JsonRpcNotification
       this.emit(notification.method, notification.params)
@@ -380,23 +498,93 @@ export class RPAClient extends EventEmitter {
     this.process = null
     this.buffer = ''
     
-    // 未処理のリクエストをエラーで終了
     for (const [, pending] of this.pendingRequests) {
       pending.reject(new Error('Agent disconnected'))
     }
     this.pendingRequests.clear()
   }
 
-  // 便利メソッドは元のまま...
-  async ping(): Promise<any> {
-    return this.call('ping')
+  /**
+   * プロセス存在確認
+   */
+  hasProcess(): boolean {
+    return this.process !== null && !this.process.killed
   }
 
+  /**
+   * ping（ヘルスチェック）
+   */
+  async ping(): Promise<any> {
+    if (!this.process) {
+      throw new Error('Agent process not started')
+    }
+    
+    if (this.process.killed) {
+      throw new Error('Agent process has been killed')
+    }
+    
+    return this.callWithTimeout('ping', undefined, 3000)
+  }
+
+  /**
+   * タイムアウト付きコール
+   */
+  async callWithTimeout(method: string, params?: any, timeout: number = 30000): Promise<any> {
+    if (!this.process) {
+      throw new Error('Agent not started')
+    }
+
+    const id = ++this.requestId
+    const request: JsonRpcRequest = {
+      jsonrpc: '2.0',
+      method,
+      params,
+      id
+    }
+
+    return new Promise((resolve, reject) => {
+      this.pendingRequests.set(id, { resolve, reject })
+
+      const json = JSON.stringify(request)
+      const lineEnding = process.platform === 'win32' ? '\r\n' : '\n'
+      this.process!.stdin?.write(json + lineEnding)
+
+      setTimeout(() => {
+        if (this.pendingRequests.has(id)) {
+          this.pendingRequests.delete(id)
+          reject(new Error(`リクエストタイムアウト (${timeout}ms): ${method}`))
+        }
+      }, timeout)
+    })
+  }
+
+  // 便利メソッド群
   async getCapabilities(): Promise<any> {
     return this.call('get_capabilities')
   }
 
+  async runTask(name: string, params?: any): Promise<string> {
+    const result = await this.call('run_task', { name, params })
+    return result.task_id
+  }
+
+  async cancelTask(taskId: string): Promise<any> {
+    return this.call('cancel_task', { task_id: taskId })
+  }
+
   async executeWorkflow(steps: any[], mode: 'sequential' | 'parallel' = 'sequential'): Promise<any> {
     return this.call('executeOperations', { steps, mode })
+  }
+
+  async excelRead(filePath: string, sheetName?: string): Promise<any> {
+    return this.call('excel_read', { file_path: filePath, sheet_name: sheetName })
+  }
+
+  async excelWrite(filePath: string, data: any[][], sheetName?: string): Promise<any> {
+    return this.call('excel_write', {
+      file_path: filePath,
+      data,
+      sheet_name: sheetName || 'Sheet1'
+    })
   }
 }

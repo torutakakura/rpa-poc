@@ -4,6 +4,8 @@ import { initRPABridge, cleanupRPABridge } from './rpa-bridge'
 
 let mainWindow: BrowserWindow | null = null
 
+// 単一の統合ブリッジを使用
+
 function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1200,
@@ -36,7 +38,7 @@ function createWindow() {
 }
 
 app.whenReady().then(() => {
-  // RPAブリッジを初期化
+  // 統合ブリッジを初期化
   initRPABridge()
   createWindow()
 })
@@ -55,7 +57,7 @@ app.on('activate', () => {
 
 app.on('before-quit', async (event) => {
   event.preventDefault()
-  // RPAブリッジをクリーンアップ
+  // 統合ブリッジをクリーンアップ
   await cleanupRPABridge()
   app.exit()
 })

@@ -120,8 +120,39 @@ try {
     fail(`PyInstaller の出力が見つかりません: ${agentBinary}`);
   }
 
+  // ビルドされたバイナリのサイズを確認
+  const { statSync } = await import("node:fs");
+  const stats = statSync(agentBinary);
+  console.log(`\n[dist-win] ビルド完了: ${agentBinary}`);
+  console.log(`[dist-win] ファイルサイズ: ${(stats.size / 1024 / 1024).toFixed(2)} MB`);
+
+  // rpa_operations.jsonファイルも確認
+  const operationsFile = path.join(agentDir, "rpa_operations.json");
+  if (!existsSync(operationsFile)) {
+    console.warn(`[dist-win] 警告: rpa_operations.json が見つかりません: ${operationsFile}`);
+  }
+
   // release ディレクトリを確実に作成
   mkdirSync(path.join(electronDir, "release"), { recursive: true });
+
+  // 手動でファイルをコピー（デバッグ用）
+  const tempResourcesPath = path.join(electronDir, "temp-resources", "rpa-agent");
+  mkdirSync(tempResourcesPath, { recursive: true });
+  
+  console.log("\n[dist-win] Python エージェントを一時リソースフォルダーにコピー中...");
+  
+  // Windows用のコピーコマンド
+  const copyCmd = process.platform === "win32" ? "copy" : "cp";
+  const copyArgs = process.platform === "win32" 
+    ? ["/Y", agentBinary.replace(/\//g, "\\"), tempResourcesPath.replace(/\//g, "\\")]
+    : [agentBinary, tempResourcesPath];
+  
+  try {
+    spawnSync(copyCmd, copyArgs, { shell: true, stdio: "inherit" });
+    console.log(`[dist-win] コピー完了: ${path.join(tempResourcesPath, "rpa_agent.exe")}`);
+  } catch (copyError) {
+    console.error(`[dist-win] コピーエラー: ${copyError.message}`);
+  }
 
   const pnpmCmd = process.platform === "win32" ? "pnpm.cmd" : "pnpm";
   // 依存関係をインストール
