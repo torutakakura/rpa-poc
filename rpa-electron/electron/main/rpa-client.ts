@@ -6,6 +6,7 @@
 import { spawn, ChildProcess } from 'child_process'
 import { EventEmitter } from 'events'
 import * as path from 'path'
+import { StringDecoder } from 'string_decoder'
 
 interface JsonRpcRequest {
   jsonrpc: '2.0'
@@ -48,6 +49,8 @@ export class RPAClient extends EventEmitter {
   }>()
   private buffer = ''
   private options: RPAClientOptions
+  private stdoutDecoder = new StringDecoder('utf8')
+  private stderrDecoder = new StringDecoder('utf8')
 
   constructor(options: RPAClientOptions = {}) {
     super()
@@ -192,24 +195,29 @@ export class RPAClient extends EventEmitter {
       }
 
       this.process.stdout?.on('data', (data) => {
-        // デバッグ用の生データログを追加
-        console.log('Raw stdout data:', data)
-        console.log('Raw stdout hex:', data.toString('hex'))
-        
-        // Windows環境では明示的にUTF-8として処理
-        const output = process.platform === 'win32'
-          ? data.toString('utf8')
-          : data.toString()
+        // マルチバイト境界を安全に処理
+        const output = this.stdoutDecoder.write(data)
         console.log('Agent stdout:', output)
         this.handleData(output)
       })
 
+      this.process.stdout?.on('end', () => {
+        const remaining = this.stdoutDecoder.end()
+        if (remaining) {
+          this.handleData(remaining)
+        }
+      })
+
       this.process.stderr?.on('data', (data) => {
-        // Windows環境では明示的にUTF-8として処理
-        const errorOutput = process.platform === 'win32'
-          ? data.toString('utf8')
-          : data.toString()
+        const errorOutput = this.stderrDecoder.write(data)
         console.error('Agent stderr:', errorOutput)
+      })
+
+      this.process.stderr?.on('end', () => {
+        const remaining = this.stderrDecoder.end()
+        if (remaining) {
+          console.error('Agent stderr:', remaining)
+        }
       })
 
       this.process.on('error', (error: any) => {

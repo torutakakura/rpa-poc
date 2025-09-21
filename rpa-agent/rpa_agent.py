@@ -30,12 +30,28 @@ os.environ['PYTHONUNBUFFERED'] = '1'
 if sys.platform == "win32":
     # Windows環境でUTF-8を強制
     os.environ['PYTHONIOENCODING'] = 'utf-8'
-    
-    # PyInstallerでビルドされている場合
+    os.environ['PYTHONUTF8'] = '1'
+
+    # 標準入出力をUTF-8に再構成（起動後でも確実に適用）
+    try:
+        if hasattr(sys.stdout, 'reconfigure'):
+            sys.stdout.reconfigure(encoding='utf-8', newline='\n')
+            sys.stderr.reconfigure(encoding='utf-8', newline='\n')
+        else:
+            sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', newline='\n')
+            sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', newline='\n')
+
+        # stdinはCRLFも受け取れるようにユニバーサル改行(None)で構成
+        if hasattr(sys.stdin, 'reconfigure'):
+            sys.stdin.reconfigure(encoding='utf-8', newline=None)
+        else:
+            sys.stdin = io.TextIOWrapper(sys.stdin.buffer, encoding='utf-8', newline=None)
+    except Exception:
+        # 失敗しても処理は継続（後続でflushを強制）
+        pass
+
+    # PyInstallerビルド時は確実にflushされるようにフック
     if hasattr(sys, '_MEIPASS'):
-        # Windows環境でのstdioを確実にする
-        # 新しいテキストラッパーを作成しない（元のままにする）
-        # ただし、フラッシュを頻繁に実行するように設定
         original_write = sys.stdout.write
         def write_with_flush(text):
             result = original_write(text)
