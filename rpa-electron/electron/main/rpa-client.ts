@@ -113,23 +113,34 @@ export class RPAClient extends EventEmitter {
 
       console.log('Spawning process:', command, args)
       
-      // Windows環境用のエンコーディング設定
+      // spawn オプションの設定
       const spawnOptions: any = {
         stdio: ['pipe', 'pipe', 'pipe'],
-        shell: process.platform === 'win32',  // Windows環境ではshell経由で実行
-        windowsHide: true  // Windowsでコンソールウィンドウを非表示
+        windowsHide: true,  // Windowsでコンソールウィンドウを非表示
+        // スペースを含むパスの問題を回避するためshellは使わない
+        shell: false,
+        // Windows特有の設定
+        ...(process.platform === 'win32' && {
+          detached: false,
+          windowsVerbatimArguments: false  // 引数の自動エスケープを有効にする
+        })
       }
       
-      // Windows環境では環境変数でUTF-8を指定
-      if (process.platform === 'win32') {
-        spawnOptions.env = {
-          ...process.env,
-          PYTHONIOENCODING: 'utf-8',
-          PYTHONUTF8: '1'
-        }
+      // 環境変数でUTF-8を指定
+      spawnOptions.env = {
+        ...process.env,
+        PYTHONIOENCODING: 'utf-8',
+        PYTHONUTF8: '1',
+        PYTHONUNBUFFERED: '1'  // バッファリングを無効化
       }
       
-      this.process = spawn(command, args, spawnOptions)
+      try {
+        this.process = spawn(command, args, spawnOptions)
+      } catch (spawnError) {
+        console.error('Failed to spawn process:', spawnError)
+        reject(spawnError)
+        return
+      }
 
       this.process.stdout?.on('data', (data) => {
         // デバッグ用の生データログを追加
@@ -145,7 +156,11 @@ export class RPAClient extends EventEmitter {
       })
 
       this.process.stderr?.on('data', (data) => {
-        console.error('Agent stderr:', data.toString())
+        // Windows環境では明示的にUTF-8として処理
+        const errorOutput = process.platform === 'win32'
+          ? data.toString('utf8')
+          : data.toString()
+        console.error('Agent stderr:', errorOutput)
       })
 
       this.process.on('error', (error: any) => {

@@ -94,7 +94,7 @@ try {
     { cwd: agentDir }
   );
 
-  // PyInstaller でエージェントをビルド
+  // PyInstaller でエージェントをビルド（Windows用の調整）
   run(
     pythonCmd[0],
     [
@@ -107,6 +107,8 @@ try {
       "rpa_agent",
       "--add-data",
       process.platform === "win32" ? "rpa_operations.json;." : "rpa_operations.json:.",  // JSONファイルを含める
+      "--console",  // コンソールウィンドウを生成（stdioとの通信に必要）
+      "--noupx",    // UPX圧縮を無効化（起動速度改善）
       "rpa_agent.py",
     ],
     { cwd: agentDir }
