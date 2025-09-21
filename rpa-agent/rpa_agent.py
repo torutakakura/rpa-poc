@@ -29,21 +29,19 @@ os.environ['PYTHONUNBUFFERED'] = '1'
 # Windows環境での特別な処理
 if sys.platform == "win32":
     # Windows環境でUTF-8を強制
-    import locale
-    locale.setlocale(locale.LC_ALL, '')
     os.environ['PYTHONIOENCODING'] = 'utf-8'
     
-    # PyInstallerでビルドされている場合の特別な処理
+    # PyInstallerでビルドされている場合
     if hasattr(sys, '_MEIPASS'):
-        # 標準入出力を明示的にバイナリモードで再オープンし、UTF-8でラップ
-        import msvcrt
-        msvcrt.setmode(sys.stdout.fileno(), os.O_BINARY)
-        msvcrt.setmode(sys.stdin.fileno(), os.O_BINARY)
-        
-        # UTF-8でラップ（行バッファリング有効）
-        sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', line_buffering=True)
-        sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', line_buffering=True)
-        sys.stdin = io.TextIOWrapper(sys.stdin.buffer, encoding='utf-8')
+        # Windows環境でのstdioを確実にする
+        # 新しいテキストラッパーを作成しない（元のままにする）
+        # ただし、フラッシュを頻繁に実行するように設定
+        original_write = sys.stdout.write
+        def write_with_flush(text):
+            result = original_write(text)
+            sys.stdout.flush()
+            return result
+        sys.stdout.write = write_with_flush
 else:
     # Unix系の環境
     if hasattr(sys.stdout, 'fileno'):
@@ -343,8 +341,16 @@ class RPAAgent:
 
 def main():
     """エントリーポイント"""
-    # 標準エラー出力を無効化（JSONRPCの邪魔にならないように）
-    sys.stderr = open("/dev/null", "w") if sys.platform != "win32" else open("nul", "w")
+    # 標準エラー出力は無効化しない（デバッグとWindows環境での互換性のため）
+    # 必要に応じてElectron側でstderrを無視する
+    
+    # Windows環境でのデバッグ情報出力
+    if sys.platform == "win32" and hasattr(sys, '_MEIPASS'):
+        # デバッグ用にstderrに情報を出力
+        sys.stderr.write(f"[RPA Agent] Starting on Windows (PyInstaller build)\n")
+        sys.stderr.write(f"[RPA Agent] Python {sys.version}\n")
+        sys.stderr.write(f"[RPA Agent] stdout: {sys.stdout}\n")
+        sys.stderr.flush()
 
     agent = RPAAgent()
     agent.start()
