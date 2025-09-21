@@ -60,80 +60,51 @@ export function useRPA(autoConnect = false) {
     try {
       const result = await ipcRenderer.invoke('rpa:start')
       if (result.success) {
-        // 接続成功 - プロセスが起動中の場合は待機
-        if (result.message === 'Process starting, please wait...') {
-          // プロセス起動中なので少し待つ
-          setStatus({
-            connected: false,
-            connecting: true,
-            error: null,
-            capabilities: null
-          })
-          
-          // 2秒待ってから機能を取得
-          setTimeout(async () => {
-            try {
-              const capabilities = await ipcRenderer.invoke('rpa:getCapabilities')
-              setStatus({
-                connected: true,
-                connecting: false,
-                error: null,
-                capabilities
-              })
-            } catch (error) {
-              setStatus({
-                connected: true,
-                connecting: false,
-                error: null,
-                capabilities: null
-              })
-            }
-          }, 2000)
-        } else {
-          // すでに接続済み - 少し待って機能を取得
-          setTimeout(async () => {
-            try {
-              const capabilities = await ipcRenderer.invoke('rpa:getCapabilities')
-              setStatus({
-                connected: true,
-                connecting: false,
-                error: null,
-                capabilities
-              })
-            } catch (error) {
-              setStatus({
-                connected: true,
-                connecting: false,
-                error: null,
-                capabilities: null
-              })
-            }
-          }, 500)
-        }
+        // 接続を即時に反映（能力情報は後から取得）
+        setStatus({
+          connected: true,
+          connecting: false,
+          error: null,
+          capabilities: null
+        })
+
+        const delay = result.message === 'Process starting, please wait...' ? 2000 : 200
+        setTimeout(async () => {
+          try {
+            const capabilities = await ipcRenderer.invoke('rpa:getCapabilities')
+            setStatus(prev => ({
+              ...prev,
+              connected: true,
+              connecting: false,
+              capabilities
+            }))
+          } catch (error) {
+            // 取得失敗でも接続状態は維持
+            setStatus(prev => ({
+              ...prev,
+              connected: true,
+              connecting: false,
+              capabilities: null
+            }))
+          }
+        }, delay)
+
         return true
       } else {
         // "Already started"エラーの場合は、既に接続されているとみなす
         if (result.error === 'Already started') {
           try {
-            // 既存の接続を使って機能を取得（少し待つ）
+            // 即時に接続済みを反映し、能力は後から取得
+            setStatus({ connected: true, connecting: false, error: null, capabilities: null })
+
             setTimeout(async () => {
               try {
                 const capabilities = await ipcRenderer.invoke('rpa:getCapabilities')
-                setStatus({
-                  connected: true,
-                  connecting: false,
-                  error: null,
-                  capabilities
-                })
+                setStatus(prev => ({ ...prev, capabilities }))
               } catch (error) {
-                setStatus({
-                  connected: true,
-                  connecting: false,
-                  error: null,
-                  capabilities: null
-                })
+                // noop
               }
-            }, 500)
+            }, 200)
             return true
           } catch (innerError) {
             setStatus({

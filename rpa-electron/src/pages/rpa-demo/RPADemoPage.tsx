@@ -10,8 +10,8 @@ import { Button } from '@/components/ui/button'
 import { Bug } from 'lucide-react'
 
 export default function RPADemoPage() {
-  // 配布版では最初からデバッグパネルを表示
-  const [showDebug, setShowDebug] = useState(true)
+  // デフォルトは非表示
+  const [showDebug, setShowDebug] = useState(false)
 
   return (
     <div className="h-screen flex flex-col overflow-hidden">
