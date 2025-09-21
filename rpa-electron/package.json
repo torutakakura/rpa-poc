@@ -10,11 +10,8 @@
     "dev:electron": "wait-on http://localhost:5173; wait-on dist-electron/preload/index.js; cross-env NODE_ENV=development electron .",
     "build": "tsc && vite build && tsc -p tsconfig.electron.json",
     "preview": "vite preview",
-    "dist": "pnpm build && electron-builder",
-    "dist:win": "node ./scripts/dist-win.mjs",
-    "dist:win:builder": "pnpm build && electron-builder --win",
-    "dist:mac": "pnpm build && electron-builder --mac",
-    "dist:linux": "pnpm build && electron-builder --linux"
+    "dist": "node ./scripts/dist-win.mjs",
+    "dist:electron-only": "pnpm build && electron-builder --win"
   },
   "keywords": [
     "rpa",
@@ -81,47 +78,23 @@
         ]
       }
     ],
-    "mac": {
-      "category": "public.app-category.productivity",
-      "icon": "build/icon.icns",
-      "hardenedRuntime": true,
-      "gatekeeperAssess": false
-    },
     "win": {
       "icon": "build/icon.ico",
       "target": [
         {
           "target": "nsis",
           "arch": [
-            "x64",
-            "ia32"
+            "x64"
           ]
         }
       ]
-    },
-    "linux": {
-      "icon": "build/icon.png",
-      "target": [
-        {
-          "target": "AppImage",
-          "arch": [
-            "x64"
-          ]
-        },
-        {
-          "target": "deb",
-          "arch": [
-            "x64"
-          ]
-        }
-      ],
-      "category": "Utility"
     },
     "nsis": {
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
-      "createStartMenuShortcut": true
+      "createStartMenuShortcut": true,
+      "artifactName": "${productName}-Setup-${version}.${ext}"
     }
   }
 }
