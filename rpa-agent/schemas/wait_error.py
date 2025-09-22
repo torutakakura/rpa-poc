@@ -9,74 +9,98 @@ class WaitErrorOperations:
     """待機・終了・エラー操作の定義"""
 
     @staticmethod
-    def wait_seconds() -> OperationTemplate:
-        """秒"""
-        return OperationTemplate(specific_params={"wait_seconds": 1})
-
-    @staticmethod
-    def wait_for_image() -> OperationTemplate:
-        """画像出現を待つ"""
-        return OperationTemplate(
-            common_params=CommonParams(timeout=60),
-            specific_params={
-                "image_path": "",
-                "accuracy": 0.8,
-                "search_area": "full_screen",
-                "coordinates": {"x": 0, "y": 0, "width": 0, "height": 0},
-            },
-        )
-
-    @staticmethod
-    def continue_confirmation() -> OperationTemplate:
-        """続行確認"""
-        return OperationTemplate(specific_params={"message": "", "title": "続行確認"})
-
-    @staticmethod
-    def timed_continue_confirmation() -> OperationTemplate:
-        """タイマー付き続行確認（秒）"""
+    def pause() -> OperationTemplate:
+        """待機（秒）"""
         return OperationTemplate(
             specific_params={
-                "message": "",
-                "title": "続行確認",
-                "countdown_seconds": 10,
+                "interval": 3,  # 待機・間隔の秒数
             }
         )
 
     @staticmethod
-    def change_command_interval() -> OperationTemplate:
-        """コマンド間待機時間を変更"""
-        return OperationTemplate(specific_params={"interval_ms": 500})
+    def search_screen_and_branch() -> OperationTemplate:
+        """画像出現を待つ"""
+        return OperationTemplate(
+            specific_params={
+                "filename": "",  # 任意設定項目（用途に応じて指定）（必須）
+                "precision": 85,  # 画像一致の厳しさ（%）
+                "interval": 5,  # 待機・間隔の秒数
+                "noise_filter": 100.0,  # 画像検索時のノイズ除去率
+                "search_area_type": None,  # screen/window/area - 検索範囲の種類
+                "search_area": "(0,0)-(0,0)",  # rect (x1,y1)-(x2,y2) - 検索座標の範囲指定
+            }
+        )
 
     @staticmethod
-    def force_terminate() -> OperationTemplate:
+    def pause_and_ask_to_proceed() -> OperationTemplate:
+        """続行確認"""
+        return OperationTemplate(
+            specific_params={
+                "string": "",  # メッセージや対象文字列
+            }
+        )
+
+    @staticmethod
+    def pause_and_countdown_to_proceed() -> OperationTemplate:
+        """タイマー付き続行確認"""
+        return OperationTemplate(
+            specific_params={
+                "interval": 3,  # 待機・間隔の秒数
+                "string": "",  # メッセージや対象文字列
+            }
+        )
+
+    @staticmethod
+    def change_speed_for_command_execution() -> OperationTemplate:
+        """コマンド間の待機時間を変更"""
+        return OperationTemplate(
+            specific_params={
+                "interval": 0.2,  # 待機・間隔の秒数
+            }
+        )
+
+    @staticmethod
+    def abort() -> OperationTemplate:
         """作業強制終了"""
-        return OperationTemplate(specific_params={"exit_code": 0})
+        return OperationTemplate(
+            specific_params={
+                "result_type": None,  # abort/exit - 終了動作の種類
+            }
+        )
 
     @staticmethod
     def raise_error() -> OperationTemplate:
-        """エラー発生"""
+        """エラーを発生させる"""
         return OperationTemplate(
-            specific_params={"error_message": "", "error_code": ""}
-        )
-
-    @staticmethod
-    def error_handling() -> OperationTemplate:
-        """エラー確認・処理"""
-        return OperationTemplate(
-            common_params=CommonParams(error_handling=ErrorHandling.CONTINUE.value),
-            specific_params={"on_error_steps": [], "clear_error": True},
-        )
-
-    @staticmethod
-    def error_handling_with_retry() -> OperationTemplate:
-        """エラー確認・処理（リトライ前処理）"""
-        return OperationTemplate(
-            common_params=CommonParams(
-                retry_count=3, error_handling=ErrorHandling.RETRY.value
-            ),
             specific_params={
-                "retry_interval": 5,
-                "on_retry_steps": [],
-                "on_error_steps": [],
-            },
+                "string": "",  # メッセージや対象文字列
+            }
+        )
+
+    @staticmethod
+    def check_for_errors() -> OperationTemplate:
+        """直前のコマンドのエラーを確認・処理"""
+        return OperationTemplate(
+            specific_params={
+                "retries": 0,  # リトライ回数
+                "wait": 1,  # リトライ間隔（秒）
+                "err_cmd": "[ERR_CMD]",  # エラー発生コマンド名の格納先
+                "err_memo": "[ERR_MEMO]",  # エラーメモの格納先
+                "err_msg": "[ERR_MSG]",  # エラーメッセージの格納先
+                "err_param": "[ERR_PARAM]",  # エラー時パラメータの格納先
+            }
+        )
+
+    @staticmethod
+    def check_for_errors_2() -> OperationTemplate:
+        """直前のコマンドのエラーを確認・処理（リトライ前処理）"""
+        return OperationTemplate(
+            specific_params={
+                "retries": 0,  # リトライ回数
+                "wait": 1,  # リトライ間隔（秒）
+                "err_cmd": "[ERR_CMD]",  # エラー発生コマンド名の格納先
+                "err_memo": "[ERR_MEMO]",  # エラーメモの格納先
+                "err_msg": "[ERR_MSG]",  # エラーメッセージの格納先
+                "err_param": "[ERR_PARAM]",  # エラー時パラメータの格納先
+            }
         )

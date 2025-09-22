@@ -10,14 +10,20 @@ from typing import Any, Dict, Optional, Union
 from schemas.app_screen import AppOperations, ScreenOperations
 
 # スキーマモジュールからインポート
+from schemas.api import APIOperations
 from schemas.base import OperationTemplate
 from schemas.branch import BranchOperations
 from schemas.excel_csv import ExcelOperations
+from schemas.external_scenario import ExternalScenarioOperations
 from schemas.file_folder import FileFolderOperations, FileOperations, FolderOperations
 from schemas.keyboard import KeyboardOperations
 from schemas.loop import LoopOperations
+from schemas.mail import MailOperations
 from schemas.memory import MemoryOperations
 from schemas.mouse import MouseOperations
+from schemas.scenario import ScenarioOrganizationOperations
+from schemas.special_app import SpecialAppOperations
+from schemas.spreadsheet import SpreadsheetOperations
 from schemas.text_extract import TextExtractOperations
 from schemas.wait_error import WaitErrorOperations
 from schemas.web_browser import WebBrowserOperations
@@ -40,80 +46,80 @@ class RPAOperationSystem:
         # A. アプリ・画面
         self.operations["A_アプリ・画面"] = {
             "アプリ": {
-                "起動": AppOperations.launch(),
-                "起動（終了待ち）": AppOperations.launch_and_wait(),
+                "起動": AppOperations.run_executable(),
+                "起動（終了待ち）": AppOperations.run_executable_and_wait(),
             },
             "画面": {
-                "最前画面を覚える": ScreenOperations.remember_foreground(),
-                "画面を覚える（名前）": ScreenOperations.remember_by_name(),
-                "切り替え（参照ID）": ScreenOperations.switch_by_reference(),
-                "切り替え（名前）": ScreenOperations.switch_by_name(),
-                "画面の名前を取得": ScreenOperations.get_window_name(),
-                "移動": ScreenOperations.move(),
-                "最大化/最小化": ScreenOperations.maximize_minimize(),
+                "最前画面を覚える": ScreenOperations.remember_focused_window(),
+                "画面を覚える（名前）": ScreenOperations.remember_named_window(),
+                "切り替え（参照ID）": ScreenOperations.focus_window(),
+                "切り替え（名前）": ScreenOperations.focus_window_by_name(),
+                "画面の名前を取得": ScreenOperations.get_window_title(),
+                "移動": ScreenOperations.align_focused_window(),
+                "最大化/最小化": ScreenOperations.maximize_focused_window(),
                 "スクリーンショットを撮る": ScreenOperations.take_screenshot(),
             },
         }
 
         # B. 待機・終了・エラー
         self.operations["B_待機・終了・エラー"] = {
-            "秒": WaitErrorOperations.wait_seconds(),
-            "画像出現を待つ": WaitErrorOperations.wait_for_image(),
-            "続行確認": WaitErrorOperations.continue_confirmation(),
-            "タイマー付き続行確認（秒）": WaitErrorOperations.timed_continue_confirmation(),
-            "コマンド間待機時間を変更": WaitErrorOperations.change_command_interval(),
-            "作業強制終了": WaitErrorOperations.force_terminate(),
+            "秒": WaitErrorOperations.pause(),
+            "画像出現を待つ": WaitErrorOperations.search_screen_and_branch(),
+            "続行確認": WaitErrorOperations.pause_and_ask_to_proceed(),
+            "タイマー付き続行確認（秒）": WaitErrorOperations.pause_and_countdown_to_proceed(),
+            "コマンド間待機時間を変更": WaitErrorOperations.change_speed_for_command_execution(),
+            "作業強制終了": WaitErrorOperations.abort(),
             "エラー発生": WaitErrorOperations.raise_error(),
-            "エラー確認・処理": WaitErrorOperations.error_handling(),
-            "エラー確認・処理（リトライ前処理）": WaitErrorOperations.error_handling_with_retry(),
+            "エラー確認・処理": WaitErrorOperations.check_for_errors(),
+            "エラー確認・処理（リトライ前処理）": WaitErrorOperations.check_for_errors_2(),
         }
 
         # C. マウス
         self.operations["C_マウス"] = {
             "移動": {
-                "座標": MouseOperations.Move.by_coordinates(),
-                "距離": MouseOperations.Move.by_distance(),
-                "画像認識": MouseOperations.Move.by_image(),
+                "座標": MouseOperations.Move.move_mouse_to_absolute_coordinates(),
+                "距離": MouseOperations.Move.move_mouse_to_relative_coordinates(),
+                "画像認識": MouseOperations.Move.move_mouse_to_image(),
             },
             "ドラッグ＆ドロップ": {
-                "座標（D&D）": MouseOperations.DragAndDrop.by_coordinates(),
-                "距離（D&D）": MouseOperations.DragAndDrop.by_distance(),
-                "画像認識（D&D）": MouseOperations.DragAndDrop.by_image(),
+                "座標（D&D）": MouseOperations.DragAndDrop.drag_and_drop_to_absolute_coordinates(),
+                "距離（D&D）": MouseOperations.DragAndDrop.drag_and_drop_to_relative_coordinates(),
+                "画像認識（D&D）": MouseOperations.DragAndDrop.drag_and_drop_to_image(),
             },
-            "マウスクリック": MouseOperations.click(),
-            "スクロール": MouseOperations.scroll(),
+            "マウスクリック": MouseOperations.click_mouse(),
+            "スクロール": MouseOperations.scroll_mouse(),
         }
 
         # D. キーボード
         self.operations["D_キーボード"] = {
             "入力": {
-                "文字": KeyboardOperations.Input.text(),
-                "文字（貼り付け）": KeyboardOperations.Input.paste(),
-                "パスワード": KeyboardOperations.Input.password(),
-                "ショートカットキー": KeyboardOperations.Input.shortcut(),
+                "文字": KeyboardOperations.Input.typewrite_static_string(),
+                "文字（貼り付け）": KeyboardOperations.Input.typewrite_all_string(),
+                "パスワード": KeyboardOperations.Input.typewrite_password(),
+                "ショートカットキー": KeyboardOperations.Input.type_hotkeys(),
             }
         }
 
         # E. 記憶
         self.operations["E_記憶"] = {
-            "文字": MemoryOperations.store_text(),
-            "パスワード": MemoryOperations.store_password(),
-            "環境情報": MemoryOperations.store_environment_info(),
-            "日付": MemoryOperations.store_date(),
-            "日付（営業日）": MemoryOperations.store_business_date(),
-            "日付（曜日）": MemoryOperations.store_weekday_date(),
-            "日付計算": MemoryOperations.calculate_date(),
-            "曜日": MemoryOperations.store_weekday(),
-            "時刻": MemoryOperations.store_time(),
-            "時刻計算": MemoryOperations.calculate_time(),
-            "計算": MemoryOperations.calculate(),
-            "乱数": MemoryOperations.random_number(),
-            "コピー内容": MemoryOperations.get_clipboard(),
-            "クリップボードへコピー": MemoryOperations.set_clipboard(),
-            "実行中に入力": MemoryOperations.runtime_input(),
-            "ファイル更新日時": MemoryOperations.file_modified_date(),
-            "ファイルサイズ": MemoryOperations.file_size(),
-            "最新ファイル・フォルダ": MemoryOperations.latest_file_or_folder(),
+            "文字": MemoryOperations.assign_string_variable(),
+            "パスワード": MemoryOperations.assign_password_variable(),
+            "環境情報": MemoryOperations.assign_environment_variable(),
+            "日付": MemoryOperations.assign_date_to_string_variable(),
+            "日付（営業日）": MemoryOperations.assign_date_business_to_string_variable(),
+            "日付（曜日）": MemoryOperations.assign_date_weekdays_to_string_variable(),
+            "日付計算": MemoryOperations.assign_date_calculation_to_string_variable(),
+            "曜日": MemoryOperations.assign_day_of_week_to_string_variable(),
+            "時刻": MemoryOperations.assign_timestamp_to_string_variable(),
+            "時刻計算": MemoryOperations.assign_time_calculation_to_string_variable(),
+            "計算": MemoryOperations.assign_arithmetic_result_to_string_variable_v2(),
+            "乱数": MemoryOperations.assign_random_number_to_string_variable(),
+            "コピー内容": MemoryOperations.assign_clipboard_to_string_variable(),
+            "クリップボードへコピー": MemoryOperations.copy_to_clipboard(),
+            "実行中に入力": MemoryOperations.assign_live_input_to_string_variable(),
+            "ファイル更新日時": MemoryOperations.assign_file_modification_timestamp_to_string_variable(),
+            "ファイルサイズ": MemoryOperations.assign_file_size_to_string_variable(),
+            "最新ファイル・フォルダ": MemoryOperations.find_newest_file_from_fixed_directory(),
         }
 
         # F. 文字抽出
@@ -208,6 +214,35 @@ class RPAOperationSystem:
             },
         }
 
+        # K. スプレッドシート
+        self.operations["K_スプレッドシート"] = {
+            "スプレッドシート": {
+                "作成": SpreadsheetOperations.Spreadsheet.create_spreadsheet(),
+                "読み込む": SpreadsheetOperations.Spreadsheet.remember_spreadsheet(),
+                "削除": SpreadsheetOperations.Spreadsheet.delete_spreadsheet(),
+                "名前変更": SpreadsheetOperations.Spreadsheet.rename_spreadsheet(),
+                "URL取得": SpreadsheetOperations.Spreadsheet.get_spreadsheet_url(),
+            },
+            "シート": {
+                "新規作成": SpreadsheetOperations.Sheet.create_spreadsheet_sheet(),
+                "削除": SpreadsheetOperations.Sheet.delete_spreadsheet_sheet(),
+                "移動": SpreadsheetOperations.Sheet.move_spreadsheet_sheet(),
+                "コピー": SpreadsheetOperations.Sheet.copy_spreadsheet_sheet(),
+                "名前取得": SpreadsheetOperations.Sheet.get_spreadsheet_sheet_name(),
+                "名前変更": SpreadsheetOperations.Sheet.rename_spreadsheet_sheet(),
+            },
+            "セル操作": {
+                "指定範囲の削除": SpreadsheetOperations.Cell.delete_spreadsheet_range(),
+                "指定範囲にセルを挿入": SpreadsheetOperations.Cell.insert_spreadsheet_range(),
+                "値を取得": SpreadsheetOperations.Cell.get_spreadsheet_values(),
+                "値を入力": SpreadsheetOperations.Cell.set_spreadsheet_values(),
+                "セルをコピー・貼り付け": SpreadsheetOperations.Cell.copy_paste_spreadsheet(),
+                "最終行取得": SpreadsheetOperations.Cell.get_spreadsheet_last_row(),
+                "行ループ": SpreadsheetOperations.Cell.loop_spreadsheet_row(),
+                "列ループ": SpreadsheetOperations.Cell.loop_spreadsheet_col(),
+            },
+        }
+
         # L. ウェブブラウザ
         self.operations["L_ウェブブラウザ"] = {
             "ブラウザを開く": WebBrowserOperations.create_operation("open"),
@@ -223,6 +258,51 @@ class RPAOperationSystem:
             "JavaScript実行": WebBrowserOperations.create_operation("execute_js"),
             "タブ切り替え": WebBrowserOperations.create_operation("switch_tab"),
             "更新": WebBrowserOperations.create_operation("refresh"),
+        }
+
+        # M. メール
+        self.operations["M_メール"] = {
+            "送信": MailOperations.send_email(),
+            "受信": MailOperations.receive_emails(),
+            "送信（Gmail）": MailOperations.send_email_gmail(),
+            "受信（Gmail）": MailOperations.receive_emails_gmail(),
+            "送信（Microsoft）": MailOperations.send_email_microsoft(),
+            "受信（Microsoft）": MailOperations.receive_emails_microsoft(),
+        }
+
+        # N. 特殊アプリ操作
+        self.operations["N_特殊アプリ操作"] = {
+            "クリック": SpecialAppOperations.click_uia_element(),
+            "文字入力": SpecialAppOperations.send_text_to_uia_element(),
+            "文字入力（パスワード）": SpecialAppOperations.send_password_to_uia_element(),
+            "座標取得": SpecialAppOperations.get_uia_element_clickable_point(),
+            "文字取得": SpecialAppOperations.get_text_from_uia_element(),
+        }
+
+        # O. API
+        self.operations["O_API"] = {
+            "Web API": APIOperations.api_web(),
+            "JSON": {
+                "JSON値取得": APIOperations.JSON.get_json_values(),
+                "JSON型確認": APIOperations.JSON.check_json_type(),
+            },
+        }
+
+        # P. シナリオ整理
+        self.operations["P_シナリオ整理"] = {
+            "グループ化": ScenarioOrganizationOperations.group_commands(),
+            "メモ": ScenarioOrganizationOperations.add_memo(),
+            "通知音を再生": ScenarioOrganizationOperations.play_sound(),
+        }
+
+        # Q. 別シナリオ実行・継承
+        self.operations["Q_別シナリオ実行・継承"] = {
+            "別シナリオ実行": ExternalScenarioOperations.run_external_scenario_and_branch(),
+            "親シナリオからデータを継承": ExternalScenarioOperations.inherit_variables(),
+            "親シナリオからパスワードを継承": ExternalScenarioOperations.inherit_passwords(),
+            "親シナリオからウィンドウを継承": ExternalScenarioOperations.inherit_windows(),
+            "親シナリオからエクセルを継承": ExternalScenarioOperations.inherit_excel(),
+            "親シナリオからブラウザを継承": ExternalScenarioOperations.inherit_browsers(),
         }
 
     def to_dict(self) -> Dict[str, Any]:
@@ -324,9 +404,9 @@ if __name__ == "__main__":
         print(json.dumps(app_launch.to_dict(), ensure_ascii=False, indent=2))
 
     # カスタマイズして新しい操作を作成する例
-    custom_app_launch = AppOperations.launch()
-    custom_app_launch.specific_params["app_path"] = "C:\\Program Files\\MyApp\\app.exe"
-    custom_app_launch.specific_params["wait_time"] = 10
+    custom_app_launch = AppOperations.run_executable()
+    custom_app_launch.specific_params["path"] = "C:\\Program Files\\MyApp\\app.exe"
+    custom_app_launch.specific_params["arguments"] = ""
     custom_app_launch.common_params.timeout = 60
     custom_app_launch.common_params.memo = "カスタムアプリの起動"
 

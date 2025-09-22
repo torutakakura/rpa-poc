@@ -10,78 +10,91 @@ class MouseOperations:
 
     class Move:
         @staticmethod
-        def by_coordinates() -> OperationTemplate:
-            """座標"""
-            return OperationTemplate(
-                specific_params={"x": 0, "y": 0, "move_speed": "normal"}
-            )
-
-        @staticmethod
-        def by_distance() -> OperationTemplate:
-            """距離"""
-            return OperationTemplate(
-                specific_params={"dx": 0, "dy": 0, "move_speed": "normal"}
-            )
-
-        @staticmethod
-        def by_image() -> OperationTemplate:
-            """画像認識"""
+        def move_mouse_to_absolute_coordinates() -> OperationTemplate:
+            """マウス移動（座標）"""
             return OperationTemplate(
                 specific_params={
-                    "image_path": "",
-                    "accuracy": 0.8,
-                    "click_position": "center",
-                    "offset_x": 0,
-                    "offset_y": 0,
+                    "x": 100,  # 任意設定項目（用途に応じて指定）
+                    "y": 100,  # 任意設定項目（用途に応じて指定）
+                    "click": "single",  # 任意設定項目（用途に応じて指定）
+                }
+            )
+
+        @staticmethod
+        def move_mouse_to_relative_coordinates() -> OperationTemplate:
+            """マウス移動（距離）"""
+            return OperationTemplate(
+                specific_params={
+                    "x": 100,  # 任意設定項目（用途に応じて指定）
+                    "y": 100,  # 任意設定項目（用途に応じて指定）
+                    "click": "single",  # 任意設定項目（用途に応じて指定）
+                }
+            )
+
+        @staticmethod
+        def move_mouse_to_image() -> OperationTemplate:
+            """マウス移動（画像認識）"""
+            return OperationTemplate(
+                specific_params={
+                    "filename": "",  # 任意設定項目（用途に応じて指定）
+                    "precision": 85,  # 画像一致の厳しさ（%）
+                    "noise_filter": 100.0,  # 画像検索時のノイズ除去率
+                    "search_area_type": None,  # screen/window/area - 検索範囲の種類
+                    "search_area": "(0,0)-(0,0)",  # rect (x1,y1)-(x2,y2) - 検索座標の範囲指定
+                    "click": "single",  # 任意設定項目（用途に応じて指定）
                 }
             )
 
     class DragAndDrop:
         @staticmethod
-        def by_coordinates() -> OperationTemplate:
-            """座標（D&D）"""
+        def drag_and_drop_to_absolute_coordinates() -> OperationTemplate:
+            """現在位置からドラッグ&ドロップ（座標）"""
             return OperationTemplate(
                 specific_params={
-                    "start_x": 0,
-                    "start_y": 0,
-                    "end_x": 0,
-                    "end_y": 0,
-                    "drag_speed": "normal",
+                    "x": 100,  # 任意設定項目（用途に応じて指定）
+                    "y": 100,  # 任意設定項目（用途に応じて指定）
                 }
             )
 
         @staticmethod
-        def by_distance() -> OperationTemplate:
-            """距離（D&D）"""
+        def drag_and_drop_to_relative_coordinates() -> OperationTemplate:
+            """現在位置からドラッグ&ドロップ（距離）"""
             return OperationTemplate(
-                specific_params={"dx": 0, "dy": 0, "drag_speed": "normal"}
+                specific_params={
+                    "x": 100,  # 任意設定項目（用途に応じて指定）
+                    "y": 100,  # 任意設定項目（用途に応じて指定）
+                }
             )
 
         @staticmethod
-        def by_image() -> OperationTemplate:
-            """画像認識（D&D）"""
+        def drag_and_drop_to_image() -> OperationTemplate:
+            """現在位置からドラッグ&ドロップ（画像認識）"""
             return OperationTemplate(
                 specific_params={
-                    "start_image_path": "",
-                    "end_image_path": "",
-                    "accuracy": 0.8,
-                    "drag_speed": "normal",
+                    "filename": "",  # 任意設定項目（用途に応じて指定）
+                    "precision": 85,  # 画像一致の厳しさ（%）
+                    "noise_filter": 100.0,  # 画像検索時のノイズ除去率
+                    "search_area_type": None,  # screen/window/area - 検索範囲の種類
+                    "search_area": "(0,0)-(0,0)",  # rect (x1,y1)-(x2,y2) - 検索座標の範囲指定
                 }
             )
 
     @staticmethod
-    def click() -> OperationTemplate:
+    def click_mouse() -> OperationTemplate:
         """マウスクリック"""
         return OperationTemplate(
             specific_params={
-                "button": "left",
-                "click_type": "single",
-                "x": None,
-                "y": None,
+                "type": "single",  # 任意設定項目（用途に応じて指定）
+                "key": "__null__",  # 任意設定項目（用途に応じて指定）
             }
         )
 
     @staticmethod
-    def scroll() -> OperationTemplate:
-        """スクロール"""
-        return OperationTemplate(specific_params={"direction": "down", "amount": 3})
+    def scroll_mouse() -> OperationTemplate:
+        """マウススクロール"""
+        return OperationTemplate(
+            specific_params={
+                "direction": "up",  # 任意設定項目（用途に応じて指定）
+                "amount": 3,  # 任意設定項目（用途に応じて指定）
+            }
+        )
