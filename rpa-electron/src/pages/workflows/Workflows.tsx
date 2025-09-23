@@ -1,9 +1,12 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import { useNavigate } from 'react-router-dom'
 import { Input } from '@/components/ui/input'
-import { Plus, Search, Play, Edit, Trash2, Copy } from 'lucide-react'
+import { Plus, Search, Play, Edit, Trash2 } from 'lucide-react'
 import { PageLayout } from '@/components/layout/PageLayout'
+import axios from 'axios'
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 
 interface Workflow {
   id: string
@@ -16,41 +19,77 @@ interface Workflow {
 
 export default function Workflows() {
   const [searchTerm, setSearchTerm] = useState('')
-  
-  const workflows: Workflow[] = [
-    {
-      id: '1',
-      name: '日次レポート生成',
-      description: '売上データを集計してレポートを自動生成',
-      lastRun: '2時間前',
-      status: 'active',
-      runs: 245
-    },
-    {
-      id: '2',
-      name: 'メール自動送信',
-      description: '定期的なお知らせメールを自動送信',
-      lastRun: '5時間前',
-      status: 'active',
-      runs: 189
-    },
-    {
-      id: '3',
-      name: 'データバックアップ',
-      description: '重要データの定期バックアップ',
-      lastRun: '1日前',
-      status: 'inactive',
-      runs: 67
-    },
-    {
-      id: '4',
-      name: 'Webスクレイピング',
-      description: '競合サイトの価格情報を収集',
-      lastRun: '3日前',
-      status: 'error',
-      runs: 342
+  const [workflows, setWorkflows] = useState<Workflow[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const navigate = useNavigate()
+  const [deletingId, setDeletingId] = useState<string | null>(null)
+  const [deleteOpen, setDeleteOpen] = useState(false)
+  const [targetWorkflow, setTargetWorkflow] = useState<Workflow | null>(null)
+
+  type ApiWorkflow = {
+    id: string
+    name: string
+    description?: string | null
+    last_run_at?: string | null
+  }
+
+  const formatRelative = (iso?: string | null) => {
+    if (!iso) return '未実行'
+    const dt = new Date(iso)
+    const now = new Date()
+    const diffMs = now.getTime() - dt.getTime()
+    const sec = Math.max(0, Math.floor(diffMs / 1000))
+    const min = Math.floor(sec / 60)
+    const hour = Math.floor(min / 60)
+    const day = Math.floor(hour / 24)
+    if (day > 0) return `${day}日前`
+    if (hour > 0) return `${hour}時間前`
+    if (min > 0) return `${min}分前`
+    return 'たった今'
+  }
+
+  useEffect(() => {
+    const fetchWorkflows = async () => {
+      try {
+        const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000'
+        const res = await axios.get<ApiWorkflow[]>(`${baseURL}/workflows`)
+        const mapped: Workflow[] = res.data.map(w => ({
+          id: w.id,
+          name: w.name,
+          description: w.description ?? '',
+          lastRun: formatRelative(w.last_run_at ?? null),
+          status: 'active',
+          runs: 0,
+        }))
+        setWorkflows(mapped)
+      } catch (e) {
+        setError('ワークフローの取得に失敗しました')
+      } finally {
+        setLoading(false)
+      }
     }
-  ]
+    fetchWorkflows()
+  }, [])
+
+  const handleEdit = (id: string) => {
+    navigate(`/workflows/hearing/${id}`)
+  }
+
+  const handleDelete = async (id: string) => {
+    try {
+      setDeletingId(id)
+      const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000'
+      await axios.delete(`${baseURL}/workflows/${id}`)
+      setWorkflows((prev) => prev.filter((w) => w.id !== id))
+    } catch (e) {
+      alert('削除に失敗しました')
+    } finally {
+      setDeletingId(null)
+      setDeleteOpen(false)
+      setTargetWorkflow(null)
+    }
+  }
 
   const filteredWorkflows = workflows.filter(workflow =>
     workflow.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -84,17 +123,23 @@ export default function Workflows() {
   }
 
   return (
+    <>
     <PageLayout
       title="ワークフロー"
       description="自動化ワークフローの作成と管理"
       action={
-        <Button className="flex items-center gap-2">
+        <Button className="flex items-center gap-2" onClick={() => navigate('/workflows/hearing')}>
           <Plus className="h-4 w-4" />
           新規作成
         </Button>
       }
     >
-
+      {loading && (
+        <div className="text-sm text-gray-500">読み込み中...</div>
+      )}
+      {error && (
+        <div className="text-sm text-red-600">{error}</div>
+      )}
       <div className="relative max-w-md">
         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
         <Input
@@ -137,14 +182,19 @@ export default function Workflows() {
                     <Play className="h-3 w-3 mr-1" />
                     実行
                   </Button>
-                  <Button size="sm" variant="outline" className="flex-1">
+                  <Button size="sm" variant="outline" className="flex-1" onClick={() => handleEdit(workflow.id)}>
                     <Edit className="h-3 w-3 mr-1" />
                     編集
                   </Button>
-                  <Button size="sm" variant="outline">
-                    <Copy className="h-3 w-3" />
-                  </Button>
-                  <Button size="sm" variant="outline">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => {
+                      setTargetWorkflow(workflow)
+                      setDeleteOpen(true)
+                    }}
+                    disabled={deletingId === workflow.id}
+                  >
                     <Trash2 className="h-3 w-3" />
                   </Button>
                 </div>
@@ -160,5 +210,22 @@ export default function Workflows() {
         </div>
       )}
     </PageLayout>
+    <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>ワークフローを削除</DialogTitle>
+          <DialogDescription>
+            {targetWorkflow ? `「${targetWorkflow.name}」を削除します。よろしいですか？` : '選択されたワークフローを削除します。'}
+          </DialogDescription>
+        </DialogHeader>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => setDeleteOpen(false)}>キャンセル</Button>
+          <Button variant="destructive" onClick={() => targetWorkflow && handleDelete(targetWorkflow.id)} disabled={!!(targetWorkflow && deletingId === targetWorkflow.id)}>
+            削除する
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+    </>
   )
 }
