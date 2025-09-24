@@ -32,6 +32,7 @@ export default function Workflows() {
     name: string
     description?: string | null
     last_run_at?: string | null
+    is_hearing?: boolean | null
   }
 
   const formatRelative = (iso?: string | null) => {
@@ -72,8 +73,17 @@ export default function Workflows() {
     fetchWorkflows()
   }, [])
 
-  const handleEdit = (id: string) => {
-    navigate(`/workflows/hearing/${id}`)
+  const handleEdit = async (id: string) => {
+    try {
+      const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000'
+      const res = await axios.get<ApiWorkflow>(`${baseURL}/workflow/${id}`)
+      const isHearing = !!res.data?.is_hearing
+      if (isHearing) navigate(`/workflows/hearing/${id}`)
+      else navigate(`/workflows/edit/${id}`)
+    } catch {
+      // フォールバックとしてヒアリングへ
+      navigate(`/workflows/hearing/${id}`)
+    }
   }
 
   const handleDelete = async (id: string) => {

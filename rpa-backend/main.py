@@ -34,6 +34,7 @@ class Workflow(BaseModel):
     name: str
     description: Optional[str] = None
     last_run_at: Optional[datetime] = None
+    is_hearing: Optional[bool] = None
 
 
 app = FastAPI(title="RPA Backend API")
@@ -311,6 +312,7 @@ async def list_workflows() -> List[Workflow]:
               w.id::text as id,
               w.name,
               w.description,
+              w.is_hearing,
               (
                 select max(coalesce(r.finished_at, r.started_at))
                 from scenario_versions sv
@@ -323,6 +325,50 @@ async def list_workflows() -> List[Workflow]:
             """
         )
         return [Workflow(**dict(row)) for row in rows]
+
+
+@app.get("/workflow/{workflow_id}", response_model=Workflow)
+async def get_workflow(workflow_id: str) -> Workflow:
+    pool: asyncpg.Pool = app.state.pool
+    async with pool.acquire() as conn:
+        row = await conn.fetchrow(
+            """
+            select
+              w.id::text as id,
+              w.name,
+              w.description,
+              w.is_hearing,
+              (
+                select max(coalesce(r.finished_at, r.started_at))
+                from scenario_versions sv
+                join runs r on r.scenario_version_id = sv.id
+                where sv.scenario_id = w.id
+              ) as last_run_at
+            from workflows w
+            where w.id = $1 and w.deleted_at is null
+            """,
+            workflow_id,
+        )
+        if row is None:
+            raise HTTPException(status_code=404, detail="Workflow not found")
+        return Workflow(**dict(row))
+
+
+@app.post("/workflow/{workflow_id}/build")
+async def build_workflow(workflow_id: str) -> dict:
+    pool: asyncpg.Pool = app.state.pool
+    async with pool.acquire() as conn:
+        result = await conn.execute(
+            """
+            update workflows
+            set is_hearing = false, updated_at = now()
+            where id = $1 and deleted_at is null
+            """,
+            workflow_id,
+        )
+        if not result.endswith(" 1"):
+            raise HTTPException(status_code=404, detail="Workflow not found")
+    return {"status": "ok"}
 
 
 @app.post("/workflows", response_model=Workflow, status_code=201)

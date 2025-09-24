@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { useLocation, useParams } from 'react-router-dom'
+import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { Send } from 'lucide-react'
 import axios from 'axios'
@@ -12,6 +12,7 @@ type ChatMessage = {
 
 export default function HearingChat() {
   const { workflowId } = useParams()
+  const navigate = useNavigate()
   const location = useLocation() as any
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([])
   const [input, setInput] = useState('')
@@ -136,7 +137,18 @@ export default function HearingChat() {
         )}
         <div className="p-4">
           <div className="flex justify-center">
-            <Button size="lg" className="px-8" disabled={loading}>
+            <Button
+              size="lg"
+              className="px-8"
+              disabled={loading}
+              onClick={async () => {
+                if (!workflowId) return
+                try {
+                  await axios.post(`${apiBase}/workflow/${workflowId}/build`)
+                } catch {}
+                navigate(`/workflows/edit/${workflowId}`)
+              }}
+            >
               ワークフロー作成
             </Button>
           </div>
@@ -145,5 +157,3 @@ export default function HearingChat() {
     </main>
   )
 }
-
-
