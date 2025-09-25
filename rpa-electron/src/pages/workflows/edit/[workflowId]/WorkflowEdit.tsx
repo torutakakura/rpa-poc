@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { PageLayout } from '@/components/layout/PageLayout'
 import { Button } from '@/components/ui/button'
@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { ArrowDown, ArrowLeft, ArrowRight, Bot, CheckCircle, Layers, Loader2, Save, Send, Settings, TestTube, Workflow, X } from 'lucide-react'
+import { ArrowDown, ArrowLeft, ArrowRight, Bot, CheckCircle, Layers, Loader2, Save, Send, Settings, TestTube, Upload, Workflow, X } from 'lucide-react'
 import axios from 'axios'
 
 type ViewMode = 'groups' | 'detailed'
@@ -42,6 +42,7 @@ export default function WorkflowEdit() {
   const [selectedNewWorkflowGroup, setSelectedNewWorkflowGroup] = useState<string | null>(null)
   const [selectedStep, setSelectedStep] = useState<string | null>(null)
   const [selectedStepsForTest, setSelectedStepsForTest] = useState<Set<string>>(new Set())
+  const fileInputRef = useRef<HTMLInputElement | null>(null)
 
   // Mock data
   const generatedGroups: GeneratedGroup[] = useMemo(
@@ -119,6 +120,66 @@ export default function WorkflowEdit() {
     }
   }
 
+  // ===== JSONインポート（generated_step_list.json 形式） =====
+  type ImportedSequenceItem = {
+    uuid?: string
+    cmd?: string
+    ['cmd-nickname']?: string
+    ['cmd-type']?: string
+    description?: string
+  }
+
+  type ImportedGeneratedList = {
+    name?: string
+    description?: string
+    sequence?: ImportedSequenceItem[]
+  }
+
+  const mapImportedItemToWorkflowStep = (item: ImportedSequenceItem, index: number): WorkflowStep => {
+    const isCondition = item['cmd-type'] === 'branching'
+    const stepType: WorkflowStep['type'] = isCondition ? 'condition' : (index === 0 ? 'trigger' : 'action')
+    const title = item['cmd-nickname'] || item.cmd || `ステップ ${index + 1}`
+    const description = item.description || ''
+    const id = item.uuid || `imp-${index + 1}`
+    return { id, title, description, type: stepType }
+  }
+
+  const handleImportClick = () => fileInputRef.current?.click()
+
+  const handleJsonImport: React.ChangeEventHandler<HTMLInputElement> = (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = () => {
+      try {
+        const text = (reader.result as string) || ''
+        const data = JSON.parse(text) as ImportedGeneratedList
+        const seq = Array.isArray(data.sequence) ? data.sequence : []
+        const steps = seq.map(mapImportedItemToWorkflowStep)
+
+        if (steps.length === 0) {
+          window.alert('JSON内に有効なステップが見つかりません。')
+        }
+
+        setWorkflowSteps(steps)
+        if (data.name) setWfTitle(data.name)
+        if (typeof data.description === 'string') setWfDescription(data.description)
+
+        // 表示を詳細ビューに切り替え、生成中のUIを完了状態へ
+        setNewWorkflowViewMode('detailed')
+        setSelectedNewWorkflowGroup(null)
+        setWorkflowCreationStep(4)
+      } catch (err) {
+        console.error(err)
+        window.alert('JSONの解析に失敗しました。ファイル形式を確認してください。')
+      } finally {
+        // 同じファイルを再選択できるように値をクリア
+        e.target.value = ''
+      }
+    }
+    reader.readAsText(file)
+  }
+
   return (
     <>
     <PageLayout title={wfTitle || 'ワークフロー編集'} description={wfDescription || ''} maxWidth="full" className="pr-80">
@@ -161,6 +222,17 @@ export default function WorkflowEdit() {
                         詳細表示
                       </Button>
                     </div>
+                    <Button variant="outline" onClick={handleImportClick}>
+                      <Upload className="h-4 w-4 mr-2" />
+                      JSONをインポート
+                    </Button>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="application/json,.json"
+                      onChange={handleJsonImport}
+                      className="hidden"
+                    />
                     <Button variant="outline">
                       <TestTube className="h-4 w-4 mr-2" />
                       テスト実行

@@ -368,6 +368,11 @@ async def build_workflow(workflow_id: str) -> dict:
         )
         if not result.endswith(" 1"):
             raise HTTPException(status_code=404, detail="Workflow not found")
+
+    # Step 1 ベクトル検索で 40-50 のステップ定義まで絞り込みを行う
+    # Step 2 MCP Tools を使って 40-50 のステップを利用して ステップの選定を行う
+    # Step 3 選定したステップをワークフローのjson 形式に整形する
+
     return {"status": "ok"}
 
 

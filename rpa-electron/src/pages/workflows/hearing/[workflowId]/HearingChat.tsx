@@ -10,6 +10,15 @@ type ChatMessage = {
   content: string
 }
 
+function TypingDots() {
+  const [dots, setDots] = useState(1)
+  useEffect(() => {
+    const id = setInterval(() => setDots((d) => (d % 3) + 1), 400)
+    return () => clearInterval(id)
+  }, [])
+  return <span className="text-gray-800 font-bold" aria-label="生成中">{'・'.repeat(dots)}</span>
+}
+
 export default function HearingChat() {
   const { workflowId } = useParams()
   const navigate = useNavigate()
@@ -19,19 +28,27 @@ export default function HearingChat() {
   const [loading, setLoading] = useState(false)
   const textareaRef = useRef<HTMLTextAreaElement | null>(null)
   const apiBase = (import.meta as any).env?.VITE_API_BASE_URL || 'http://127.0.0.1:8000'
+  const hasInitialFromNav = useRef(false)
 
-  // 初回遷移時にHearingから渡された初期メッセージがあれば表示
+  // 初回遷移時: Hearingからの初期メッセージがあれば表示して即実行
   useEffect(() => {
     const init = location?.state?.initialMessages as ChatMessage[] | undefined
     if (init && init.length > 0) {
+      hasInitialFromNav.current = true
       setChatMessages(init)
+      // 画面遷移後に初回のAI応答を取得
+      if (workflowId) {
+        void fetchAssistant(init)
+      }
     }
-  }, [location])
+  }, [location, workflowId])
 
   // 履歴のロード
   useEffect(() => {
     const loadHistory = async () => {
       if (!workflowId) return
+      // 直前の画面から初期メッセージで実行中の場合は履歴ロードをスキップ
+      if (hasInitialFromNav.current) return
       try {
         const res = await axios.get(`${apiBase}/workflows/${workflowId}/messages`)
         const msgs = (res.data || []) as { role: 'user' | 'assistant'; content: string }[]
@@ -105,6 +122,13 @@ export default function HearingChat() {
                 </div>
               </div>
             ))}
+            {loading && (
+              <div className="flex justify-start">
+                <div className="max-w-[70%] py-2 px-4 rounded-lg bg-muted text-muted-foreground">
+                  <TypingDots />
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
@@ -132,9 +156,7 @@ export default function HearingChat() {
           </div>
         </div>
 
-        {loading && (
-            <div className="text-center text-xs text-muted-foreground">生成中...</div>
-        )}
+        {/* 下部のグローバルな"生成中..."はバブルのドットに置換 */}
         <div className="p-4">
           <div className="flex justify-center">
             <Button

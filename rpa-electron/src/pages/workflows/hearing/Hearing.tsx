@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
-import { ArrowRight, Send, Workflow as WorkflowIcon } from 'lucide-react'
+import { ArrowRight } from 'lucide-react'
 import axios from 'axios'
 import { useNavigate } from 'react-router-dom'
 
@@ -11,38 +11,31 @@ type ChatMessage = {
 }
 
 export default function Hearing() {
-  const [workflowCreationStep, setWorkflowCreationStep] = useState<1 | 2>(1)
   const [workflowPrompt, setWorkflowPrompt] = useState('')
-  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([])
-  const [chatInput, setChatInput] = useState('')
   const [submitting, setSubmitting] = useState(false)
-  const [chatLoading, setChatLoading] = useState(false)
 
   const apiBase = (import.meta as any).env?.VITE_API_BASE_URL || 'http://127.0.0.1:8000'
   const navigate = useNavigate()
 
-  const fetchAssistant = async (messages: ChatMessage[]) => {
-    setChatLoading(true)
+  const createWorkflowAndNavigate = async (initialUser: ChatMessage) => {
+    setSubmitting(true)
     try {
-      const res = await axios.post(`${apiBase}/ai-chat`, { messages })
-      const reply: string = res.data?.reply ?? ''
-      const workflowId: string | undefined = res.data?.workflow_id
-      const initialMessages: ChatMessage[] = [...messages, { role: 'assistant', content: reply }]
+      const name = (workflowPrompt.trim() || '新規ワークフロー').slice(0, 120)
+      const res = await axios.post(`${apiBase}/workflows`, { name, description: null })
+      const workflowId: string | undefined = res.data?.id
       if (workflowId) {
-        navigate(`/workflows/hearing/${workflowId}`, { state: { initialMessages } })
-      } else {
-        setChatMessages(initialMessages)
+        navigate(`/workflows/hearing/${workflowId}`, { state: { initialMessages: [initialUser] } })
       }
     } finally {
-      setChatLoading(false)
+      setSubmitting(false)
     }
   }
 
   const handlePromptSubmit = async () => {
     if (!workflowPrompt.trim()) return
-    // 初回: /ai-chat を呼び、返信とworkflow_idを受け取ってチャット画面へ遷移
+    // 初回は軽量にワークフローだけ作成してからチャット画面へ遷移
     const initialUser: ChatMessage = { role: 'user', content: workflowPrompt.trim() }
-    await fetchAssistant([initialUser])
+    await createWorkflowAndNavigate(initialUser)
   }
 
   return (
@@ -67,7 +60,7 @@ export default function Hearing() {
                 <Button
                   className="absolute right-2 top-1/2 -translate-y-1/2"
                   onClick={handlePromptSubmit}
-                  disabled={!workflowPrompt.trim()}
+                  disabled={!workflowPrompt.trim() || submitting}
                 >
                   <ArrowRight className="h-4 w-4" />
                 </Button>
