@@ -1,4 +1,5 @@
 from typing import List, Optional, Literal
+import json
 from datetime import datetime
 import os
 from dotenv import load_dotenv
@@ -415,6 +416,56 @@ async def get_workflow_generated(workflow_id: str) -> WorkflowGeneratedOut:
     # まだワークフローの詳細生成は未実装のため、空配列を返す
     # 将来的には DB や生成結果から返却する
     return WorkflowGeneratedOut(groups=[], steps=[])
+
+
+class WorkflowSaveIn(BaseModel):
+    groups: list
+    steps: list
+
+
+class WorkflowSaveOut(BaseModel):
+    scenario_version_id: str
+    version: int
+
+
+@app.post("/workflow/{workflow_id}/save", response_model=WorkflowSaveOut)
+async def save_workflow(workflow_id: str, payload: WorkflowSaveIn) -> WorkflowSaveOut:
+    # クライアントから受け取った表示中のワークフローをそのまま保存（簡易）
+    pool: asyncpg.Pool = app.state.pool
+    async with pool.acquire() as conn:
+        # workflow の存在確認
+        row = await conn.fetchrow(
+            """
+            select id from workflows where id = $1 and deleted_at is null
+            """,
+            workflow_id,
+        )
+        if row is None:
+            raise HTTPException(status_code=404, detail="Workflow not found")
+
+        # 次バージョンを採番
+        row_ver = await conn.fetchrow(
+            """
+            select coalesce(max(version), 0) + 1 as next_version
+            from scenario_versions
+            where scenario_id = $1
+            """,
+            workflow_id,
+        )
+        next_version: int = int(row_ver[0])
+
+        # 保存
+        row_sv = await conn.fetchrow(
+            """
+            insert into scenario_versions (scenario_id, version, steps_json)
+            values ($1, $2, $3::jsonb)
+            returning id::text as id, version
+            """,
+            workflow_id,
+            next_version,
+            json.dumps({"groups": payload.groups, "steps": payload.steps}, ensure_ascii=False),
+        )
+        return WorkflowSaveOut(scenario_version_id=row_sv[0], version=row_sv[1])
 
 
 @app.post("/workflow/{workflow_id}/build")

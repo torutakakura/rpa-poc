@@ -318,7 +318,20 @@ export default function WorkflowEdit() {
                       <TestTube className="h-4 w-4 mr-2" />
                       テスト実行
                     </Button>
-                    <Button>
+                    <Button
+                      onClick={async () => {
+                        if (!workflowId) return
+                        try {
+                          // icon は送信しない（表示用）
+                          const groups = generatedGroups.map(({ icon, ...rest }) => rest)
+                          const steps = workflowSteps.map(({ icon, ...rest }) => rest)
+                          await axios.post(`${apiBase}/workflow/${workflowId}/save`, { groups, steps })
+                          window.alert('ワークフローを保存しました。')
+                        } catch (e) {
+                          window.alert('ワークフローの保存に失敗しました。')
+                        }
+                      }}
+                    >
                       <Save className="h-4 w-4 mr-2" />
                       ワークフローを保存
                     </Button>
