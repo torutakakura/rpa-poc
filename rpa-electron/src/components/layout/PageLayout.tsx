@@ -3,7 +3,7 @@ import { cn } from '@/lib/utils'
 
 interface PageLayoutProps {
   children: ReactNode
-  title: string
+  title: ReactNode
   description?: string
   action?: ReactNode
   className?: string

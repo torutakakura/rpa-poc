@@ -354,6 +354,69 @@ async def get_workflow(workflow_id: str) -> Workflow:
         return Workflow(**dict(row))
 
 
+class WorkflowUpdateIn(BaseModel):
+    name: Optional[str] = None
+    description: Optional[str] = None
+
+
+@app.patch("/workflow/{workflow_id}", response_model=Workflow)
+async def update_workflow(workflow_id: str, payload: WorkflowUpdateIn) -> Workflow:
+    if payload.name is None and payload.description is None:
+        raise HTTPException(status_code=400, detail="No fields to update")
+
+    pool: asyncpg.Pool = app.state.pool
+    async with pool.acquire() as conn:
+        result = await conn.execute(
+            """
+            update workflows
+            set
+              name = coalesce($2, name),
+              description = coalesce($3, description),
+              updated_at = now()
+            where id = $1 and deleted_at is null
+            """,
+            workflow_id,
+            payload.name,
+            payload.description,
+        )
+        if not result.endswith(" 1"):
+            raise HTTPException(status_code=404, detail="Workflow not found")
+
+        row = await conn.fetchrow(
+            """
+            select
+              w.id::text as id,
+              w.name,
+              w.description,
+              w.is_hearing,
+              (
+                select max(coalesce(r.finished_at, r.started_at))
+                from scenario_versions sv
+                join runs r on r.scenario_version_id = sv.id
+                where sv.scenario_id = w.id
+              ) as last_run_at
+            from workflows w
+            where w.id = $1 and w.deleted_at is null
+            """,
+            workflow_id,
+        )
+        if row is None:
+            raise HTTPException(status_code=404, detail="Workflow not found")
+        return Workflow(**dict(row))
+
+
+class WorkflowGeneratedOut(BaseModel):
+    groups: list
+    steps: list
+
+
+@app.get("/workflow/{workflow_id}/generated", response_model=WorkflowGeneratedOut)
+async def get_workflow_generated(workflow_id: str) -> WorkflowGeneratedOut:
+    # まだワークフローの詳細生成は未実装のため、空配列を返す
+    # 将来的には DB や生成結果から返却する
+    return WorkflowGeneratedOut(groups=[], steps=[])
+
+
 @app.post("/workflow/{workflow_id}/build")
 async def build_workflow(workflow_id: str) -> dict:
     pool: asyncpg.Pool = app.state.pool

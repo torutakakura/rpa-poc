@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { PageLayout } from '@/components/layout/PageLayout'
 import { Button } from '@/components/ui/button'
@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { ArrowDown, ArrowLeft, ArrowRight, Bot, CheckCircle, Layers, Loader2, Save, Send, Settings, TestTube, Upload, Workflow, X } from 'lucide-react'
+import { ArrowDown, ArrowLeft, ArrowRight, Bot, CheckCircle, Layers, Loader2, Pencil, Save, Send, Settings, TestTube, Upload, Workflow, X } from 'lucide-react'
 import axios from 'axios'
 
 type ViewMode = 'groups' | 'detailed'
@@ -43,23 +43,12 @@ export default function WorkflowEdit() {
   const [selectedStep, setSelectedStep] = useState<string | null>(null)
   const [selectedStepsForTest, setSelectedStepsForTest] = useState<Set<string>>(new Set())
   const fileInputRef = useRef<HTMLInputElement | null>(null)
+  const [isEditingTitle, setIsEditingTitle] = useState(false)
+  const [draftTitle, setDraftTitle] = useState<string>('')
 
-  // Mock data
-  const generatedGroups: GeneratedGroup[] = useMemo(
-    () => [
-      { id: 'grp-1', title: '入力の取得', description: 'メールやファイルから入力データを収集します', steps: 2, icon: Layers },
-      { id: 'grp-2', title: 'データの検証', description: '抽出データを検証し整形します', steps: 3, icon: Layers },
-      { id: 'grp-3', title: '出力/通知', description: '結果の保存や通知を行います', steps: 2, icon: Layers },
-    ],
-    []
-  )
+  const [generatedGroups, setGeneratedGroups] = useState<GeneratedGroup[]>([])
 
-  const [workflowSteps, setWorkflowSteps] = useState<WorkflowStep[]>([
-    { id: 'st-1', title: 'トリガー: メール受信', description: '指定ラベルの新着メールで開始', type: 'trigger', status: 'configured' },
-    { id: 'st-2', title: 'テキスト抽出', description: '本文から必要情報を抽出', type: 'action' },
-    { id: 'st-3', title: '条件: 金額が閾値以上', description: '条件に応じて分岐', type: 'condition' },
-    { id: 'st-4', title: '通知送信', description: 'Slackへ結果を通知', type: 'action' },
-  ])
+  const [workflowSteps, setWorkflowSteps] = useState<WorkflowStep[]>([])
 
   useEffect(() => {
     // 簡易的にロード中UI→完了UIへ遷移
@@ -72,7 +61,9 @@ export default function WorkflowEdit() {
       if (!workflowId) return
       try {
         const res = await axios.get(`${apiBase}/workflow/${workflowId}`)
-        setWfTitle(res.data?.name ?? '')
+        const name = res.data?.name ?? ''
+        setWfTitle(name)
+        setDraftTitle(name)
         setWfDescription(res.data?.description ?? '')
       } catch {
         // noop
@@ -93,6 +84,23 @@ export default function WorkflowEdit() {
       }
     }
     loadHistory()
+  }, [apiBase, workflowId])
+
+  // 生成結果（グループ/ステップ）をAPIから取得（未実装のため空想定）
+  useEffect(() => {
+    const loadGenerated = async () => {
+      if (!workflowId) return
+      try {
+        const res = await axios.get(`${apiBase}/workflow/${workflowId}/generated`)
+        const groups = Array.isArray(res.data?.groups) ? res.data.groups : []
+        const steps = Array.isArray(res.data?.steps) ? res.data.steps : []
+        setGeneratedGroups(groups.map((g: any) => ({ ...g, icon: Layers })))
+        setWorkflowSteps(steps)
+      } catch {
+        // noop
+      }
+    }
+    loadGenerated()
   }, [apiBase, workflowId])
 
   const toggleStepForTest = (id: string) => {
@@ -182,7 +190,80 @@ export default function WorkflowEdit() {
 
   return (
     <>
-    <PageLayout title={wfTitle || 'ワークフロー編集'} description={wfDescription || ''} maxWidth="full" className="pr-80">
+    <PageLayout
+      title={
+        <div className="flex items-center gap-2">
+          {!isEditingTitle ? (
+            <>
+              <span>{wfTitle || 'ワークフロー編集'}</span>
+              <button
+                className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground"
+                onClick={() => setIsEditingTitle(true)}
+                aria-label="タイトルを編集"
+              >
+                <Pencil className="h-4 w-4" />
+              </button>
+            </>
+          ) : (
+            <div className="flex items-center gap-2">
+              <Input
+                value={draftTitle}
+                onChange={(e) => setDraftTitle(e.target.value)}
+                className="h-8 w-80"
+                autoFocus
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    void (async () => {
+                      const next = draftTitle.trim()
+                      setWfTitle(next)
+                      setIsEditingTitle(false)
+                      if (workflowId) {
+                        try {
+                          await axios.patch(`${apiBase}/workflow/${workflowId}`, { name: next })
+                        } catch {}
+                      }
+                    })()
+                  } else if (e.key === 'Escape') {
+                    setDraftTitle(wfTitle)
+                    setIsEditingTitle(false)
+                  }
+                }}
+              />
+              <Button
+                size="sm"
+                onClick={() => {
+                  void (async () => {
+                    const next = draftTitle.trim()
+                    setWfTitle(next)
+                    setIsEditingTitle(false)
+                    if (workflowId) {
+                      try {
+                        await axios.patch(`${apiBase}/workflow/${workflowId}`, { name: next })
+                      } catch {}
+                    }
+                  })()
+                }}
+              >
+                保存
+              </Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => {
+                  setDraftTitle(wfTitle)
+                  setIsEditingTitle(false)
+                }}
+              >
+                キャンセル
+              </Button>
+            </div>
+          )}
+        </div>
+      }
+      description={wfDescription || ''}
+      maxWidth="full"
+      className="pr-80"
+    >
       <div className="flex h-[calc(100vh-8rem)]">
         {/* 左側 */}
         <div className="flex-1 flex flex-col">
