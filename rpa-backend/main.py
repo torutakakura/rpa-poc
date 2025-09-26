@@ -468,6 +468,68 @@ async def save_workflow(workflow_id: str, payload: WorkflowSaveIn) -> WorkflowSa
         return WorkflowSaveOut(scenario_version_id=row_sv[0], version=row_sv[1])
 
 
+@app.get("/workflow/{workflow_id}/latest")
+async def get_latest_step_list(workflow_id: str) -> dict:
+    pool: asyncpg.Pool = app.state.pool
+    async with pool.acquire() as conn:
+        # workflow meta
+        wf = await conn.fetchrow(
+            """
+            select id::text as id, name, description
+            from workflows
+            where id = $1 and deleted_at is null
+            """,
+            workflow_id,
+        )
+        if wf is None:
+            raise HTTPException(status_code=404, detail="Workflow not found")
+
+        # latest scenario version
+        row = await conn.fetchrow(
+            """
+            select version, steps_json
+            from scenario_versions
+            where scenario_id = $1
+            order by version desc
+            limit 1
+            """,
+            workflow_id,
+        )
+
+        version = str(row[0]) if row is not None else "0"
+        steps_json = row[1] if row is not None else {"steps": [], "groups": []}
+        # steps_json が文字列で返る環境に備えてデコード
+        if isinstance(steps_json, str):
+            try:
+                steps_json = json.loads(steps_json)
+            except Exception:
+                steps_json = {"steps": [], "groups": []}
+        steps = steps_json.get("steps") if isinstance(steps_json, dict) else []
+
+        # map saved steps -> sequence (generated_step_list-ish)
+        sequence: list[dict] = []
+        for s in steps or []:
+            step_type = s.get("type", "action")
+            cmd_type = "branching" if step_type == "condition" else "basic"
+            sequence.append({
+                "uuid": s.get("id"),
+                "cmd": step_type,
+                "cmd-nickname": s.get("title") or step_type,
+                "cmd-type": cmd_type,
+                "description": s.get("description", ""),
+            })
+
+        # response similar to generated_step_list.json
+        return {
+            "version": version,
+            "uuid": wf["id"],
+            "name": wf["name"] or "",
+            "description": wf["description"] or "",
+            "timestamp-last-modified": datetime.utcnow().strftime("%Y/%m/%d %H:%M:%S"),
+            "flags": {},
+            "sequence": sequence,
+        }
+
 @app.post("/workflow/{workflow_id}/build")
 async def build_workflow(workflow_id: str) -> dict:
     pool: asyncpg.Pool = app.state.pool

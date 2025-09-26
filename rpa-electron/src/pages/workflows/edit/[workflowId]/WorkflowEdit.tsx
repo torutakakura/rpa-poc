@@ -91,10 +91,25 @@ export default function WorkflowEdit() {
     const loadGenerated = async () => {
       if (!workflowId) return
       try {
-        const res = await axios.get(`${apiBase}/workflow/${workflowId}/generated`)
-        const groups = Array.isArray(res.data?.groups) ? res.data.groups : []
-        const steps = Array.isArray(res.data?.steps) ? res.data.steps : []
-        setGeneratedGroups(groups.map((g: any) => ({ ...g, icon: Layers })))
+        // 最新のステップ一覧（generated_step_list.json 風）を取得
+        const res = await axios.get(`${apiBase}/workflow/${workflowId}/latest`)
+        const seq = Array.isArray(res.data?.sequence) ? res.data.sequence : []
+
+        // グループは現状返却しないため空
+        setGeneratedGroups([])
+
+        // sequence -> WorkflowStep[] へマッピング
+        const steps = (seq as any[]).map((item, index): WorkflowStep => {
+          const type: WorkflowStep['type'] = item['cmd-type'] === 'branching'
+            ? 'condition'
+            : (index === 0 ? 'trigger' : 'action')
+          return {
+            id: String(item.uuid || `sv-${index + 1}`),
+            title: String(item['cmd-nickname'] || item.cmd || `ステップ ${index + 1}`),
+            description: String(item.description || ''),
+            type
+          }
+        })
         setWorkflowSteps(steps)
       } catch {
         // noop
@@ -213,16 +228,9 @@ export default function WorkflowEdit() {
                 autoFocus
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') {
-                    void (async () => {
-                      const next = draftTitle.trim()
-                      setWfTitle(next)
-                      setIsEditingTitle(false)
-                      if (workflowId) {
-                        try {
-                          await axios.patch(`${apiBase}/workflow/${workflowId}`, { name: next })
-                        } catch {}
-                      }
-                    })()
+                    const next = draftTitle.trim()
+                    setWfTitle(next)
+                    setIsEditingTitle(false)
                   } else if (e.key === 'Escape') {
                     setDraftTitle(wfTitle)
                     setIsEditingTitle(false)
@@ -322,6 +330,11 @@ export default function WorkflowEdit() {
                       onClick={async () => {
                         if (!workflowId) return
                         try {
+                          // タイトルも保存
+                          const name = (wfTitle || draftTitle).trim()
+                          if (name) {
+                            await axios.patch(`${apiBase}/workflow/${workflowId}`, { name })
+                          }
                           // icon は送信しない（表示用）
                           const groups = generatedGroups.map(({ icon, ...rest }) => rest)
                           const steps = workflowSteps.map(({ icon, ...rest }) => rest)
