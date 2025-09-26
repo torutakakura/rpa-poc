@@ -8,7 +8,7 @@ import asyncpg
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from langchain_openai import ChatOpenAI
+from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.messages import HumanMessage, AIMessage, SystemMessage
 from langchain_core.output_parsers import StrOutputParser
@@ -103,6 +103,18 @@ def _build_llm(model: Optional[str], temperature: Optional[float]) -> ChatOpenAI
         temperature=temperature if temperature is not None else 0.2,
         api_key=api_key,
     )
+def _build_embeddings(model: Optional[str]) -> OpenAIEmbeddings:
+    api_key = os.getenv("OPENAI_API_KEY")
+    if not api_key:
+        raise HTTPException(status_code=500, detail="OPENAI_API_KEY is not set")
+    return OpenAIEmbeddings(model=model or os.getenv("OPENAI_EMBEDDING_MODEL", "text-embedding-3-small"), api_key=api_key)
+
+
+def _to_pgvector_literal(vec: List[float]) -> str:
+    # pgvector は '[v1,v2,...]' の文字列表現で受け取れる
+    # 文字列で渡すことで asyncpg の型不一致を回避
+    return "[" + ",".join(str(float(x)) for x in vec) + "]"
+
 
 
 SYSTEM_PROMPT = (
@@ -534,6 +546,7 @@ async def get_latest_step_list(workflow_id: str) -> dict:
 async def build_workflow(workflow_id: str) -> dict:
     pool: asyncpg.Pool = app.state.pool
     async with pool.acquire() as conn:
+        # 1) workflow の存在確認 + hearing 終了フラグ更新（将来的な意味合い）
         result = await conn.execute(
             """
             update workflows
@@ -545,11 +558,76 @@ async def build_workflow(workflow_id: str) -> dict:
         if not result.endswith(" 1"):
             raise HTTPException(status_code=404, detail="Workflow not found")
 
-    # Step 1 ベクトル検索で 40-50 のステップ定義まで絞り込みを行う
+        # Step 1 ベクトル検索で 40-50 のステップ定義まで絞り込みを行う
+        # 2) ヒアリングメッセージ取得（user/assistant問わず全文）
+        rows = await conn.fetch(
+            """
+            select role, content
+            from messages
+            where workflow_id = $1 and deleted_at is null
+            order by created_at asc
+            """,
+            workflow_id,
+        )
+        contents: list[str] = [str(r["content"]).strip() for r in rows if r and r["content"]]
+
+    # 3) クレンジング＆結合
+    # - 空行/重複の削除、改行圧縮、assistantの冗長説明は軽く短縮（先頭2000文字まで）
+    text = "\n".join(dict.fromkeys([c for c in contents if c]))  # preserve order, drop dups
+    text = "\n".join([ln.strip() for ln in text.splitlines() if ln.strip()])
+    if len(text) > 8000:
+        text = text[:8000]
+
+    # 4) 埋め込みモデルでベクトル化
+    try:
+        embedder = _build_embeddings(None)
+        embedding = await embedder.aembed_query(text)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Embedding failed: {e}")
+
+    # 5) ベクトル検索（上位40件）
+    # step_embeddings(embedding vector(1536)) に対して cosine 距離で類似検索
+    async with pool.acquire() as conn:
+        # パラメータは vector 文字列表現で渡す
+        emb_literal = _to_pgvector_literal(embedding)
+        candidates = await conn.fetch(
+            """
+            select
+              id::text as id,
+              step_key,
+              title,
+              description,
+              metadata,
+              1 - (embedding <=> $1::vector) as similarity
+            from step_embeddings
+            order by embedding <=> $1::vector asc
+            limit 40
+            """,
+            emb_literal,
+        )
+
     # Step 2 MCP Tools を使って 40-50 のステップを利用して ステップの選定を行う
+
+    
     # Step 3 選定したステップをワークフローのjson 形式に整形する
 
-    return {"status": "ok"}
+
+    # 6) レスポンス整形
+    return {
+        "status": "ok",
+        "workflow_id": workflow_id,
+        "candidates": [
+            {
+                "id": str(c["id"]),
+                "step_key": c["step_key"],
+                "title": c["title"],
+                "description": c["description"],
+                "metadata": c["metadata"],
+                "similarity": float(c["similarity"]) if c["similarity"] is not None else None,
+            }
+            for c in candidates
+        ],
+    }
 
 
 @app.post("/workflows", response_model=Workflow, status_code=201)
