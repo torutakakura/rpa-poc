@@ -20,7 +20,7 @@ class RunExecutableStep(BaseStep):
     """アプリ起動ステップ"""
     def __init__(self, **kwargs):
         super().__init__(
-            cmd="run-executable",
+            cmd="run_executable",
             cmd_nickname="アプリ起動",
             cmd_type="basic",
             version=3,
@@ -44,7 +44,7 @@ class RunExecutableAndWaitStep(BaseStep):
     """アプリ起動（終了待ち）ステップ"""
     def __init__(self, **kwargs):
         super().__init__(
-            cmd="run-executable-and-wait",
+            cmd="run_executable_and_wait",
             cmd_nickname="アプリ起動（終了待ち）",
             cmd_type="basic",
             version=1,
@@ -89,7 +89,7 @@ class TakeScreenshotStep(BaseStep):
     """スクリーンショットステップ"""
     def __init__(self, **kwargs):
         super().__init__(
-            cmd="take-screenshot",
+            cmd="take_screenshot",
             cmd_nickname="スクリーンショットを撮る",
             cmd_type="basic",
             version=1,
@@ -129,7 +129,7 @@ class RaiseErrorStep(BaseStep):
     """エラーを発生させるステップ"""
     def __init__(self, error_message: str = "", **kwargs):
         super().__init__(
-            cmd="raise-error",
+            cmd="raise_error",
             cmd_nickname="エラーを発生させる",
             cmd_type="basic",
             version=1,
@@ -149,7 +149,7 @@ class PauseAndAskStep(BaseStep):
     """続行確認ステップ"""
     def __init__(self, message: str = "", **kwargs):
         super().__init__(
-            cmd="pause-and-ask-to-proceed",
+            cmd="pause_and_ask_to_proceed",
             cmd_nickname="続行確認",
             cmd_type="basic",
             version=2,
@@ -169,7 +169,7 @@ class ChangeSpeedStep(BaseStep):
     """コマンド間の待機時間を変更ステップ"""
     def __init__(self, interval: float = 0.2, **kwargs):
         super().__init__(
-            cmd="change-speed-for-command-execution",
+            cmd="change_speed_for_command_execution",
             cmd_nickname="コマンド間の待機時間を変更",
             cmd_type="basic",
             version=1,

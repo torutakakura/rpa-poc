@@ -18,7 +18,7 @@ class AssignStringVariableStep(BaseStep):
     """データの記憶（文字）ステップ"""
     def __init__(self, variable: str = "データ", value: str = "", **kwargs):
         super().__init__(
-            cmd="assign-string-variable",
+            cmd="assign_string_variable",
             cmd_nickname="データの記憶（文字）",
             cmd_type="basic",
             version=1,
@@ -41,7 +41,7 @@ class AssignDateToStringStep(BaseStep):
     """日付を記憶ステップ"""
     def __init__(self, variable: str = "日付", offset: str = "0", format: str = "yyyy-mm-dd", **kwargs):
         super().__init__(
-            cmd="assign-date-to-string-variable",
+            cmd="assign_date_to_string_variable",
             cmd_nickname="日付を記憶",
             cmd_type="basic",
             version=3,
@@ -66,7 +66,7 @@ class AssignClipboardStep(BaseStep):
     """コピー内容を記憶ステップ"""
     def __init__(self, variable: str = "データ", **kwargs):
         super().__init__(
-            cmd="assign-clipboard-to-string-variable",
+            cmd="assign_clipboard_to_string_variable",
             cmd_nickname="コピー内容を記憶",
             cmd_type="basic",
             version=1,
@@ -86,7 +86,7 @@ class CopyToClipboardStep(BaseStep):
     """クリップボードへコピーステップ"""
     def __init__(self, text: str = "", **kwargs):
         super().__init__(
-            cmd="copy-to-clipboard",
+            cmd="copy_to_clipboard",
             cmd_nickname="クリップボードへコピー",
             cmd_type="basic",
             version=1,
@@ -115,7 +115,7 @@ class ParseBracketsStep(BaseStep):
     def __init__(self, src: str = "", dst: str = "抽出文字", **kwargs):
         params_data = kwargs.pop('parameters', {})
         super().__init__(
-            cmd="parse-brackets",
+            cmd="parse_brackets",
             cmd_nickname="文字列抽出（括弧・引用符号）",
             cmd_type="basic",
             version=1,

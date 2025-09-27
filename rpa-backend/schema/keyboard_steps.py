@@ -2,7 +2,6 @@
 キーボード操作関連のステップ定義
 """
 from dataclasses import dataclass
-from typing import Optional
 from .base import BaseStep, StepParameter
 
 
@@ -18,7 +17,7 @@ class TypeWriteStaticStep(BaseStep):
     """キーボード入力（文字）ステップ"""
     def __init__(self, text: str = "", enter: bool = False, **kwargs):
         super().__init__(
-            cmd="typewrite-static-string",
+            cmd="typewrite_static_string",
             cmd_nickname="キーボード入力（文字）",
             cmd_type="basic",
             version=2,
@@ -39,7 +38,7 @@ class TypeWriteAllStep(BaseStep):
     """キーボード入力（貼り付け）ステップ"""
     def __init__(self, text: str = "", enter: bool = False, **kwargs):
         super().__init__(
-            cmd="typewrite-all-string",
+            cmd="typewrite_all_string",
             cmd_nickname="キーボード入力（貼り付け）",
             cmd_type="basic",
             version=1,
@@ -64,7 +63,7 @@ class TypeWritePasswordStep(BaseStep):
     def __init__(self, **kwargs):
         params_data = kwargs.pop('parameters', {})
         super().__init__(
-            cmd="typewrite-password",
+            cmd="typewrite_password",
             cmd_nickname="キーボード入力（パスワード）",
             cmd_type="basic",
             version=4,
@@ -88,7 +87,7 @@ class TypeHotkeysStep(BaseStep):
     def __init__(self, **kwargs):
         params_data = kwargs.pop('parameters', {})
         super().__init__(
-            cmd="type-hotkeys",
+            cmd="type_hotkeys",
             cmd_nickname="ショートカットキーを入力",
             cmd_type="basic",
             version=1,

@@ -2,7 +2,7 @@
 Excel操作関連のステップ定義（簡略版）
 """
 from dataclasses import dataclass
-from .base import BaseStep, StepParameter
+from .base import BaseStep
 
 
 @dataclass

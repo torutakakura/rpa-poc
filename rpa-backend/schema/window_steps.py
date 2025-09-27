@@ -17,7 +17,7 @@ class RememberFocusedWindowStep(BaseStep):
     """最前面画面を覚えるステップ"""
     def __init__(self, variable: str = "ウィンドウ", **kwargs):
         super().__init__(
-            cmd="remember-focused-window",
+            cmd="remember_focused_window",
             cmd_nickname="最前面画面を覚える",
             cmd_type="basic",
             version=1,
@@ -39,7 +39,7 @@ class RememberNamedWindowStep(BaseStep):
     """画面を覚える（名前）ステップ"""
     def __init__(self, window_name: str = "ウィンドウ", variable: str = "ウィンドウ", match_type: str = "contains", **kwargs):
         super().__init__(
-            cmd="remember-named-window",
+            cmd="remember_named_window",
             cmd_nickname="画面を覚える（名前）",
             cmd_type="basic",
             version=1,
@@ -63,7 +63,7 @@ class FocusWindowStep(BaseStep):
     """最前面画面切り替えステップ"""
     def __init__(self, variable: str = "", **kwargs):
         super().__init__(
-            cmd="focus-window",
+            cmd="focus_window",
             cmd_nickname="最前面画面切り替え",
             cmd_type="basic",
             version=1,
@@ -83,7 +83,7 @@ class FocusWindowByNameStep(BaseStep):
     """画面切り替え（名前）ステップ"""
     def __init__(self, window_name: str = "", **kwargs):
         super().__init__(
-            cmd="focus-window-by-name",
+            cmd="focus_window_by_name",
             cmd_nickname="画面切り替え（名前）",
             cmd_type="basic",
             version=1,
@@ -104,7 +104,7 @@ class GetWindowTitleStep(BaseStep):
     """画面の名前を取得ステップ"""
     def __init__(self, variable: str = "ウィンドウ名", window: str = "__focused_window__", **kwargs):
         super().__init__(
-            cmd="get-window-title",
+            cmd="get_window_title",
             cmd_nickname="画面の名前を取得",
             cmd_type="basic",
             version=1,
@@ -124,7 +124,7 @@ class AlignFocusedWindowStep(BaseStep):
     """ウィンドウを移動ステップ"""
     def __init__(self, alignment: str = "left", **kwargs):
         super().__init__(
-            cmd="align-focused-window",
+            cmd="align_focused_window",
             cmd_nickname="ウィンドウを移動",
             cmd_type="basic",
             version=1,
@@ -144,7 +144,7 @@ class MaximizeWindowStep(BaseStep):
     """ウィンドウ最大化/最小化ステップ"""
     def __init__(self, behavior: str = "maximize", **kwargs):
         super().__init__(
-            cmd="maximize-focused-window",
+            cmd="maximize_focused_window",
             cmd_nickname="ウィンドウ最大化／最小化",
             cmd_type="basic",
             version=2,

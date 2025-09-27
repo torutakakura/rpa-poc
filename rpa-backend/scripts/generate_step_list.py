@@ -21,6 +21,25 @@ class StepListGenerator:
 
     def __init__(self):
         self.factory = StepFactory()
+        
+    def _normalize_cmd_case(self, step: dict) -> dict:
+        """cmdをスネークケースに正規化し、ネストしたsequenceも再帰的に変換"""
+        if not isinstance(step, dict):
+            return step
+        
+        def snake_cmd(value: str) -> str:
+            return (value or '').replace('-', '_')
+        
+        normalized = dict(step)
+        if 'cmd' in normalized:
+            normalized['cmd'] = snake_cmd(normalized['cmd'])
+        
+        # ネストしたシーケンスを再帰的に正規化
+        for key in ['sequence', 'sequence-0', 'sequence-1']:
+            if key in normalized and isinstance(normalized[key], list):
+                normalized[key] = [self._normalize_cmd_case(s) for s in normalized[key]]
+        
+        return normalized
 
     def create_all_steps(self):
         """全177個のステップ定義を生成"""
@@ -60,20 +79,20 @@ class StepListGenerator:
 
         # 各ステップの定義
         step_configs = [
-            ("run-executable", "アプリ起動", 3,
+            ("run_executable", "アプリ起動", 3,
              {"path": "", "arguments": "", "interval": 3, "maximized": True}),
-            ("run-executable-and-wait", "アプリ起動（終了待ち）", 1,
+            ("run_executable_and_wait", "アプリ起動（終了待ち）", 1,
              {"path": "", "arguments": "", "timeout": 300,
               "output-variable": "", "error-variable": ""}),
             ("pause", "待機（秒）", 1, {"interval": "3"}),
-            ("pause-and-ask-to-proceed", "続行確認", 2, {"string": ""}),
-            ("pause-and-countdown-to-proceed", "タイマー付き続行確認", 2,
+            ("pause_and_ask_to_proceed", "続行確認", 2, {"string": ""}),
+            ("pause_and_countdown_to_proceed", "タイマー付き続行確認", 2,
              {"interval": "3", "string": ""}),
-            ("change-speed-for-command-execution", "コマンド間の待機時間を変更", 1,
+            ("change_speed_for_command_execution", "コマンド間の待機時間を変更", 1,
              {"interval": 0.2}),
             ("abort", "作業強制終了", 2, {"result-type": "abort"}),
-            ("raise-error", "エラーを発生させる", 1, {"string": ""}),
-            ("take-screenshot", "スクリーンショットを撮る", 1,
+            ("raise_error", "エラーを発生させる", 1, {"string": ""}),
+            ("take_screenshot", "スクリーンショットを撮る", 1,
              {"dir-path": "", "file-name": "", "area": "area-whole",
               "variable": "", "timestamp": False, "extension": "png"}),
         ]
@@ -94,16 +113,16 @@ class StepListGenerator:
         steps = []
 
         step_configs = [
-            ("remember-focused-window", "最前面画面を覚える", 1,
+            ("remember_focused_window", "最前面画面を覚える", 1,
              {"variable": "ウィンドウ"}),
-            ("remember-named-window", "画面を覚える（名前）", 1,
+            ("remember_named_window", "画面を覚える（名前）", 1,
              {"match-type": "contains", "window-name": "ウィンドウ", "variable": "ウィンドウ"}),
-            ("focus-window", "最前面画面切り替え", 1, {"variable": ""}),
-            ("focus-window-by-name", "画面切り替え（名前）", 1, {"string": ""}),
-            ("get-window-title", "画面の名前を取得", 1,
+            ("focus_window", "最前面画面切り替え", 1, {"variable": ""}),
+            ("focus_window_by_name", "画面切り替え（名前）", 1, {"string": ""}),
+            ("get_window_title", "画面の名前を取得", 1,
              {"window": "__focused_window__", "variable": "ウィンドウ名"}),
-            ("align-focused-window", "ウィンドウを移動", 1, {"alignment": "left"}),
-            ("maximize-focused-window", "ウィンドウ最大化／最小化", 2,
+            ("align_focused_window", "ウィンドウを移動", 1, {"alignment": "left"}),
+            ("maximize_focused_window", "ウィンドウ最大化／最小化", 2,
              {"behavior": "maximize"}),
         ]
 
@@ -122,50 +141,50 @@ class StepListGenerator:
         """マウス操作ステップを生成"""
         steps = [
             self.factory.create_basic_step(
-                "move-mouse-to-absolute-coordinates", "マウス移動（座標）", 2,
+                "move_mouse_to_absolute_coordinates", "マウス移動（座標）", 2,
                 {"x": "100", "y": "100", "click": "single"},
-                description=get_description("move-mouse-to-absolute-coordinates"),
-                tags=get_tags("move-mouse-to-absolute-coordinates")
+                description=get_description("move_mouse_to_absolute_coordinates"),
+                tags=get_tags("move_mouse_to_absolute_coordinates")
             ),
             self.factory.create_basic_step(
-                "move-mouse-to-relative-coordinates", "マウス移動（距離）", 2,
+                "move_mouse_to_relative_coordinates", "マウス移動（距離）", 2,
                 {"x": "100", "y": "100", "click": "single"},
-                description=get_description("move-mouse-to-relative-coordinates"),
-                tags=get_tags("move-mouse-to-relative-coordinates")
+                description=get_description("move_mouse_to_relative_coordinates"),
+                tags=get_tags("move_mouse_to_relative_coordinates")
             ),
             self.factory.create_basic_step(
-                "click-mouse", "マウスクリック", 1,
+                "click_mouse", "マウスクリック", 1,
                 {"type": "single", "key": "__null__"},
-                description=get_description("click-mouse"),
-                tags=get_tags("click-mouse")
+                description=get_description("click_mouse"),
+                tags=get_tags("click_mouse")
             ),
             self.factory.create_basic_step(
-                "scroll-mouse", "マウススクロール", 1,
+                "scroll_mouse", "マウススクロール", 1,
                 {"direction": "up", "amount": 3},
-                description=get_description("scroll-mouse"),
-                tags=get_tags("scroll-mouse")
+                description=get_description("scroll_mouse"),
+                tags=get_tags("scroll_mouse")
             ),
             self.factory.create_basic_step(
-                "drag-and-drop-to-absolute-coordinates", "現在位置からドラッグ＆ドロップ（座標）", 1,
+                "drag_and_drop_to_absolute_coordinates", "現在位置からドラッグ＆ドロップ（座標）", 1,
                 {"x": "100", "y": "100"},
-                description=get_description("drag-and-drop-to-absolute-coordinates"),
-                tags=get_tags("drag-and-drop-to-absolute-coordinates")
+                description=get_description("drag_and_drop_to_absolute_coordinates"),
+                tags=get_tags("drag_and_drop_to_absolute_coordinates")
             ),
             self.factory.create_basic_step(
-                "drag-and-drop-to-relative-coordinates", "現在位置からドラッグ＆ドロップ（距離）", 1,
+                "drag_and_drop_to_relative_coordinates", "現在位置からドラッグ＆ドロップ（距離）", 1,
                 {"x": "100", "y": "100"},
-                description=get_description("drag-and-drop-to-relative-coordinates"),
-                tags=get_tags("drag-and-drop-to-relative-coordinates")
+                description=get_description("drag_and_drop_to_relative_coordinates"),
+                tags=get_tags("drag_and_drop_to_relative_coordinates")
             ),
         ]
 
         # 画像認識系（特殊フラグ付き）
         image_step = self.factory.create_basic_step(
-            "move-mouse-to-image", "マウス移動（画像認識）", 4,
+            "move_mouse_to_image", "マウス移動（画像認識）", 4,
             {"filename": "", "precision": "85", "noise-filter": "100.0",
              "search-area-type": "screen", "search-area": "(0, 0) ~ (0, 0)", "click": "single"},
-            description=get_description("move-mouse-to-image"),
-            tags=get_tags("move-mouse-to-image")
+            description=get_description("move_mouse_to_image"),
+            tags=get_tags("move_mouse_to_image")
         )
         image_step["flags"]["checked"] = False
         image_step["flags"]["error"] = {"flag": False, "timestamp": "", "msg": ""}
@@ -173,11 +192,11 @@ class StepListGenerator:
         steps.append(image_step)
 
         drag_image_step = self.factory.create_basic_step(
-            "drag-and-drop-to-image", "現在位置からドラッグ＆ドロップ（画像認識）", 2,
+            "drag_and_drop_to_image", "現在位置からドラッグ＆ドロップ（画像認識）", 2,
             {"filename": "", "precision": "85", "noise-filter": "100.0",
              "search-area-type": "screen", "search-area": "(0, 0) ~ (0, 0)"},
-            description=get_description("drag-and-drop-to-image"),
-            tags=get_tags("drag-and-drop-to-image")
+            description=get_description("drag_and_drop_to_image"),
+            tags=get_tags("drag_and_drop_to_image")
         )
         drag_image_step["flags"]["checked"] = False
         drag_image_step["flags"]["error"] = {"flag": False, "timestamp": "", "msg": ""}
@@ -190,30 +209,30 @@ class StepListGenerator:
         """キーボード操作ステップを生成"""
         return [
             self.factory.create_basic_step(
-                "typewrite-static-string", "キーボード入力（文字）", 2,
+                "typewrite_static_string", "キーボード入力（文字）", 2,
                 {"string": "", "enter": False},
-                description=get_description("typewrite-static-string"),
-                tags=get_tags("typewrite-static-string")
+                description=get_description("typewrite_static_string"),
+                tags=get_tags("typewrite_static_string")
             ),
             self.factory.create_basic_step(
-                "typewrite-all-string", "キーボード入力（貼り付け）", 1,
+                "typewrite_all_string", "キーボード入力（貼り付け）", 1,
                 {"string": "", "enter": False},
-                description=get_description("typewrite-all-string"),
-                tags=get_tags("typewrite-all-string")
+                description=get_description("typewrite_all_string"),
+                tags=get_tags("typewrite_all_string")
             ),
             self.factory.create_basic_step(
-                "typewrite-password", "キーボード入力（パスワード）", 4,
+                "typewrite_password", "キーボード入力（パスワード）", 4,
                 {"enter": False, "password-type": "type-input",
                  "ciphertext": "", "nonce": "", "encryption": 1},
-                description=get_description("typewrite-password"),
-                tags=get_tags("typewrite-password")
+                description=get_description("typewrite_password"),
+                tags=get_tags("typewrite_password")
             ),
             self.factory.create_basic_step(
-                "type-hotkeys", "ショートカットキーを入力", 1,
+                "type_hotkeys", "ショートカットキーを入力", 1,
                 {"key-0": "__null__", "key-1": "__null__",
                  "key-2": "__null__", "key-3": ""},
-                description=get_description("type-hotkeys"),
-                tags=get_tags("type-hotkeys")
+                description=get_description("type_hotkeys"),
+                tags=get_tags("type_hotkeys")
             ),
         ]
 
@@ -221,54 +240,54 @@ class StepListGenerator:
         """変数操作ステップを生成"""
         return [
             self.factory.create_basic_step(
-                "assign-string-variable", "データの記憶（文字）", 1,
+                "assign_string_variable", "データの記憶（文字）", 1,
                 {"variable": "データ", "string": ""},
-                description=get_description("assign-string-variable"),
-                tags=get_tags("assign-string-variable")
+                description=get_description("assign_string_variable"),
+                tags=get_tags("assign_string_variable")
             ),
             self.factory.create_basic_step(
-                "assign-password-variable", "パスワードの記憶", 1,
+                "assign_password_variable", "パスワードの記憶", 1,
                 {"password-type": "type-input", "password": "", "password-id": "パスワード"},
-                description=get_description("assign-password-variable"),
-                tags=get_tags("assign-password-variable")
+                description=get_description("assign_password_variable"),
+                tags=get_tags("assign_password_variable")
             ),
             self.factory.create_basic_step(
-                "assign-environment-variable", "データの記憶（環境情報）", 1,
+                "assign_environment_variable", "データの記憶（環境情報）", 1,
                 {"variable": "環境", "environment": ""},
-                description=get_description("assign-environment-variable"),
-                tags=get_tags("assign-environment-variable")
+                description=get_description("assign_environment_variable"),
+                tags=get_tags("assign_environment_variable")
             ),
             self.factory.create_basic_step(
-                "assign-date-to-string-variable", "日付を記憶", 3,
+                "assign_date_to_string_variable", "日付を記憶", 3,
                 {"variable": "日付", "offset": "0", "format": "yyyy-mm-dd", "0-option": False},
-                description=get_description("assign-date-to-string-variable"),
-                tags=get_tags("assign-date-to-string-variable")
+                description=get_description("assign_date_to_string_variable"),
+                tags=get_tags("assign_date_to_string_variable")
             ),
             self.factory.create_basic_step(
-                "assign-clipboard-to-string-variable", "コピー内容を記憶", 1,
+                "assign_clipboard_to_string_variable", "コピー内容を記憶", 1,
                 {"variable": "データ"},
-                description=get_description("assign-clipboard-to-string-variable"),
-                tags=get_tags("assign-clipboard-to-string-variable")
+                description=get_description("assign_clipboard_to_string_variable"),
+                tags=get_tags("assign_clipboard_to_string_variable")
             ),
             self.factory.create_basic_step(
-                "copy-to-clipboard", "クリップボードへコピー", 1,
+                "copy_to_clipboard", "クリップボードへコピー", 1,
                 {"string": ""},
-                description=get_description("copy-to-clipboard"),
-                tags=get_tags("copy-to-clipboard")
+                description=get_description("copy_to_clipboard"),
+                tags=get_tags("copy_to_clipboard")
             ),
             self.factory.create_basic_step(
-                "parse-brackets", "文字列抽出（括弧・引用符号）", 1,
+                "parse_brackets", "文字列抽出（括弧・引用符号）", 1,
                 {"src-variable": "", "dst-variable": "抽出文字",
                  "bracket-types": ["()"], "index": "1", "strip": True},
-                description=get_description("parse-brackets"),
-                tags=get_tags("parse-brackets")
+                description=get_description("parse_brackets"),
+                tags=get_tags("parse_brackets")
             ),
             self.factory.create_basic_step(
-                "parse-delimiters", "文字列抽出（区切り文字）", 1,
+                "parse_delimiters", "文字列抽出（区切り文字）", 1,
                 {"src-variable": "", "dst-variable": "抽出文字",
                  "delimiter-type": ",", "custom-str": "", "index": "1"},
-                description=get_description("parse-delimiters"),
-                tags=get_tags("parse-delimiters")
+                description=get_description("parse_delimiters"),
+                tags=get_tags("parse_delimiters")
             ),
         ]
 
@@ -318,12 +337,12 @@ class StepListGenerator:
 
         # 分岐ステップ
         branch_step = self.factory.create_branching_step(
-            "search-screen-and-branch", "画像出現を待つ", 3,
+            "search_screen_and_branch", "画像出現を待つ", 3,
             {"filename": "", "precision": "85", "interval": "5",
              "noise-filter": "100.0", "search-area-type": "screen",
              "search-area": "(0, 0) ~ (0, 0)"},
-            description=get_description("search-screen-and-branch"),
-            tags=get_tags("search-screen-and-branch")
+            description=get_description("search_screen_and_branch"),
+            tags=get_tags("search_screen_and_branch")
         )
         branch_step["flags"]["checked"] = False
         branch_step["flags"]["error"] = {"flag": True, "timestamp": "", "msg": ""}
@@ -333,24 +352,24 @@ class StepListGenerator:
         # エラー処理（グルーピング）
         steps.append(
             self.factory.create_grouping_step(
-                "check-for-errors", "直前のコマンドのエラーを確認・処理", 1,
+                "check_for_errors", "直前のコマンドのエラーを確認・処理", 1,
                 {"retries": 0, "wait": 1, "err-cmd": "[ERR_CMD]",
                  "err-memo": "[ERR_MEMO]", "err-msg": "[ERR_MSG]",
                  "err-param": "[ERR_PARAM]"},
-                description=get_description("check-for-errors"),
-                tags=get_tags("check-for-errors")
+                description=get_description("check_for_errors"),
+                tags=get_tags("check_for_errors")
             )
         )
 
         # エラー処理（分岐）
         steps.append(
             self.factory.create_branching_step(
-                "check-for-errors-2", "直前のコマンドのエラーを確認・処理（リトライ前処理）", 1,
+                "check_for_errors_2", "直前のコマンドのエラーを確認・処理（リトライ前処理）", 1,
                 {"retries": 0, "wait": 1, "err-cmd": "[ERR_CMD]",
                  "err-memo": "[ERR_MEMO]", "err-msg": "[ERR_MSG]",
                  "err-param": "[ERR_PARAM]"},
-                description=get_description("check-for-errors-2"),
-                tags=get_tags("check-for-errors-2")
+                description=get_description("check_for_errors_2"),
+                tags=get_tags("check_for_errors_2")
             )
         )
 
@@ -358,8 +377,10 @@ class StepListGenerator:
 
     def _create_other_steps(self):
         """その他の操作ステップを生成"""
-        # 元のstep_list.jsonから残りの132個のステップをすべて追加
-        original_path = project_root / "step_list.json"
+        # 元データ: 優先して既存のgenerated_step_list.jsonを参照、無ければstep_list.json
+        original_path = project_root / "generated_step_list.json"
+        if not original_path.exists():
+            original_path = project_root / "step_list.json"
         if not original_path.exists():
             return []
 
@@ -370,35 +391,37 @@ class StepListGenerator:
         # 元のstep_list.jsonには以下のステップがない（Excel/ファイル操作の一部）ため、
         # これらはincluded_cmdsから除外しない
         implemented_cmds = {
-            "run-executable", "run-executable-and-wait", "pause", "pause-and-ask-to-proceed",
-            "pause-and-countdown-to-proceed", "change-speed-for-command-execution", "abort",
-            "raise-error", "take-screenshot", "remember-focused-window", "remember-named-window",
-            "focus-window", "focus-window-by-name", "get-window-title", "align-focused-window",
-            "maximize-focused-window", "move-mouse-to-absolute-coordinates",
-            "move-mouse-to-relative-coordinates", "move-mouse-to-image",
-            "drag-and-drop-to-absolute-coordinates", "drag-and-drop-to-relative-coordinates",
-            "drag-and-drop-to-image", "click-mouse", "scroll-mouse", "typewrite-static-string",
-            "typewrite-all-string", "typewrite-password", "type-hotkeys", "assign-string-variable",
-            "assign-password-variable", "assign-environment-variable", "assign-date-to-string-variable",
-            "assign-clipboard-to-string-variable", "copy-to-clipboard", "parse-brackets",
-            "parse-delimiters", "search-screen-and-branch",
-            "check-for-errors", "check-for-errors-2"
+            "run_executable", "run_executable_and_wait", "pause", "pause_and_ask_to_proceed",
+            "pause_and_countdown_to_proceed", "change_speed_for_command_execution", "abort",
+            "raise_error", "take_screenshot", "remember_focused_window", "remember_named_window",
+            "focus_window", "focus_window_by_name", "get_window_title", "align_focused_window",
+            "maximize_focused_window", "move_mouse_to_absolute_coordinates",
+            "move_mouse_to_relative_coordinates", "move_mouse_to_image",
+            "drag_and_drop_to_absolute_coordinates", "drag_and_drop_to_relative_coordinates",
+            "drag_and_drop_to_image", "click_mouse", "scroll_mouse", "typewrite_static_string",
+            "typewrite_all_string", "typewrite_password", "type_hotkeys", "assign_string_variable",
+            "assign_password_variable", "assign_environment_variable", "assign_date_to_string_variable",
+            "assign_clipboard_to_string_variable", "copy_to_clipboard", "parse_brackets",
+            "parse_delimiters", "search_screen_and_branch",
+            "check_for_errors", "check_for_errors_2"
         }
 
         steps = []
 
         # 元のファイルから不足しているステップを追加
         for original_step in original_data['sequence']:
-            cmd = original_step['cmd']
+            # 元データをスネークケースへ正規化（ネスト含む）
+            normalized_step = self._normalize_cmd_case(original_step)
+            cmd = normalized_step['cmd']
 
             # 既に実装されているステップはスキップ
             if cmd in implemented_cmds:
                 continue
 
-            cmd_nickname = original_step.get('cmd-nickname', '')
-            cmd_type = original_step.get('cmd-type', 'basic')
-            version = original_step.get('version', 1)
-            parameters = original_step.get('parameters', {})
+            cmd_nickname = normalized_step.get('cmd-nickname', '')
+            cmd_type = normalized_step.get('cmd-type', 'basic')
+            version = normalized_step.get('version', 1)
+            parameters = normalized_step.get('parameters', {})
 
             # ステップタイプに応じて生成
             if cmd_type == 'looping':
@@ -406,22 +429,22 @@ class StepListGenerator:
                     cmd, cmd_nickname, version, parameters,
                     description=get_description(cmd),
                     tags=get_tags(cmd),
-                    sequence=original_step.get('sequence', [])
+                    sequence=normalized_step.get('sequence', [])
                 )
             elif cmd_type == 'branching':
                 step = self.factory.create_branching_step(
                     cmd, cmd_nickname, version, parameters,
                     description=get_description(cmd),
                     tags=get_tags(cmd),
-                    sequence_0=original_step.get('sequence-0', []),
-                    sequence_1=original_step.get('sequence-1', [])
+                    sequence_0=normalized_step.get('sequence-0', []),
+                    sequence_1=normalized_step.get('sequence-1', [])
                 )
             elif cmd_type == 'grouping':
                 step = self.factory.create_grouping_step(
                     cmd, cmd_nickname, version, parameters,
                     description=get_description(cmd),
                     tags=get_tags(cmd),
-                    sequence=original_step.get('sequence', [])
+                    sequence=normalized_step.get('sequence', [])
                 )
             else:  # basic, static, excel, file など
                 step = self.factory.create_step(
@@ -431,13 +454,13 @@ class StepListGenerator:
                 )
 
             # 特殊なフラグがある場合
-            if 'flags' in original_step:
-                flags = original_step['flags']
+            if 'flags' in normalized_step:
+                flags = normalized_step['flags']
                 if 'error' in flags or 'checked' in flags:
                     step['flags'] = flags
 
-            if 'ext' in original_step:
-                step['ext'] = original_step['ext']
+            if 'ext' in normalized_step:
+                step['ext'] = normalized_step['ext']
 
             steps.append(step)
 

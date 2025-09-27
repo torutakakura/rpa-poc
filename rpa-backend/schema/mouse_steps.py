@@ -19,7 +19,7 @@ class MoveMouseAbsoluteStep(BaseStep):
     """マウス移動（座標）ステップ"""
     def __init__(self, x: str = "100", y: str = "100", click: str = "single", **kwargs):
         super().__init__(
-            cmd="move-mouse-to-absolute-coordinates",
+            cmd="move_mouse_to_absolute_coordinates",
             cmd_nickname="マウス移動（座標）",
             cmd_type="basic",
             version=2,
@@ -41,7 +41,7 @@ class MoveMouseRelativeStep(BaseStep):
     """マウス移動（距離）ステップ"""
     def __init__(self, x: str = "100", y: str = "100", click: str = "single", **kwargs):
         super().__init__(
-            cmd="move-mouse-to-relative-coordinates",
+            cmd="move_mouse_to_relative_coordinates",
             cmd_nickname="マウス移動（距離）",
             cmd_type="basic",
             version=2,
@@ -83,7 +83,7 @@ class MoveMouseToImageStep(BaseStep):
         )
 
         super().__init__(
-            cmd="move-mouse-to-image",
+            cmd="move_mouse_to_image",
             cmd_nickname="マウス移動（画像認識）",
             cmd_type="basic",
             version=4,
@@ -109,7 +109,7 @@ class ClickMouseStep(BaseStep):
     """マウスクリックステップ"""
     def __init__(self, click_type: str = "single", **kwargs):
         super().__init__(
-            cmd="click-mouse",
+            cmd="click_mouse",
             cmd_nickname="マウスクリック",
             cmd_type="basic",
             version=1,
@@ -130,7 +130,7 @@ class ScrollMouseStep(BaseStep):
     """マウススクロールステップ"""
     def __init__(self, direction: str = "up", amount: int = 3, **kwargs):
         super().__init__(
-            cmd="scroll-mouse",
+            cmd="scroll_mouse",
             cmd_nickname="マウススクロール",
             cmd_type="basic",
             version=1,
@@ -151,7 +151,7 @@ class DragDropAbsoluteStep(BaseStep):
     """現在位置からドラッグ&ドロップ（座標）ステップ"""
     def __init__(self, x: str = "100", y: str = "100", **kwargs):
         super().__init__(
-            cmd="drag-and-drop-to-absolute-coordinates",
+            cmd="drag_and_drop_to_absolute_coordinates",
             cmd_nickname="現在位置からドラッグ&ドロップ（座標）",
             cmd_type="basic",
             version=1,
@@ -172,7 +172,7 @@ class DragDropRelativeStep(BaseStep):
     """現在位置からドラッグ&ドロップ（距離）ステップ"""
     def __init__(self, x: str = "100", y: str = "100", **kwargs):
         super().__init__(
-            cmd="drag-and-drop-to-relative-coordinates",
+            cmd="drag_and_drop_to_relative_coordinates",
             cmd_nickname="現在位置からドラッグ&ドロップ（距離）",
             cmd_type="basic",
             version=1,
@@ -213,7 +213,7 @@ class DragDropToImageStep(BaseStep):
         )
 
         super().__init__(
-            cmd="drag-and-drop-to-image",
+            cmd="drag_and_drop_to_image",
             cmd_nickname="現在位置からドラッグ&ドロップ（画像認識）",
             cmd_type="basic",
             version=2,
