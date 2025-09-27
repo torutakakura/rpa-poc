@@ -10,13 +10,6 @@ import { Textarea } from '@/components/ui/textarea'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { ArrowDown, ArrowLeft, ArrowRight, Bot, CheckCircle, Layers, Loader2, Pencil, RefreshCw, Save, Send, Settings, TestTube, Upload, Workflow, X } from 'lucide-react'
 import axios from 'axios'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
 
 type ViewMode = 'groups' | 'detailed'
 
@@ -59,6 +52,19 @@ export default function WorkflowEdit() {
   const [workflowSteps, setWorkflowSteps] = useState<WorkflowStep[]>([])
   const hasBuildDataProcessed = useRef(false)
   const [isRebuilding, setIsRebuilding] = useState(false)
+
+  // アシスタントパネルの幅管理
+  const [assistantWidth, setAssistantWidth] = useState(320) // デフォルト幅 320px
+  const [isResizing, setIsResizing] = useState(false)
+  const assistantRef = useRef<HTMLDivElement | null>(null)
+  const MIN_WIDTH = 280
+  const MAX_WIDTH = 780
+
+  // チャット機能の状態管理
+  const [assistantInput, setAssistantInput] = useState('')
+  const [assistantLoading, setAssistantLoading] = useState(false)
+  const assistantTextareaRef = useRef<HTMLTextAreaElement | null>(null)
+  const chatScrollRef = useRef<HTMLDivElement | null>(null)
 
   // HearingChatからbuildDataが渡された場合の処理
   useEffect(() => {
@@ -192,6 +198,93 @@ export default function WorkflowEdit() {
 
     return () => clearTimeout(timer)
   }, [apiBase, workflowId])
+
+  // リサイズのハンドリング
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!isResizing) return
+
+      const newWidth = window.innerWidth - e.clientX
+      if (newWidth >= MIN_WIDTH && newWidth <= MAX_WIDTH) {
+        setAssistantWidth(newWidth)
+      }
+    }
+
+    const handleMouseUp = () => {
+      setIsResizing(false)
+      document.body.style.userSelect = ''
+      document.body.style.cursor = ''
+    }
+
+    if (isResizing) {
+      document.body.style.userSelect = 'none'
+      document.body.style.cursor = 'col-resize'
+      document.addEventListener('mousemove', handleMouseMove)
+      document.addEventListener('mouseup', handleMouseUp)
+    }
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove)
+      document.removeEventListener('mouseup', handleMouseUp)
+    }
+  }, [isResizing])
+
+  // チャットメッセージのスクロール
+  useEffect(() => {
+    if (chatScrollRef.current) {
+      chatScrollRef.current.scrollTop = chatScrollRef.current.scrollHeight
+    }
+  }, [chatMessages])
+
+  // アシスタントへのメッセージ送信
+  const handleAssistantSend = async () => {
+    if (!assistantInput.trim() || !workflowId || assistantLoading) return
+
+    const userMsg = { role: 'user' as const, content: assistantInput.trim() }
+    const nextMessages = [...chatMessages, userMsg]
+    setChatMessages(nextMessages)
+    setAssistantInput('')
+
+    // テキストエリアの高さをリセット
+    if (assistantTextareaRef.current) {
+      assistantTextareaRef.current.style.height = '40px'
+    }
+
+    setAssistantLoading(true)
+    try {
+      const url = `${apiBase}/ai-chat/${workflowId}`
+      const res = await axios.post(url, { messages: nextMessages })
+      const reply: string = res.data?.reply ?? ''
+      setChatMessages([...nextMessages, { role: 'assistant', content: reply }])
+    } catch {
+      setChatMessages([...nextMessages, {
+        role: 'assistant',
+        content: 'エラーが発生しました。時間をおいて再試行してください。'
+      }])
+    } finally {
+      setAssistantLoading(false)
+    }
+  }
+
+  // キーボードショートカットのハンドリング
+  const handleAssistantKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+      e.preventDefault()
+      if (!assistantLoading) {
+        void handleAssistantSend()
+      }
+    }
+  }
+
+  // テキストエリアの高さ自動調整
+  const handleAssistantInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setAssistantInput(e.target.value)
+    if (assistantTextareaRef.current) {
+      assistantTextareaRef.current.style.height = 'auto'
+      const h = Math.min(assistantTextareaRef.current.scrollHeight, 120)
+      assistantTextareaRef.current.style.height = `${h}px`
+    }
+  }
 
   const toggleStepForTest = (id: string) => {
     setSelectedStepsForTest(prev => {
@@ -327,7 +420,9 @@ export default function WorkflowEdit() {
 
   return (
     <>
-    <PageLayout
+    {/* メインコンテンツエリア - アシスタント幅に応じてマージンを調整 */}
+    <div style={{ marginRight: `${assistantWidth}px` }}>
+      <PageLayout
       title={
         <div className="flex items-center gap-2">
           {!isEditingTitle ? (
@@ -682,17 +777,39 @@ export default function WorkflowEdit() {
 
       </div>
     </PageLayout>
-    {/* 固定表示の右側AIアシスタント（画面最上部〜最下部） */}
-    <div className="fixed right-0 top-0 bottom-0 w-80 border-l bg-muted/10 flex flex-col">
+    </div>
+
+    {/* リサイズ可能なハンドル */}
+    <div
+      className="fixed top-0 bottom-0 w-1 cursor-col-resize hover:bg-primary/20 active:bg-primary/30 z-50 transition-colors"
+      style={{ right: `${assistantWidth - 2}px` }}
+      onMouseDown={(e) => {
+        e.preventDefault()
+        setIsResizing(true)
+      }}
+    >
+      <div className="absolute inset-0 flex items-center justify-center">
+        <div className="w-0.5 h-8 bg-border rounded-full" />
+      </div>
+    </div>
+
+    {/* リサイズ可能な右側AIアシスタント（画面最上部〜最下部） */}
+    <div
+      ref={assistantRef}
+      className="fixed right-0 top-0 bottom-0 border-l bg-muted/10 flex flex-col transition-none"
+      style={{ width: `${assistantWidth}px` }}>
       <div className="p-4 border-b">
         <h3 className="font-semibold flex items-center">
           <Bot className="h-4 w-4 mr-2" />
           ワークフローアシスタント
         </h3>
       </div>
-      <div className="flex-1 overflow-y-auto p-4 space-y-4 text-sm">
+      <div ref={chatScrollRef} className="flex-1 overflow-y-auto p-4 space-y-3">
         {chatMessages.length === 0 && (
-          <p className="text-muted-foreground">履歴はまだありません。</p>
+          <div className="text-center text-sm text-muted-foreground mt-8">
+            <p>ワークフローについて何かお手伝いできることはありますか？</p>
+            <p className="mt-2">例: ステップの追加、修正、最適化など</p>
+          </div>
         )}
         {chatMessages.map((message, index) => (
           <div
@@ -700,20 +817,51 @@ export default function WorkflowEdit() {
             className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
           >
             <div
-              className={`max-w-[80%] rounded-lg px-3 py-2 ${
-                message.role === 'user' ? 'bg-primary text-primary-foreground' : 'bg-muted'
+              className={`max-w-[85%] rounded-lg px-3 py-2 ${
+                message.role === 'user'
+                  ? 'bg-primary text-primary-foreground'
+                  : 'bg-muted'
               }`}
             >
-              <p className="whitespace-pre-wrap text-sm">{message.content}</p>
+              <p className="whitespace-pre-wrap text-sm leading-relaxed">{message.content}</p>
             </div>
           </div>
         ))}
+        {assistantLoading && (
+          <div className="flex justify-start">
+            <div className="max-w-[85%] rounded-lg px-3 py-2 bg-muted">
+              <div className="flex items-center space-x-2">
+                <Loader2 className="h-3 w-3 animate-spin" />
+                <span className="text-sm text-muted-foreground">考え中...</span>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
-      <div className="p-4 border-t bg-card">
-        <div className="flex space-x-2">
-          <Input placeholder="メッセージを入力..." />
-          <Button size="sm">
-            <Send className="h-4 w-4" />
+      <div className="p-3 border-t bg-card">
+        <div className="relative">
+          <Textarea
+            ref={assistantTextareaRef}
+            value={assistantInput}
+            onChange={handleAssistantInputChange}
+            onKeyDown={handleAssistantKeyDown}
+            placeholder="メッセージを入力... (Ctrl+Enterで送信)"
+            className="w-full rounded-md border border-input bg-background px-3 py-2 pr-12 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50 resize-none overflow-y-auto"
+            rows={1}
+            style={{ height: '40px', minHeight: '40px', maxHeight: '120px' }}
+            disabled={assistantLoading}
+          />
+          <Button
+            onClick={handleAssistantSend}
+            disabled={!assistantInput.trim() || assistantLoading}
+            size="icon"
+            className="absolute right-1 bottom-1 h-8 w-8"
+          >
+            {assistantLoading ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Send className="h-4 w-4" />
+            )}
           </Button>
         </div>
       </div>
