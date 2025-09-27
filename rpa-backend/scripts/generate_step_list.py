@@ -497,14 +497,21 @@ def main():
     generator = StepListGenerator()
     scenario = generator.generate_scenario()
 
-    # 出力ファイル
-    output_file = project_root / "generated_step_list.json"
+    # 出力ファイル（backendとmcpの両方に出力）
+    backend_output = project_root / "generated_step_list.json"
+    mcp_output = project_root.parent / "rpa-mcp" / "generated_step_list.json"
 
-    # JSONとして保存
-    with open(output_file, 'w', encoding='utf-8') as f:
+    # rpa-backendに保存
+    with open(backend_output, 'w', encoding='utf-8') as f:
         json.dump(scenario, f, ensure_ascii=False, indent=2)
 
-    print(f"✅ JSONファイルを生成しました: {output_file}")
+    # rpa-mcpにも保存
+    with open(mcp_output, 'w', encoding='utf-8') as f:
+        json.dump(scenario, f, ensure_ascii=False, indent=2)
+
+    print(f"✅ JSONファイルを生成しました:")
+    print(f"  - Backend: {backend_output}")
+    print(f"  - MCP: {mcp_output}")
     print(f"  - バージョン: {scenario['version']}")
     print(f"  - ステップ数: {len(scenario.get('sequence', []))}")
 

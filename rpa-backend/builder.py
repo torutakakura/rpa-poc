@@ -4,6 +4,7 @@ from deepmcpagent import HTTPServerSpec, FastMCPMulti, MCPToolLoader
 from langchain_openai import ChatOpenAI
 from langgraph.prebuilt import create_react_agent
 import os
+from tool_mapping import convert_cmd_list_to_tool_names
 
 class RPAWorkflowBuilder:
     """RPAワークフロービルダー - MCPツールを使用してワークフローを構築"""
@@ -22,10 +23,18 @@ class RPAWorkflowBuilder:
             mcp_server_url: MCPサーバーのURL
             model_name: 使用するLLMモデル名
             api_key: OpenAI APIキー（環境変数から取得する場合は不要）
+            allowed_tool_names: 許可するツール名のリスト（cmdフォーマット）
         """
         self.mcp_server_url = mcp_server_url
         self.model_name = model_name
-        self.allowed_tool_names = list(dict.fromkeys(allowed_tool_names or []))
+        # cmdフォーマットをMCPツール名に変換
+        if allowed_tool_names:
+            self.allowed_tool_names = convert_cmd_list_to_tool_names(
+                list(dict.fromkeys(allowed_tool_names))
+            )
+            print(f"📋 Converted {len(allowed_tool_names)} cmd names to {len(self.allowed_tool_names)} MCP tool names")
+        else:
+            self.allowed_tool_names = None
 
         # APIキーの設定
         if api_key:
@@ -98,10 +107,11 @@ class RPAWorkflowBuilder:
             raise RuntimeError("No matching MCP tools available for allowed_tool_names")
 
         # エージェントの構築（フィルタ済みツールのみ）
+        # promptパラメータを使用（SystemMessageまたは文字列）
         agent = create_react_agent(
             model=self.llm,
             tools=selected_tools,
-            state_modifier=instructions,
+            prompt=instructions,
         )
 
         self.agent = agent
@@ -171,7 +181,7 @@ class RPAWorkflowBuilder:
           - description: ステップ説明（1文程度）
           - tags: 文字列配列（例: ["アプリ", "起動", "基本"]）
           - parameters: パラメータオブジェクト。コマンドに必要なキーのみ含める
-          - flags: {"checkboxed": boolean, "bookmarked": boolean}
+          - flags: {{"checkboxed": boolean, "bookmarked": boolean}}
 
         【重要】
         - JSON以外の文章は出力しない
@@ -209,13 +219,98 @@ class RPAWorkflowBuilder:
         ```
         """
 
+        # step2.log: デバッグ情報を出力
+        import json as json_module
+        with open("step2.log", "w", encoding="utf-8") as f:
+            f.write("=== RPAワークフロービルダー デバッグ情報 ===\n\n")
+            f.write(f"モデル名: {self.model_name}\n")
+            f.write(f"MCPサーバーURL: {self.mcp_server_url}\n")
+            f.write(f"許可ツール数: {len(self.allowed_tool_names) if self.allowed_tool_names else 'All'}\n\n")
+
+            # システムプロンプトを出力
+            f.write("=== システムプロンプト ===\n")
+            f.write("""あなたはRPAワークフロー設計の専門家です。
+        ユーザーのストーリーや要求を分析し、適切なRPAツールを組み合わせて
+        効率的なワークフローを構築してください。
+
+        【重要】出力は必ず以下のJSON形式で行ってください：
+        {
+          "steps": [
+            {
+                "cmd": "run-executable",
+                "cmd-nickname": "アプリ起動",
+                "cmd-type": "basic",
+                "version": 3,
+                "uuid": "308e70dd-c638-4af0-8269-ec3d95a02b4f",
+                "memo": "",
+                "description": "指定したアプリケーションやファイルを起動します。パスや引数、ウィンドウ表示状態を設定できます。",
+                "tags": ["アプリ", "起動", "基本"],
+                "parameters": {"path": "", "arguments": "", "interval": 3, "maximized": true},
+                "flags": {"checkboxed": false, "bookmarked": false}
+            }
+          ]
+        }\n\n""")
+
+            # ユーザープロンプトを出力
+            f.write("=== ユーザープロンプト ===\n")
+            f.write(prompt)
+            f.write("\n\n")
+
+            # 利用可能なツールを出力
+            f.write("=== 利用可能なツール ===\n")
+            if self.available_tools:
+                for i, tool in enumerate(self.available_tools, 1):
+                    f.write(f"{i}. {tool['name']}: {tool['description']}\n")
+            else:
+                f.write("ツール情報が取得できていません\n")
+            f.write(f"\n合計: {len(self.available_tools) if self.available_tools else 0} ツール\n\n")
+
+            # 許可されたツール名を出力
+            if self.allowed_tool_names:
+                f.write("=== 許可されたツール名 (MCP形式) ===\n")
+                for i, name in enumerate(self.allowed_tool_names, 1):
+                    f.write(f"{i}. {name}\n")
+                f.write(f"\n合計: {len(self.allowed_tool_names)} ツール\n\n")
+
         # エージェントの実行
-        result = await self.agent.ainvoke({
-            "messages": [{"role": "user", "content": prompt}]
-        })
+        try:
+            result = await self.agent.ainvoke({
+                "messages": [{"role": "user", "content": prompt}]
+            })
+        except Exception as e:
+            # エラーログを記録
+            with open("step2.log", "a", encoding="utf-8") as f:
+                f.write(f"\n⚠️ エージェント実行エラー: {str(e)}\n")
+                f.write(f"エラータイプ: {type(e)}\n")
+            raise
 
         # 結果の解析
         workflow = self._parse_workflow_response(result)
+
+        # step2.log: 実行結果を追記
+        with open("step2.log", "a", encoding="utf-8") as f:
+            f.write("=== エージェント実行結果 ===\n")
+            f.write(f"結果のタイプ: {type(result)}\n")
+            if result and "messages" in result:
+                f.write(f"メッセージ数: {len(result.get('messages', []))}\n")
+                if result["messages"]:
+                    last_msg = result["messages"][-1]
+                    f.write(f"最終メッセージタイプ: {type(last_msg)}\n")
+                    if hasattr(last_msg, 'content'):
+                        f.write(f"最終メッセージ内容（最初の500文字）:\n{str(last_msg.content)[:500]}...\n\n")
+
+            f.write("=== パース後のワークフロー ===\n")
+            f.write(json_module.dumps(workflow, ensure_ascii=False, indent=2))
+            f.write("\n\n")
+
+            # ステップが空の場合の診断情報
+            if not workflow.get("steps"):
+                f.write("⚠️ ワークフローのstepsが空です！\n")
+                f.write("考えられる原因:\n")
+                f.write("1. エージェントが正しいJSON形式で応答していない\n")
+                f.write("2. 許可されたツールとエージェントの出力が一致していない\n")
+                f.write("3. プロンプトの指示が正しく理解されていない\n")
+                f.write("4. MCPツールが正しく初期化されていない\n")
 
         # ワークフロー名が指定されていれば設定
         if workflow_name and "name" in workflow:
@@ -225,6 +320,12 @@ class RPAWorkflowBuilder:
 
     def _parse_workflow_response(self, response: Dict[str, Any]) -> Dict[str, Any]:
         """エージェントの応答からワークフローを解析"""
+
+        # デバッグ用ログ
+        with open("step2.log", "a", encoding="utf-8") as f:
+            f.write("\n=== _parse_workflow_response 開始 ===\n")
+            f.write(f"response タイプ: {type(response)}\n")
+            f.write(f"response キー: {list(response.keys()) if isinstance(response, dict) else 'Not a dict'}\n")
 
         # 最後のメッセージを取得
         messages = response.get("messages", [])
@@ -246,6 +347,12 @@ class RPAWorkflowBuilder:
         else:
             content = str(last_message)
 
+        # デバッグ：内容を記録
+        with open("step2.log", "a", encoding="utf-8") as f:
+            f.write(f"\nlast_message タイプ: {type(last_message)}\n")
+            f.write(f"content 長さ: {len(content) if content else 0}\n")
+            f.write(f"content 最初の500文字:\n{content[:500] if content else 'Empty'}\n\n")
+
         # デフォルトのワークフロー構造
         default_workflow = {
             "name": "Generated RPA Workflow",
@@ -260,6 +367,12 @@ class RPAWorkflowBuilder:
             json_pattern = r'```json\s*(.*?)\s*```'
             json_matches = re.findall(json_pattern, content, re.DOTALL)
 
+            # デバッグ：JSON検索結果
+            with open("step2.log", "a", encoding="utf-8") as f:
+                f.write(f"JSON検索結果: {len(json_matches)} 個のJSONブロック発見\n")
+                if json_matches:
+                    f.write(f"最初のJSONブロック (最初の500文字):\n{json_matches[0][:500]}\n\n")
+
             if json_matches:
                 # JSONをパース
                 workflow_data = json.loads(json_matches[0])
@@ -273,19 +386,30 @@ class RPAWorkflowBuilder:
                 }
             else:
                 # JSONブロックが見つからない場合、content全体をJSONとして解析を試みる
+                with open("step2.log", "a", encoding="utf-8") as f:
+                    f.write("JSONブロックが見つからないため、content全体をJSON解析試行\n")
                 try:
                     workflow_data = json.loads(content)
+                    with open("step2.log", "a", encoding="utf-8") as f:
+                        f.write(f"✅ content全体のJSON解析成功\n")
+                        f.write(f"steps キーの存在: {'steps' in workflow_data}\n")
+                        f.write(f"steps の内容: {workflow_data.get('steps', [])[:3] if 'steps' in workflow_data else 'No steps key'}\n")
                     return {
                         "name": workflow_data.get("name", default_workflow["name"]),
                         "description": workflow_data.get("description", default_workflow["description"]),
                         "version": workflow_data.get("version", "1.0.0"),
                         "steps": workflow_data.get("steps", [])
                     }
-                except Exception:
+                except Exception as parse_error:
+                    with open("step2.log", "a", encoding="utf-8") as f:
+                        f.write(f"❌ content全体のJSON解析失敗: {str(parse_error)}\n")
                     print("⚠️ JSON形式のワークフローが見つかりませんでした")
                     return default_workflow
                     
         except (json.JSONDecodeError, KeyError) as e:
+            with open("step2.log", "a", encoding="utf-8") as f:
+                f.write(f"❌ ワークフロー解析エラー: {str(e)}\n")
+                f.write(f"エラータイプ: {type(e)}\n")
             print(f"⚠️ ワークフローの解析中にエラーが発生しました: {e}")
             return default_workflow
 
@@ -328,3 +452,4 @@ class RPAWorkflowBuilder:
             json.dump(workflow, f, ensure_ascii=False, indent=2)
         
         print(f"✅ ワークフローを {filename} に保存しました。")
+

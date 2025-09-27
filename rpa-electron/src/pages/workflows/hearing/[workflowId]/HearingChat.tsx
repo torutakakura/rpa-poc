@@ -29,12 +29,14 @@ export default function HearingChat() {
   const textareaRef = useRef<HTMLTextAreaElement | null>(null)
   const apiBase = (import.meta as any).env?.VITE_API_BASE_URL || 'http://127.0.0.1:8000'
   const hasInitialFromNav = useRef(false)
+  const isProcessingInitial = useRef(false)
 
   // 初回遷移時: Hearingからの初期メッセージがあれば表示して即実行
   useEffect(() => {
     const init = location?.state?.initialMessages as ChatMessage[] | undefined
-    if (init && init.length > 0) {
+    if (init && init.length > 0 && !isProcessingInitial.current) {
       hasInitialFromNav.current = true
+      isProcessingInitial.current = true
       setChatMessages(init)
       // 画面遷移後に初回のAI応答を取得
       if (workflowId) {
@@ -63,6 +65,9 @@ export default function HearingChat() {
   }, [apiBase, workflowId])
 
   const fetchAssistant = async (messages: ChatMessage[]) => {
+    // APIコールの重複防止
+    if (loading) return
+
     setLoading(true)
     try {
       const url = `${apiBase}/ai-chat/${workflowId}`
@@ -82,6 +87,10 @@ export default function HearingChat() {
     const nextMessages = [...chatMessages, userMsg]
     setChatMessages(nextMessages)
     setInput('')
+    // テキストエリアの高さを初期値にリセット
+    if (textareaRef.current) {
+      textareaRef.current.style.height = '40px'
+    }
     await fetchAssistant(nextMessages)
   }
 

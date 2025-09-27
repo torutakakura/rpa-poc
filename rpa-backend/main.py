@@ -932,6 +932,12 @@ async def build_workflow(workflow_id: str) -> dict:
     text = "\n".join(dict.fromkeys([c for c in contents if c]))  # preserve order, drop dups
     text = "\n".join([ln.strip() for ln in text.splitlines() if ln.strip()])
 
+    # step1.log: ヒアリング内容を出力
+    with open("step1.log", "w", encoding="utf-8") as f:
+        f.write("=== ヒアリング内容 (ベクトル化前) ===\n\n")
+        f.write(text)
+        f.write("\n\n")
+
     # 4) 埋め込みモデルでベクトル化
     try:
         embedder = _build_embeddings(None)
@@ -960,6 +966,18 @@ async def build_workflow(workflow_id: str) -> dict:
             emb_literal,
         )
 
+    # step1.log: 絞り込み結果40件を追記
+    with open("step1.log", "a", encoding="utf-8") as f:
+        f.write("=== ベクトル検索結果 (上位40件) ===\n\n")
+        for i, c in enumerate(candidates, 1):
+            f.write(f"{i}. step_key: {c['step_key']}\n")
+            f.write(f"   title: {c['title']}\n")
+            f.write(f"   description: {c['description']}\n")
+            f.write(f"   similarity: {c['similarity']:.4f}\n")
+            f.write(f"   metadata: {c['metadata']}\n")
+            f.write("\n")
+        f.write("\n")
+
     # 候補40件から許可ツール名を抽出
     # 1) 正規マッピング（cmd -> MCPツール名）
     # 2) マップに無い場合はフォールバックで step_key 自体も候補に含める
@@ -973,6 +991,13 @@ async def build_workflow(workflow_id: str) -> dict:
             if name and name not in _seen:
                 _seen.add(name)
                 allowed_tool_names.append(name)
+
+    # step1.log: 許可されたツール名を追記
+    with open("step1.log", "a", encoding="utf-8") as f:
+        f.write("=== 許可されたツール名 ===\n\n")
+        for i, name in enumerate(allowed_tool_names, 1):
+            f.write(f"{i}. {name}\n")
+        f.write(f"\n合計: {len(allowed_tool_names)} ツール\n")
 
     # ビルダーでワークフロー生成（ヒアリング全文を渡す）
     builder = RPAWorkflowBuilder(
