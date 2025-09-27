@@ -67,22 +67,20 @@ class RPAWorkflowBuilder:
         ユーザーのストーリーや要求を分析し、適切なRPAツールを組み合わせて
         効率的なワークフローを構築してください。
 
-        【重要】出力は必ず以下のJSON形式で行ってください：
+        【重要】利用可能なMCPツールを呼び出して、実際のステップ定義を取得してください。
+        各ツールは正しいcmd形式（スネークケース）とパラメータ構造を返します。
+
+        ワークフロー作成手順：
+        1. ヒアリング内容を分析
+        2. 必要なMCPツールを選択して実行
+        3. ツールの出力をそのまま使用してワークフローを構成
+        4. 最終的なワークフローをJSON形式で出力
+
+        出力形式：
         {
-          "steps": [
-            {
-                "cmd": "run-executable",
-                "cmd-nickname": "アプリ起動",
-                "cmd-type": "basic",
-                "version": 3,
-                "uuid": "308e70dd-c638-4af0-8269-ec3d95a02b4f",
-                "memo": "",
-                "description": "指定したアプリケーションやファイルを起動します。パスや引数、ウィンドウ表示状態を設定できます。",
-                "tags": ["アプリ", "起動", "基本"],
-                "parameters": {"path": "", "arguments": "", "interval": 3, "maximized": true},
-                "flags": {"checkboxed": false, "bookmarked": false}
-            }
-          ]
+          "name": "ワークフロー名",
+          "description": "説明",
+          "steps": [ツールから取得したステップ定義の配列]
         }
         """
 
@@ -160,6 +158,40 @@ class RPAWorkflowBuilder:
         if not self.agent:
             await self.initialize_agent()
 
+        # generated_step_list.jsonから直接ステップ定義を取得
+        import json as json_module
+        from pathlib import Path
+
+        step_list_path = Path(__file__).parent.parent / "rpa-mcp" / "generated_step_list.json"
+        if not step_list_path.exists():
+            step_list_path = Path(__file__).parent / "generated_step_list.json"
+
+        available_step_definitions = []
+        if step_list_path.exists():
+            with open(step_list_path, 'r', encoding='utf-8') as f:
+                step_data = json_module.load(f)
+                sequence = step_data.get('sequence', [])
+
+                # 許可されたツールに対応するステップ定義を取得
+                if self.allowed_tool_names:
+                    from tool_mapping import get_cmd_to_tool_mapping
+                    tool_to_cmd = {v: k for k, v in get_cmd_to_tool_mapping().items()}
+
+                    for tool_name in self.allowed_tool_names[:10]:  # 最初の10個の例
+                        cmd_key = tool_to_cmd.get(tool_name)
+                        if cmd_key:
+                            for step in sequence:
+                                if step.get('cmd') == cmd_key:
+                                    available_step_definitions.append(step)
+                                    break
+
+        # ステップ定義の例をプロンプトに含める
+        step_examples = ""
+        if available_step_definitions:
+            step_examples = "\n【利用可能なステップ定義の例（これらの形式を厳守してください）】\n"
+            for i, step_def in enumerate(available_step_definitions[:5], 1):
+                step_examples += f"\n例{i}:\n{json_module.dumps(step_def, ensure_ascii=False, indent=2)}\n"
+
         # プロンプトの構築（ヒアリング内容ベース + sequence出力指定）
         prompt = f"""
         次のヒアリング内容に基づき、実行可能なRPAワークフローを設計してください。
@@ -168,52 +200,25 @@ class RPAWorkflowBuilder:
         【ヒアリング内容】
         {hearing_text}
 
-        【出力スキーマ】
-        - name: ワークフロー名（20〜50文字程度）
-        - description: ワークフローの説明（1〜2文）
-        - sequence: 実行シーケンス（配列）。各要素は以下の構造：
-          - cmd: コマンドID（例: "run-executable"）
-          - cmd-nickname: 表示名（例: "アプリ起動"）
-          - cmd-type: 種別（"basic"|"branching" など）
-          - version: 数値バージョン（例: 3）
-          - uuid: ステップUUID（ランダムで良い）
-          - memo: メモ文字列（空でも可）
-          - description: ステップ説明（1文程度）
-          - tags: 文字列配列（例: ["アプリ", "起動", "基本"]）
-          - parameters: パラメータオブジェクト。コマンドに必要なキーのみ含める
-          - flags: {{"checkboxed": boolean, "bookmarked": boolean}}
+        {step_examples}
 
-        【重要】
-        - JSON以外の文章は出力しない
-        - 不要なキーは含めない
-        - parametersやtagsは、選定したコマンドに合わせて妥当な初期値を設定
+        【重要な指示】
+        1. 上記の利用可能なステップ定義の形式に厳密に従ってください
+        2. stepsには上記の例から適切なものを選んでコピーし、配列に含めてください
+        3. 各ステップは上記の例の完全なコピーとし、parametersの値のみ変更可能です
+        4. cmd, cmd-nickname, cmd-type, version, description, tags, flagsは絶対に変更しないでください
+        5. 新しいcmdや形式を勝手に作成しないでください
+        6. cmdは必ずスネークケース（run_executable）を維持してください
 
-        【出力例】（例示。コンテンツはヒアリングに合わせて調整）
+        【最終出力形式】
+        最後にJSON形式でワークフローを出力してください：
         ```json
         {{
-          "name": "サンプルワークフロー",
-          "description": "サンプルワークフローの説明",
-          "sequence": [
-            {{
-              "cmd": "run-executable",
-              "cmd-nickname": "アプリ起動",
-              "cmd-type": "basic",
-              "version": 3,
-              "uuid": "308e70dd-c638-4af0-8269-ec3d95a02b4f",
-              "memo": "",
-              "description": "指定したアプリケーションやファイルを起動します。パスや引数、ウィンドウ表示状態を設定できます。",
-              "tags": ["アプリ", "起動", "基本"],
-              "parameters": {{
-                "path": "",
-                "arguments": "",
-                "interval": 3,
-                "maximized": true
-              }},
-              "flags": {{
-                "checkboxed": false,
-                "bookmarked": false
-              }}
-            }}
+          "name": "ワークフロー名（20〜50文字程度）",
+          "description": "ワークフローの説明（1〜2文）",
+          "steps": [
+            // 利用可能なステップ定義の形式に従ったステップの配列
+            // parametersの値のみ調整可能
           ]
         }}
         ```
@@ -272,11 +277,12 @@ class RPAWorkflowBuilder:
                     f.write(f"{i}. {name}\n")
                 f.write(f"\n合計: {len(self.allowed_tool_names)} ツール\n\n")
 
-        # エージェントの実行
+        # エージェントの実行（設定オプション付き）
         try:
-            result = await self.agent.ainvoke({
-                "messages": [{"role": "user", "content": prompt}]
-            })
+            result = await self.agent.ainvoke(
+                {"messages": [{"role": "user", "content": prompt}]},
+                config={"recursion_limit": 50}  # 実行時の設定として再帰制限を指定
+            )
         except Exception as e:
             # エラーログを記録
             with open("step2.log", "a", encoding="utf-8") as f:
@@ -376,13 +382,17 @@ class RPAWorkflowBuilder:
             if json_matches:
                 # JSONをパース
                 workflow_data = json.loads(json_matches[0])
-                
+
+                # sequenceキーをstepsキーに変換
+                # エージェントは"sequence"を返すが、APIは"steps"を期待している
+                steps = workflow_data.get("sequence", workflow_data.get("steps", []))
+
                 # 正しい形式のワークフローを返す
                 return {
                     "name": workflow_data.get("name", default_workflow["name"]),
                     "description": workflow_data.get("description", default_workflow["description"]),
                     "version": workflow_data.get("version", "1.0.0"),
-                    "steps": workflow_data.get("steps", [])
+                    "steps": steps
                 }
             else:
                 # JSONブロックが見つからない場合、content全体をJSONとして解析を試みる
@@ -393,12 +403,18 @@ class RPAWorkflowBuilder:
                     with open("step2.log", "a", encoding="utf-8") as f:
                         f.write(f"✅ content全体のJSON解析成功\n")
                         f.write(f"steps キーの存在: {'steps' in workflow_data}\n")
-                        f.write(f"steps の内容: {workflow_data.get('steps', [])[:3] if 'steps' in workflow_data else 'No steps key'}\n")
+                        f.write(f"sequence キーの存在: {'sequence' in workflow_data}\n")
+                        steps = workflow_data.get("sequence", workflow_data.get("steps", []))
+                        f.write(f"取得したステップ数: {len(steps)}\n")
+                        if steps:
+                            f.write(f"最初のステップ: {steps[0].get('cmd', 'No cmd key')}\n")
+                    # sequenceキーをstepsキーに変換
+                    steps = workflow_data.get("sequence", workflow_data.get("steps", []))
                     return {
                         "name": workflow_data.get("name", default_workflow["name"]),
                         "description": workflow_data.get("description", default_workflow["description"]),
                         "version": workflow_data.get("version", "1.0.0"),
-                        "steps": workflow_data.get("steps", [])
+                        "steps": steps
                     }
                 except Exception as parse_error:
                     with open("step2.log", "a", encoding="utf-8") as f:

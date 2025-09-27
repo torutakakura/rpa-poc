@@ -1,9 +1,16 @@
 import { useEffect, useRef, useState } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
-import { Send } from 'lucide-react'
+import { Send, Loader2 } from 'lucide-react'
 import axios from 'axios'
 import { Textarea } from '@/components/ui/textarea'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 
 type ChatMessage = {
   role: 'user' | 'assistant'
@@ -26,6 +33,7 @@ export default function HearingChat() {
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
+  const [buildingWorkflow, setBuildingWorkflow] = useState(false)
   const textareaRef = useRef<HTMLTextAreaElement | null>(null)
   const apiBase = (import.meta as any).env?.VITE_API_BASE_URL || 'http://127.0.0.1:8000'
   const hasInitialFromNav = useRef(false)
@@ -165,25 +173,56 @@ export default function HearingChat() {
           </div>
         </div>
 
-        {/* 下部のグローバルな"生成中..."はバブルのドットに置換 */}
+        {/* ワークフロー作成ボタン */}
         <div className="p-4">
           <div className="flex justify-center">
             <Button
               size="lg"
               className="px-8"
-              disabled={loading}
+              disabled={loading || buildingWorkflow}
               onClick={async () => {
                 if (!workflowId) return
+                setBuildingWorkflow(true)
                 try {
-                  await axios.post(`${apiBase}/workflow/${workflowId}/build`)
-                } catch {}
-                navigate(`/workflows/edit/${workflowId}`)
+                  const res = await axios.post(`${apiBase}/workflow/${workflowId}/build`)
+                  const buildData = res.data
+                  // buildレスポンスデータを渡してWorkflowEdit画面へ遷移
+                  navigate(`/workflows/edit/${workflowId}`, { state: { buildData } })
+                } catch (error) {
+                  console.error('ワークフロー作成エラー:', error)
+                  setBuildingWorkflow(false)
+                  navigate(`/workflows/edit/${workflowId}`)
+                }
               }}
             >
               ワークフロー作成
             </Button>
           </div>
         </div>
+
+        {/* ワークフロー作成中のダイアログ */}
+        <Dialog open={buildingWorkflow} onOpenChange={() => {}}>
+          <DialogContent className="sm:max-w-md" onPointerDownOutside={(e) => e.preventDefault()}>
+            <DialogHeader className="sr-only">
+              <DialogTitle>ワークフロー作成中</DialogTitle>
+              <DialogDescription>
+                AIがワークフローの詳細を生成しています
+              </DialogDescription>
+            </DialogHeader>
+            <div className="flex flex-col items-center justify-center space-y-6 py-8">
+              <div className="relative w-24 h-24">
+                <div className="absolute inset-0 rounded-full bg-gray-200 animate-pulse"></div>
+                <div className="absolute inset-2 rounded-full bg-white flex items-center justify-center">
+                  <Loader2 className="h-10 w-10 animate-spin text-gray-600" />
+                </div>
+              </div>
+              <div className="text-center space-y-2">
+                <h3 className="text-xl font-semibold text-gray-900">詳細ステップを作成中...</h3>
+                <p className="text-sm text-gray-600">AIがワークフローの詳細を生成しています</p>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </main>
   )

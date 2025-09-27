@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { useParams } from 'react-router-dom'
+import { useParams, useLocation } from 'react-router-dom'
 import { PageLayout } from '@/components/layout/PageLayout'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -8,8 +8,15 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { ArrowDown, ArrowLeft, ArrowRight, Bot, CheckCircle, Layers, Loader2, Pencil, Save, Send, Settings, TestTube, Upload, Workflow, X } from 'lucide-react'
+import { ArrowDown, ArrowLeft, ArrowRight, Bot, CheckCircle, Layers, Loader2, Pencil, RefreshCw, Save, Send, Settings, TestTube, Upload, Workflow, X } from 'lucide-react'
 import axios from 'axios'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 
 type ViewMode = 'groups' | 'detailed'
 
@@ -32,6 +39,7 @@ type WorkflowStep = {
 
 export default function WorkflowEdit() {
   const { workflowId } = useParams()
+  const location = useLocation() as any
   const [wfTitle, setWfTitle] = useState<string>('')
   const [wfDescription, setWfDescription] = useState<string>('')
   const apiBase = (import.meta as any).env?.VITE_API_BASE_URL || 'http://127.0.0.1:8000'
@@ -49,73 +57,140 @@ export default function WorkflowEdit() {
   const [generatedGroups, setGeneratedGroups] = useState<GeneratedGroup[]>([])
 
   const [workflowSteps, setWorkflowSteps] = useState<WorkflowStep[]>([])
+  const hasBuildDataProcessed = useRef(false)
+  const [isRebuilding, setIsRebuilding] = useState(false)
 
+  // HearingChatからbuildDataが渡された場合の処理
   useEffect(() => {
-    // 簡易的にロード中UI→完了UIへ遷移
-    const t = setTimeout(() => setWorkflowCreationStep(4), 1200)
-    return () => clearTimeout(t)
-  }, [])
+    const buildData = location?.state?.buildData
+    console.log('+++++++++++++++++')
+    console.log('buildData', buildData)
+    if (buildData && !hasBuildDataProcessed.current) {
+      hasBuildDataProcessed.current = true
 
-  useEffect(() => {
-    const load = async () => {
-      if (!workflowId) return
-      try {
-        const res = await axios.get(`${apiBase}/workflow/${workflowId}`)
-        const name = res.data?.name ?? ''
-        setWfTitle(name)
-        setDraftTitle(name)
-        setWfDescription(res.data?.description ?? '')
-      } catch {
-        // noop
+      // generatedフィールドからデータを取得
+      const generated = buildData.generated || buildData
+
+      // ワークフロー名と説明を設定
+      if (generated.name) {
+        setWfTitle(generated.name)
+        setDraftTitle(generated.name)
       }
-    }
-    load()
-  }, [apiBase, workflowId])
-
-  useEffect(() => {
-    const loadHistory = async () => {
-      if (!workflowId) return
-      try {
-        const res = await axios.get(`${apiBase}/workflows/${workflowId}/messages`)
-        const msgs = (res.data || []) as { role: 'user' | 'assistant'; content: string }[]
-        if (msgs.length > 0) setChatMessages(msgs)
-      } catch {
-        // noop
+      if (generated.description) {
+        setWfDescription(generated.description)
       }
-    }
-    loadHistory()
-  }, [apiBase, workflowId])
 
-  // 生成結果（グループ/ステップ）をAPIから取得（未実装のため空想定）
-  useEffect(() => {
-    const loadGenerated = async () => {
-      if (!workflowId) return
-      try {
-        // 最新のステップ一覧（generated_step_list.json 風）を取得
-        const res = await axios.get(`${apiBase}/workflow/${workflowId}/latest`)
-        const seq = Array.isArray(res.data?.sequence) ? res.data.sequence : []
-
-        // グループは現状返却しないため空
-        setGeneratedGroups([])
-
-        // sequence -> WorkflowStep[] へマッピング
-        const steps = (seq as any[]).map((item, index): WorkflowStep => {
+      // ステップデータをWorkflowStep[]へマッピング
+      if (Array.isArray(generated.steps)) {
+        const mappedSteps = generated.steps.map((item: any, index: number): WorkflowStep => {
           const type: WorkflowStep['type'] = item['cmd-type'] === 'branching'
             ? 'condition'
             : (index === 0 ? 'trigger' : 'action')
+          // UUIDが重複している場合はインデックスを付与してユニークにする
+          const baseId = item.uuid || `step-${index + 1}`
+          const uniqueId = `${baseId}-${index}`
           return {
-            id: String(item.uuid || `sv-${index + 1}`),
+            id: String(uniqueId),
             title: String(item['cmd-nickname'] || item.cmd || `ステップ ${index + 1}`),
             description: String(item.description || ''),
-            type
+            type,
+            status: 'configured'
           }
         })
-        setWorkflowSteps(steps)
+
+        console.log('mappedSteps', mappedSteps)
+        if (mappedSteps.length > 0) {
+          setWorkflowSteps(mappedSteps)
+          setNewWorkflowViewMode('detailed')
+        }
+      }
+
+      // buildDataがある場合は即座に完了状態にする
+      setWorkflowCreationStep(4)
+    }
+  }, [location])
+
+  useEffect(() => {
+    const loadAll = async () => {
+      if (!workflowId) return
+
+      // buildDataがある場合は他のデータロードは不要
+      if (hasBuildDataProcessed.current) {
+        // 履歴だけは読み込む
+        try {
+          const res = await axios.get(`${apiBase}/workflows/${workflowId}/messages`)
+          const msgs = (res.data || []) as { role: 'user' | 'assistant'; content: string }[]
+          if (msgs.length > 0) setChatMessages(msgs)
+        } catch {
+          // noop
+        }
+        return
+      }
+
+      // buildDataがない場合は各種データをロード
+      try {
+        // ワークフロー基本情報を取得
+        const wfRes = await axios.get(`${apiBase}/workflow/${workflowId}`)
+        const name = wfRes.data?.name ?? ''
+        setWfTitle(name)
+        setDraftTitle(name)
+        setWfDescription(wfRes.data?.description ?? '')
+
+        // 会話履歴を取得
+        const msgRes = await axios.get(`${apiBase}/workflows/${workflowId}/messages`)
+        const msgs = (msgRes.data || []) as { role: 'user' | 'assistant'; content: string }[]
+        if (msgs.length > 0) setChatMessages(msgs)
+
+        // 生成済みステップを取得
+        const latestRes = await axios.get(`${apiBase}/workflow/${workflowId}/latest`)
+        const generated = latestRes.data?.generated
+        const steps = generated?.steps || []
+
+        // ワークフロー情報を更新（生成されたものがあれば上書き）
+        if (generated?.name) {
+          setWfTitle(generated.name)
+          setDraftTitle(generated.name)
+        }
+        if (generated?.description) {
+          setWfDescription(generated.description)
+        }
+
+        // ステップデータをWorkflowStep[]へマッピング
+        const mappedSteps = (steps as any[]).map((item, index): WorkflowStep => {
+          const type: WorkflowStep['type'] = item['cmd-type'] === 'branching'
+            ? 'condition'
+            : (index === 0 ? 'trigger' : 'action')
+          // UUIDが重複している場合はインデックスを付与してユニークにする
+          const baseId = item.uuid || `sv-${index + 1}`
+          const uniqueId = `${baseId}-${index}`
+          return {
+            id: String(uniqueId),
+            title: String(item['cmd-nickname'] || item.cmd || `ステップ ${index + 1}`),
+            description: String(item.description || ''),
+            type,
+            status: 'configured'
+          }
+        })
+
+        if (mappedSteps.length > 0) {
+          setWorkflowSteps(mappedSteps)
+          setNewWorkflowViewMode('detailed')
+        }
+
+        // データロード完了後に完了状態にする
+        setWorkflowCreationStep(4)
       } catch {
-        // noop
+        // エラー時も完了状態にして画面を表示
+        setWorkflowCreationStep(4)
       }
     }
-    loadGenerated()
+
+    // 少し遅延させてからロードを開始（ローディング画面を表示するため）
+    const timer = setTimeout(() => {
+      loadAll()
+    }, 500)
+
+    return () => clearTimeout(timer)
   }, [apiBase, workflowId])
 
   const toggleStepForTest = (id: string) => {
@@ -130,6 +205,53 @@ export default function WorkflowEdit() {
   const addWorkflowStep = () => {
     const n = workflowSteps.length + 1
     setWorkflowSteps(prev => [...prev, { id: `st-${n}`, title: `アクション ${n}`, description: '詳細設定', type: 'action' }])
+  }
+
+  // ワークフローを再ビルドする関数
+  const handleRebuild = async () => {
+    if (!workflowId) return
+    setIsRebuilding(true)
+    try {
+      const res = await axios.post(`${apiBase}/workflow/${workflowId}/build`)
+      const buildData = res.data
+      const generated = buildData.generated || buildData
+
+      // ワークフロー名と説明を更新
+      if (generated.name) {
+        setWfTitle(generated.name)
+        setDraftTitle(generated.name)
+      }
+      if (generated.description) {
+        setWfDescription(generated.description)
+      }
+
+      // ステップデータを更新
+      if (Array.isArray(generated.steps)) {
+        const mappedSteps = generated.steps.map((item: any, index: number): WorkflowStep => {
+          const type: WorkflowStep['type'] = item['cmd-type'] === 'branching'
+            ? 'condition'
+            : (index === 0 ? 'trigger' : 'action')
+          const baseId = item.uuid || `rebuild-${index + 1}`
+          const uniqueId = `${baseId}-${index}`
+          return {
+            id: String(uniqueId),
+            title: String(item['cmd-nickname'] || item.cmd || `ステップ ${index + 1}`),
+            description: String(item.description || ''),
+            type,
+            status: 'configured'
+          }
+        })
+
+        if (mappedSteps.length > 0) {
+          setWorkflowSteps(mappedSteps)
+          setNewWorkflowViewMode('detailed')
+        }
+      }
+    } catch (error) {
+      console.error('ワークフロー再ビルドエラー:', error)
+    } finally {
+      setIsRebuilding(false)
+    }
   }
 
   const getStepIcon = (type: WorkflowStep['type']) => {
@@ -322,6 +444,23 @@ export default function WorkflowEdit() {
                       onChange={handleJsonImport}
                       className="hidden"
                     />
+                    <Button
+                      variant="outline"
+                      onClick={handleRebuild}
+                      disabled={isRebuilding}
+                    >
+                      {isRebuilding ? (
+                        <>
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          再生成中...
+                        </>
+                      ) : (
+                        <>
+                          <RefreshCw className="h-4 w-4 mr-2" />
+                          ワークフローを再生成
+                        </>
+                      )}
+                    </Button>
                     <Button variant="outline">
                       <TestTube className="h-4 w-4 mr-2" />
                       テスト実行

@@ -1,0 +1,4424 @@
+{
+  "version": "38.0",
+  "uuid": "d0316eaf-06cf-43b3-bb3c-ecee5f21698b",
+  "name": "list",
+  "description": "",
+  "timestamp-created": "2025/09/27 20:32:31",
+  "timestamp-last-modified": "2025/09/27 20:32:31",
+  "timestamp-last-run": "",
+  "flags": {},
+  "sequence": [
+    {
+      "cmd": "run_executable",
+      "cmd-nickname": "アプリ起動",
+      "cmd-type": "basic",
+      "version": 3,
+      "uuid": "68231101-3a59-4e8d-9b8c-08d8ea5fc22d",
+      "memo": "",
+      "description": "指定したアプリケーションやファイルを起動します。パスや引数、ウィンドウ表示状態を設定できます。",
+      "tags": [
+        "アプリ",
+        "起動",
+        "基本"
+      ],
+      "parameters": {
+        "path": "",
+        "arguments": "",
+        "interval": 3,
+        "maximized": true
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      }
+    },
+    {
+      "cmd": "run_executable_and_wait",
+      "cmd-nickname": "アプリ起動（終了待ち）",
+      "cmd-type": "basic",
+      "version": 1,
+      "uuid": "f139e490-338b-43f3-ba91-d908aac18d81",
+      "memo": "",
+      "description": "アプリケーションを起動し、そのプロセスが終了するまで待機します。実行結果を変数に格納できます。",
+      "tags": [
+        "アプリ",
+        "起動",
+        "待機"
+      ],
+      "parameters": {
+        "path": "",
+        "arguments": "",
+        "timeout": 300,
+        "output-variable": "",
+        "error-variable": ""
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      }
+    },
+    {
+      "cmd": "pause",
+      "cmd-nickname": "待機（秒）",
+      "cmd-type": "basic",
+      "version": 1,
+      "uuid": "ef98fe4c-5230-4a42-9d56-db71b0aeda56",
+      "memo": "",
+      "description": "指定した秒数だけ処理を一時停止します。画面の描画完了やシステムの応答を待つ際に使用します。",
+      "tags": [
+        "制御",
+        "待機",
+        "基本"
+      ],
+      "parameters": {
+        "interval": "3"
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      }
+    },
+    {
+      "cmd": "pause_and_ask_to_proceed",
+      "cmd-nickname": "続行確認",
+      "cmd-type": "basic",
+      "version": 2,
+      "uuid": "080281e4-9e6a-4ecf-b7dd-ce35dbc0d964",
+      "memo": "",
+      "description": "メッセージを表示して一時停止し、ユーザーの確認を待ちます。重要な処理の前に確認を取る際に使用します。",
+      "tags": [
+        "制御",
+        "確認",
+        "インタラクティブ"
+      ],
+      "parameters": {
+        "string": ""
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      }
+    },
+    {
+      "cmd": "pause_and_countdown_to_proceed",
+      "cmd-nickname": "タイマー付き続行確認",
+      "cmd-type": "basic",
+      "version": 2,
+      "uuid": "a6f6258d-ca82-4072-8c5a-c7e80a462a9d",
+      "memo": "",
+      "description": "指定時間のカウントダウン後に自動的に処理を継続します。ユーザーに準備時間を与える際に使用します。",
+      "tags": [
+        "制御",
+        "タイマー",
+        "確認"
+      ],
+      "parameters": {
+        "interval": "3",
+        "string": ""
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      }
+    },
+    {
+      "cmd": "change_speed_for_command_execution",
+      "cmd-nickname": "コマンド間の待機時間を変更",
+      "cmd-type": "basic",
+      "version": 1,
+      "uuid": "cf07902e-a035-4566-8786-b21345a02c23",
+      "memo": "",
+      "description": "以降のコマンド実行間の待機時間を変更します。処理速度の調整が必要な場合に使用します。",
+      "tags": [
+        "制御",
+        "速度調整",
+        "待機"
+      ],
+      "parameters": {
+        "interval": 0.2
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      }
+    },
+    {
+      "cmd": "abort",
+      "cmd-nickname": "作業強制終了",
+      "cmd-type": "basic",
+      "version": 2,
+      "uuid": "9879601a-fc9a-4900-a276-40ca34f5ed7c",
+      "memo": "",
+      "description": "シナリオの実行を強制終了します。エラー発生時や条件を満たさない場合の処理中断に使用します。",
+      "tags": [
+        "制御",
+        "エラー処理",
+        "終了"
+      ],
+      "parameters": {
+        "result-type": "abort"
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      }
+    },
+    {
+      "cmd": "raise_error",
+      "cmd-nickname": "エラーを発生させる",
+      "cmd-type": "basic",
+      "version": 1,
+      "uuid": "b1959e27-1196-4dd3-981e-fece37931bfc",
+      "memo": "",
+      "description": "意図的にエラーを発生させます。エラーハンドリングのテストや条件分岐での使用を想定しています。",
+      "tags": [
+        "エラー処理",
+        "テスト",
+        "デバッグ"
+      ],
+      "parameters": {
+        "string": ""
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      }
+    },
+    {
+      "cmd": "take_screenshot",
+      "cmd-nickname": "スクリーンショットを撮る",
+      "cmd-type": "basic",
+      "version": 1,
+      "uuid": "cfec2d20-3e7a-4404-94ef-0f65a5ac1504",
+      "memo": "",
+      "description": "画面全体または指定範囲のスクリーンショットを撮影し、ファイルに保存します。記録や証跡保存に使用します。",
+      "tags": [
+        "スクリーンショット",
+        "記録",
+        "画像"
+      ],
+      "parameters": {
+        "dir-path": "",
+        "file-name": "",
+        "area": "area-whole",
+        "variable": "",
+        "timestamp": false,
+        "extension": "png"
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      }
+    },
+    {
+      "cmd": "remember_focused_window",
+      "cmd-nickname": "最前面画面を覚える",
+      "cmd-type": "basic",
+      "version": 1,
+      "uuid": "d56d44fb-4c11-430f-96be-2685ec08e90d",
+      "memo": "",
+      "description": "現在最前面に表示されているウィンドウの参照を変数に記憶し、後で切り替えや操作に使用できます。",
+      "tags": [
+        "ウィンドウ",
+        "記憶",
+        "参照"
+      ],
+      "parameters": {
+        "variable": "ウィンドウ"
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      }
+    },
+    {
+      "cmd": "remember_named_window",
+      "cmd-nickname": "画面を覚える（名前）",
+      "cmd-type": "basic",
+      "version": 1,
+      "uuid": "148c2360-a4b0-4135-adb7-7d37d765d706",
+      "memo": "",
+      "description": "指定した名前を含むウィンドウを検索して記憶します。複数のウィンドウを扱う際の識別に使用します。",
+      "tags": [
+        "ウィンドウ",
+        "記憶",
+        "名前指定"
+      ],
+      "parameters": {
+        "match-type": "contains",
+        "window-name": "ウィンドウ",
+        "variable": "ウィンドウ"
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      }
+    },
+    {
+      "cmd": "focus_window",
+      "cmd-nickname": "最前面画面切り替え",
+      "cmd-type": "basic",
+      "version": 1,
+      "uuid": "c8c9cbb1-d81d-42ec-894d-58f90ddede86",
+      "memo": "",
+      "description": "記憶したウィンドウを最前面に表示します。複数ウィンドウ間の切り替えに使用します。",
+      "tags": [
+        "ウィンドウ",
+        "切り替え",
+        "フォーカス"
+      ],
+      "parameters": {
+        "variable": ""
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      }
+    },
+    {
+      "cmd": "focus_window_by_name",
+      "cmd-nickname": "画面切り替え（名前）",
+      "cmd-type": "basic",
+      "version": 1,
+      "uuid": "ada0c1e9-c882-4053-a3b5-3ceff0a536e7",
+      "memo": "",
+      "description": "ウィンドウ名を指定して該当するウィンドウを最前面に表示します。",
+      "tags": [
+        "ウィンドウ",
+        "切り替え",
+        "名前指定"
+      ],
+      "parameters": {
+        "string": ""
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      }
+    },
+    {
+      "cmd": "get_window_title",
+      "cmd-nickname": "画面の名前を取得",
+      "cmd-type": "basic",
+      "version": 1,
+      "uuid": "03e6e0ff-cb84-4bc3-9aec-4d1c5d18b850",
+      "memo": "",
+      "description": "現在のウィンドウまたは指定したウィンドウのタイトルを取得し、変数に格納します。",
+      "tags": [
+        "ウィンドウ",
+        "取得",
+        "タイトル"
+      ],
+      "parameters": {
+        "window": "__focused_window__",
+        "variable": "ウィンドウ名"
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      }
+    },
+    {
+      "cmd": "align_focused_window",
+      "cmd-nickname": "ウィンドウを移動",
+      "cmd-type": "basic",
+      "version": 1,
+      "uuid": "58a99f64-bde9-4096-a159-b04b35df4aec",
+      "memo": "",
+      "description": "最前面のウィンドウを画面の指定位置（左、右、中央など）に配置します。",
+      "tags": [
+        "ウィンドウ",
+        "UI操作",
+        "配置"
+      ],
+      "parameters": {
+        "alignment": "left"
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      }
+    },
+    {
+      "cmd": "maximize_focused_window",
+      "cmd-nickname": "ウィンドウ最大化／最小化",
+      "cmd-type": "basic",
+      "version": 2,
+      "uuid": "2e64d568-1181-4808-b20a-6b793f5f628e",
+      "memo": "",
+      "description": "最前面のウィンドウを最大化、最小化、または元のサイズに戻します。",
+      "tags": [
+        "ウィンドウ",
+        "最大化",
+        "サイズ変更"
+      ],
+      "parameters": {
+        "behavior": "maximize"
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      }
+    },
+    {
+      "cmd": "move_mouse_to_absolute_coordinates",
+      "cmd-nickname": "マウス移動（座標）",
+      "cmd-type": "basic",
+      "version": 2,
+      "uuid": "34e7f51a-24de-4fb1-a05c-6d8ce0983894",
+      "memo": "",
+      "description": "マウスカーソルを画面上の絶対座標に移動します。オプションでクリックも実行できます。",
+      "tags": [
+        "マウス",
+        "移動",
+        "座標"
+      ],
+      "parameters": {
+        "x": "100",
+        "y": "100",
+        "click": "single"
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      }
+    },
+    {
+      "cmd": "move_mouse_to_relative_coordinates",
+      "cmd-nickname": "マウス移動（距離）",
+      "cmd-type": "basic",
+      "version": 2,
+      "uuid": "20fb89bd-6c91-468c-a474-bc9952780016",
+      "memo": "",
+      "description": "マウスカーソルを現在位置から相対的に移動します。微調整が必要な場合に使用します。",
+      "tags": [
+        "マウス",
+        "移動",
+        "相対座標"
+      ],
+      "parameters": {
+        "x": "100",
+        "y": "100",
+        "click": "single"
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      }
+    },
+    {
+      "cmd": "click_mouse",
+      "cmd-nickname": "マウスクリック",
+      "cmd-type": "basic",
+      "version": 1,
+      "uuid": "3fa06688-8990-4fb2-97a7-427fb0cb8eff",
+      "memo": "",
+      "description": "現在のマウス位置でクリック（シングル、ダブル、右クリック）を実行します。",
+      "tags": [
+        "マウス",
+        "クリック",
+        "基本操作"
+      ],
+      "parameters": {
+        "type": "single",
+        "key": "__null__"
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      }
+    },
+    {
+      "cmd": "scroll_mouse",
+      "cmd-nickname": "マウススクロール",
+      "cmd-type": "basic",
+      "version": 1,
+      "uuid": "537ce612-8047-4b72-aa1f-c73105225606",
+      "memo": "",
+      "description": "マウスホイールを使用して上下にスクロールします。ページや文書の移動に使用します。",
+      "tags": [
+        "マウス",
+        "スクロール",
+        "基本操作"
+      ],
+      "parameters": {
+        "direction": "up",
+        "amount": 3
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      }
+    },
+    {
+      "cmd": "drag_and_drop_to_absolute_coordinates",
+      "cmd-nickname": "現在位置からドラッグ＆ドロップ（座標）",
+      "cmd-type": "basic",
+      "version": 1,
+      "uuid": "be9734dc-0b39-43b7-b04e-b23c44afc421",
+      "memo": "",
+      "description": "現在位置から指定した絶対座標までドラッグ＆ドロップを実行します。",
+      "tags": [
+        "マウス",
+        "ドラッグ",
+        "座標"
+      ],
+      "parameters": {
+        "x": "100",
+        "y": "100"
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      }
+    },
+    {
+      "cmd": "drag_and_drop_to_relative_coordinates",
+      "cmd-nickname": "現在位置からドラッグ＆ドロップ（距離）",
+      "cmd-type": "basic",
+      "version": 1,
+      "uuid": "4c1c4f13-ca2b-443b-a783-c900ab3edbf7",
+      "memo": "",
+      "description": "現在位置から相対的な位置までドラッグ＆ドロップを実行します。",
+      "tags": [
+        "マウス",
+        "ドラッグ",
+        "相対座標"
+      ],
+      "parameters": {
+        "x": "100",
+        "y": "100"
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      }
+    },
+    {
+      "cmd": "move_mouse_to_image",
+      "cmd-nickname": "マウス移動（画像認識）",
+      "cmd-type": "basic",
+      "version": 4,
+      "uuid": "953fcceb-d873-4556-bb33-2a73cfcdae83",
+      "memo": "",
+      "description": "画像認識を使用して指定した画像の位置にマウスを移動します。動的な要素のクリックに使用します。",
+      "tags": [
+        "マウス",
+        "移動",
+        "画像認識"
+      ],
+      "parameters": {
+        "filename": "",
+        "precision": "85",
+        "noise-filter": "100.0",
+        "search-area-type": "screen",
+        "search-area": "(0, 0) ~ (0, 0)",
+        "click": "single"
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false,
+        "checked": false,
+        "error": {
+          "flag": false,
+          "timestamp": "",
+          "msg": ""
+        }
+      },
+      "ext": {}
+    },
+    {
+      "cmd": "drag_and_drop_to_image",
+      "cmd-nickname": "現在位置からドラッグ＆ドロップ（画像認識）",
+      "cmd-type": "basic",
+      "version": 2,
+      "uuid": "c014f422-acd7-4691-9159-7d1950521908",
+      "memo": "",
+      "description": "画像認識を使用して、現在位置から画像の位置までドラッグ＆ドロップを実行します。",
+      "tags": [
+        "マウス",
+        "ドラッグ",
+        "画像認識"
+      ],
+      "parameters": {
+        "filename": "",
+        "precision": "85",
+        "noise-filter": "100.0",
+        "search-area-type": "screen",
+        "search-area": "(0, 0) ~ (0, 0)"
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false,
+        "checked": false,
+        "error": {
+          "flag": false,
+          "timestamp": "",
+          "msg": ""
+        }
+      },
+      "ext": {}
+    },
+    {
+      "cmd": "typewrite_static_string",
+      "cmd-nickname": "キーボード入力（文字）",
+      "cmd-type": "basic",
+      "version": 2,
+      "uuid": "3c0ac65a-5bf9-480e-a594-261f8c95b9d7",
+      "memo": "",
+      "description": "指定した文字列を一文字ずつキーボード入力します。フォームへの入力に使用します。",
+      "tags": [
+        "キーボード",
+        "入力",
+        "文字"
+      ],
+      "parameters": {
+        "string": "",
+        "enter": false
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      }
+    },
+    {
+      "cmd": "typewrite_all_string",
+      "cmd-nickname": "キーボード入力（貼り付け）",
+      "cmd-type": "basic",
+      "version": 1,
+      "uuid": "628493be-f31c-405e-999d-5abd0684584b",
+      "memo": "",
+      "description": "文字列を貼り付け操作で一括入力します。大量のテキスト入力を高速に行う際に使用します。",
+      "tags": [
+        "キーボード",
+        "入力",
+        "貼り付け"
+      ],
+      "parameters": {
+        "string": "",
+        "enter": false
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      }
+    },
+    {
+      "cmd": "typewrite_password",
+      "cmd-nickname": "キーボード入力（パスワード）",
+      "cmd-type": "basic",
+      "version": 4,
+      "uuid": "d2e41a39-0fdf-4f60-81aa-879c2dafdc47",
+      "memo": "",
+      "description": "パスワードを安全に入力します。入力値は暗号化され、ログに残りません。",
+      "tags": [
+        "キーボード",
+        "パスワード",
+        "セキュリティ"
+      ],
+      "parameters": {
+        "enter": false,
+        "password-type": "type-input",
+        "ciphertext": "",
+        "nonce": "",
+        "encryption": 1
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      }
+    },
+    {
+      "cmd": "type_hotkeys",
+      "cmd-nickname": "ショートカットキーを入力",
+      "cmd-type": "basic",
+      "version": 1,
+      "uuid": "94a920d6-5cf7-469e-9ca7-bfc19402765c",
+      "memo": "",
+      "description": "複数のキーを組み合わせたショートカットキーを入力します。Ctrl+C、Alt+Tab などに使用します。",
+      "tags": [
+        "キーボード",
+        "ショートカット",
+        "入力"
+      ],
+      "parameters": {
+        "key-0": "__null__",
+        "key-1": "__null__",
+        "key-2": "__null__",
+        "key-3": ""
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      }
+    },
+    {
+      "cmd": "assign_string_variable",
+      "cmd-nickname": "データの記憶（文字）",
+      "cmd-type": "basic",
+      "version": 1,
+      "uuid": "2353cfb3-04e8-47ae-a2df-cee62c60e765",
+      "memo": "",
+      "description": "文字列データを変数に格納します。後続の処理で参照可能なデータの保存に使用します。",
+      "tags": [
+        "変数",
+        "基本",
+        "データ保存"
+      ],
+      "parameters": {
+        "variable": "データ",
+        "string": ""
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      }
+    },
+    {
+      "cmd": "assign_password_variable",
+      "cmd-nickname": "パスワードの記憶",
+      "cmd-type": "basic",
+      "version": 1,
+      "uuid": "7eccba37-266c-4040-a34e-16d28e41379c",
+      "memo": "",
+      "description": "パスワードを暗号化して変数に格納します。セキュアな認証情報の管理に使用します。",
+      "tags": [
+        "変数",
+        "セキュリティ",
+        "パスワード"
+      ],
+      "parameters": {
+        "password-type": "type-input",
+        "password": "",
+        "password-id": "パスワード"
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      }
+    },
+    {
+      "cmd": "assign_environment_variable",
+      "cmd-nickname": "データの記憶（環境情報）",
+      "cmd-type": "basic",
+      "version": 1,
+      "uuid": "50e0c20b-9de7-416a-9142-87782b48ca67",
+      "memo": "",
+      "description": "環境変数の値を取得して変数に格納します。システム情報の取得に使用します。",
+      "tags": [
+        "変数",
+        "環境",
+        "システム情報"
+      ],
+      "parameters": {
+        "variable": "環境",
+        "environment": ""
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      }
+    },
+    {
+      "cmd": "assign_date_to_string_variable",
+      "cmd-nickname": "日付を記憶",
+      "cmd-type": "basic",
+      "version": 3,
+      "uuid": "ad771fd4-0208-4e8d-9b43-df5c52132220",
+      "memo": "",
+      "description": "現在日付または指定日付を指定フォーマットで変数に格納します。日付処理に使用します。",
+      "tags": [
+        "変数",
+        "日付",
+        "フォーマット"
+      ],
+      "parameters": {
+        "variable": "日付",
+        "offset": "0",
+        "format": "yyyy-mm-dd",
+        "0-option": false
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      }
+    },
+    {
+      "cmd": "assign_clipboard_to_string_variable",
+      "cmd-nickname": "コピー内容を記憶",
+      "cmd-type": "basic",
+      "version": 1,
+      "uuid": "12ee5fa4-b0a6-40df-a414-5d0700992db2",
+      "memo": "",
+      "description": "クリップボードの内容を変数に格納します。コピーしたデータの取得に使用します。",
+      "tags": [
+        "変数",
+        "クリップボード",
+        "データ取得"
+      ],
+      "parameters": {
+        "variable": "データ"
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      }
+    },
+    {
+      "cmd": "copy_to_clipboard",
+      "cmd-nickname": "クリップボードへコピー",
+      "cmd-type": "basic",
+      "version": 1,
+      "uuid": "805c0338-43a4-415e-b4ab-c79b9bb3275f",
+      "memo": "",
+      "description": "指定した文字列をクリップボードにコピーします。他アプリケーションへのデータ受け渡しに使用します。",
+      "tags": [
+        "クリップボード",
+        "コピー",
+        "データ転送"
+      ],
+      "parameters": {
+        "string": ""
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      }
+    },
+    {
+      "cmd": "parse_brackets",
+      "cmd-nickname": "文字列抽出（括弧・引用符号）",
+      "cmd-type": "basic",
+      "version": 1,
+      "uuid": "1098b000-982d-4b30-a321-e8afe06b32bd",
+      "memo": "",
+      "description": "文字列から括弧や引用符で囲まれた部分を抽出します。データの解析に使用します。",
+      "tags": [
+        "文字列",
+        "抽出",
+        "括弧"
+      ],
+      "parameters": {
+        "src-variable": "",
+        "dst-variable": "抽出文字",
+        "bracket-types": [
+          "()"
+        ],
+        "index": "1",
+        "strip": true
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      }
+    },
+    {
+      "cmd": "parse_delimiters",
+      "cmd-nickname": "文字列抽出（区切り文字）",
+      "cmd-type": "basic",
+      "version": 1,
+      "uuid": "6926a529-4982-49b6-9734-8547ffad865f",
+      "memo": "",
+      "description": "区切り文字で分割された文字列から特定の要素を抽出します。CSV処理などに使用します。",
+      "tags": [
+        "文字列",
+        "抽出",
+        "区切り文字"
+      ],
+      "parameters": {
+        "src-variable": "",
+        "dst-variable": "抽出文字",
+        "delimiter-type": ",",
+        "custom-str": "",
+        "index": "1"
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      }
+    },
+    {
+      "cmd": "search_screen_and_branch",
+      "cmd-nickname": "画像出現を待つ",
+      "cmd-type": "branching",
+      "version": 3,
+      "uuid": "073dc4d8-d852-461e-8d7a-e135208d283c",
+      "memo": "",
+      "description": "画像が画面に表示されるまで待機し、結果によって処理を分岐します。",
+      "tags": [
+        "画像認識",
+        "検索",
+        "分岐"
+      ],
+      "parameters": {
+        "filename": "",
+        "precision": "85",
+        "interval": "5",
+        "noise-filter": "100.0",
+        "search-area-type": "screen",
+        "search-area": "(0, 0) ~ (0, 0)"
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false,
+        "checked": false,
+        "error": {
+          "flag": true,
+          "timestamp": "",
+          "msg": ""
+        }
+      },
+      "sequence-0": [],
+      "sequence-1": [],
+      "ext": {}
+    },
+    {
+      "cmd": "check_for_errors",
+      "cmd-nickname": "直前のコマンドのエラーを確認・処理",
+      "cmd-type": "grouping",
+      "version": 1,
+      "uuid": "cb7d0e2e-783a-4ad7-8b09-77ba35d2e116",
+      "memo": "",
+      "description": "直前のコマンドのエラーを確認し、エラー処理を実行します。リトライ設定も可能です。",
+      "tags": [
+        "エラー処理",
+        "制御",
+        "リトライ"
+      ],
+      "parameters": {
+        "retries": 0,
+        "wait": 1,
+        "err-cmd": "[ERR_CMD]",
+        "err-memo": "[ERR_MEMO]",
+        "err-msg": "[ERR_MSG]",
+        "err-param": "[ERR_PARAM]"
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      },
+      "sequence": []
+    },
+    {
+      "cmd": "check_for_errors_2",
+      "cmd-nickname": "直前のコマンドのエラーを確認・処理（リトライ前処理）",
+      "cmd-type": "branching",
+      "version": 1,
+      "uuid": "118e91cf-802d-4fea-a5c4-8d9f0202e1c5",
+      "memo": "",
+      "description": "エラー確認と処理を行い、リトライ前の事前処理を実行できます。",
+      "tags": [
+        "エラー処理",
+        "制御",
+        "リトライ"
+      ],
+      "parameters": {
+        "retries": 0,
+        "wait": 1,
+        "err-cmd": "[ERR_CMD]",
+        "err-memo": "[ERR_MEMO]",
+        "err-msg": "[ERR_MSG]",
+        "err-param": "[ERR_PARAM]"
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      },
+      "sequence-0": [],
+      "sequence-1": []
+    },
+    {
+      "cmd": "assign_date_business_to_string_variable",
+      "cmd-nickname": "日付を記憶（営業日）",
+      "cmd-type": "basic",
+      "version": 3,
+      "uuid": "96c8867c-21e8-4796-a8db-08f75c733c36",
+      "memo": "",
+      "description": "営業日を考慮した日付を計算して変数に格納します。",
+      "tags": [
+        "変数",
+        "日付",
+        "営業日"
+      ],
+      "parameters": {
+        "variable": "日付",
+        "offset": "0",
+        "busidays": "1",
+        "mon": false,
+        "tue": false,
+        "wed": false,
+        "thu": false,
+        "fri": false,
+        "sat": true,
+        "sun": true,
+        "holidays": true,
+        "holidays-custom": true,
+        "format": "yyyy-mm-dd",
+        "0-option": false
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      }
+    },
+    {
+      "cmd": "assign_date_weekdays_to_string_variable",
+      "cmd-nickname": "日付を記憶（曜日）",
+      "cmd-type": "basic",
+      "version": 3,
+      "uuid": "8b6ef6d7-76cc-4762-b121-ba293ca0961c",
+      "memo": "",
+      "description": "指定した曜日の日付を計算して変数に格納します。",
+      "tags": [
+        "変数",
+        "日付",
+        "曜日"
+      ],
+      "parameters": {
+        "variable": "日付",
+        "month": "0",
+        "week": "0",
+        "weekdays": "0",
+        "mon": false,
+        "tue": false,
+        "wed": false,
+        "thu": false,
+        "fri": false,
+        "sat": false,
+        "sun": false,
+        "holidays": false,
+        "holidays-custom": false,
+        "adjust": "forward",
+        "format": "yyyy-mm-dd",
+        "0-option": false
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      }
+    },
+    {
+      "cmd": "assign_date_calculation_to_string_variable",
+      "cmd-nickname": "日付計算結果を記憶",
+      "cmd-type": "basic",
+      "version": 3,
+      "uuid": "00e02f96-616a-49ed-8141-884cacafe2e5",
+      "memo": "",
+      "description": "日付の加算・減算を行い、結果を変数に格納します。",
+      "tags": [
+        "変数",
+        "日付",
+        "計算"
+      ],
+      "parameters": {
+        "variable": "日付",
+        "input-date": "",
+        "format1": "yyyy-mm-dd",
+        "format2": "yyyy-mm-dd",
+        "operator": "add",
+        "year": "",
+        "month": "",
+        "day": "",
+        "mon": false,
+        "tue": false,
+        "wed": false,
+        "thu": false,
+        "fri": false,
+        "sat": false,
+        "sun": false,
+        "holidays": false,
+        "holidays-custom": false,
+        "count-method": "everyday",
+        "adjust": "forward",
+        "0-option": false
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      }
+    },
+    {
+      "cmd": "assign_day_of_week_to_string_variable",
+      "cmd-nickname": "曜日を記憶",
+      "cmd-type": "basic",
+      "version": 2,
+      "uuid": "fe10d310-166b-4175-a20f-d6d9893eaac5",
+      "memo": "",
+      "description": "指定日付の曜日を取得して変数に格納します。",
+      "tags": [
+        "変数",
+        "日付",
+        "曜日"
+      ],
+      "parameters": {
+        "variable": "曜日",
+        "offset": "0",
+        "format": "月曜日",
+        "type": "today",
+        "date": "",
+        "format-date": "yyyy-mm-dd"
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      }
+    },
+    {
+      "cmd": "assign_timestamp_to_string_variable",
+      "cmd-nickname": "現在の時刻を記憶",
+      "cmd-type": "basic",
+      "version": 2,
+      "uuid": "ddde5791-c9f2-4a27-9ceb-eba84482c8f6",
+      "memo": "",
+      "description": "現在時刻を指定フォーマットで変数に格納します。",
+      "tags": [
+        "変数",
+        "時刻",
+        "フォーマット"
+      ],
+      "parameters": {
+        "variable": "時刻",
+        "format": "hh:mm:ss",
+        "language": "",
+        "timezone": "",
+        "0-option": false
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      }
+    },
+    {
+      "cmd": "assign_time_calculation_to_string_variable",
+      "cmd-nickname": "時刻計算結果を記憶",
+      "cmd-type": "basic",
+      "version": 1,
+      "uuid": "a7f8d17e-84e7-4d19-b043-dde0f89ad9e2",
+      "memo": "",
+      "description": "時刻の計算結果を変数に格納します。",
+      "tags": [
+        "変数",
+        "時刻",
+        "計算"
+      ],
+      "parameters": {
+        "variable": "時刻",
+        "time": "",
+        "format": "hh:mm:ss",
+        "operator": "add",
+        "hours": "",
+        "minutes": "",
+        "seconds": "",
+        "format2": "hh:mm:ss",
+        "language": "",
+        "timezone": "",
+        "0-option": false
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      }
+    },
+    {
+      "cmd": "assign_arithmetic_result_to_string_variable_v2",
+      "cmd-nickname": "計算結果を記憶",
+      "cmd-type": "basic",
+      "version": 1,
+      "uuid": "8f5ec009-5f77-42d2-addd-addbe423cc99",
+      "memo": "",
+      "description": "数値の四則演算結果を変数に格納します。計算処理に使用します。",
+      "tags": [
+        "変数",
+        "計算",
+        "数値処理"
+      ],
+      "parameters": {
+        "variable": "計算結果",
+        "number1": "",
+        "number2": "",
+        "operator": "add",
+        "round-type": "none",
+        "precision": ""
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      }
+    },
+    {
+      "cmd": "assign_random_number_to_string_variable",
+      "cmd-nickname": "乱数を記憶",
+      "cmd-type": "basic",
+      "version": 1,
+      "uuid": "74f8c8ae-91a4-47c7-b4eb-eaa9f91bcecf",
+      "memo": "",
+      "description": "指定範囲の乱数を生成して変数に格納します。ランダムな値が必要な処理に使用します。",
+      "tags": [
+        "変数",
+        "ランダム",
+        "数値処理"
+      ],
+      "parameters": {
+        "variable": "データ",
+        "min-number": "0",
+        "max-number": "100",
+        "precision": "0",
+        "zero-fill": true
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      }
+    },
+    {
+      "cmd": "assign_live_input_to_string_variable",
+      "cmd-nickname": "実行中に入力",
+      "cmd-type": "basic",
+      "version": 1,
+      "uuid": "bc66859d-0dac-4fd4-83b9-32911f0e1f85",
+      "memo": "",
+      "description": "実行時にユーザーから入力を受け取り、変数に格納します。動的な値の入力に使用します。",
+      "tags": [
+        "変数",
+        "入力",
+        "インタラクティブ"
+      ],
+      "parameters": {
+        "variable": "データ",
+        "string": ""
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      }
+    },
+    {
+      "cmd": "assign_file_modification_timestamp_to_string_variable",
+      "cmd-nickname": "ファイル更新日時を記憶",
+      "cmd-type": "basic",
+      "version": 1,
+      "uuid": "c005bd7a-6a7f-4b96-807b-d5e7dff921f9",
+      "memo": "",
+      "description": "ファイルの更新日時を取得して変数に格納します。ファイル管理に使用します。",
+      "tags": [
+        "変数",
+        "ファイル",
+        "タイムスタンプ"
+      ],
+      "parameters": {
+        "variable": "日時",
+        "path": "",
+        "timestamp": "modification",
+        "format": "yyyy-mm-dd_hh:mm:ss"
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      }
+    },
+    {
+      "cmd": "assign_file_size_to_string_variable",
+      "cmd-nickname": "ファイルサイズを記憶",
+      "cmd-type": "basic",
+      "version": 1,
+      "uuid": "a9c5a661-d176-4fe7-ba98-3c4f3a1e1c87",
+      "memo": "",
+      "description": "ファイルサイズを取得して変数に格納します。ファイル容量の確認に使用します。",
+      "tags": [
+        "変数",
+        "ファイル",
+        "サイズ"
+      ],
+      "parameters": {
+        "variable": "サイズ",
+        "path": "",
+        "unit": "bytes"
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      }
+    },
+    {
+      "cmd": "find_newest_file_from_fixed_directory",
+      "cmd-nickname": "最新ファイル・フォルダを取得",
+      "cmd-type": "basic",
+      "version": 3,
+      "uuid": "b08e5676-d011-4d2d-a750-7ce12e42a629",
+      "memo": "",
+      "description": "指定ディレクトリから最新のファイルやフォルダを検索します。最新データの処理に使用します。",
+      "tags": [
+        "ファイル",
+        "検索",
+        "最新"
+      ],
+      "parameters": {
+        "variable": "ファイル保存場所",
+        "file-or-dir": "file",
+        "date-check": "更新日時",
+        "number": 1,
+        "path": ""
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      }
+    },
+    {
+      "cmd": "parse_break_and_space",
+      "cmd-nickname": "文字列抽出（改行・空白を削除）",
+      "cmd-type": "basic",
+      "version": 1,
+      "uuid": "00a74970-5f51-40f2-9d21-c3cd86f4d7be",
+      "memo": "",
+      "description": "文字列から改行や空白を削除します。テキストの整形に使用します。",
+      "tags": [
+        "文字列",
+        "整形",
+        "空白除去"
+      ],
+      "parameters": {
+        "break-space": "break",
+        "variable": "",
+        "all": false,
+        "head": false,
+        "end": true
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      }
+    },
+    {
+      "cmd": "extract_fname",
+      "cmd-nickname": "ファイル・フォルダ名抽出（ファイルパス）",
+      "cmd-type": "basic",
+      "version": 1,
+      "uuid": "a58f9dda-ed95-4abb-b40c-72764c09ebae",
+      "memo": "",
+      "description": "ファイルパスからファイル名やフォルダ名を抽出します。パス処理に使用します。",
+      "tags": [
+        "文字列",
+        "パス",
+        "抽出"
+      ],
+      "parameters": {
+        "src-variable": "",
+        "dst-variable": "ファイル名",
+        "extension": false
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      }
+    },
+    {
+      "cmd": "parse_regex",
+      "cmd-nickname": "文字列抽出（ルールにマッチする）",
+      "cmd-type": "basic",
+      "version": 1,
+      "uuid": "6d82db5d-39ae-4059-8230-167be109fb4a",
+      "memo": "",
+      "description": "正規表現にマッチする文字列を抽出します。高度なテキスト処理に使用します。",
+      "tags": [
+        "文字列",
+        "抽出",
+        "正規表現"
+      ],
+      "parameters": {
+        "src-variable": "",
+        "dst-variable": "抽出文字",
+        "regex": "",
+        "option": ""
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      }
+    },
+    {
+      "cmd": "replace_strings",
+      "cmd-nickname": "文字を置換",
+      "cmd-type": "basic",
+      "version": 1,
+      "uuid": "fab409ba-4112-488a-a477-8357e14cf3e6",
+      "memo": "",
+      "description": "文字列内の特定の文字を置換します。テキストの変換に使用します。",
+      "tags": [
+        "文字列",
+        "置換",
+        "変換"
+      ],
+      "parameters": {
+        "src-variable": "",
+        "dst-variable": "置換結果",
+        "src-str": "",
+        "dst-str": ""
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      }
+    },
+    {
+      "cmd": "convert_character_type",
+      "cmd-nickname": "文字変換",
+      "cmd-type": "basic",
+      "version": 1,
+      "uuid": "9a166438-f4bd-40c4-b0dd-d398f297a7ed",
+      "memo": "",
+      "description": "全角・半角文字の変換を行います。文字種の統一に使用します。",
+      "tags": [
+        "文字列",
+        "変換",
+        "全角半角"
+      ],
+      "parameters": {
+        "string": "",
+        "type": "z2h-all",
+        "variable": "データ"
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      }
+    },
+    {
+      "cmd": "convert_date_format",
+      "cmd-nickname": "日付の形式を変換",
+      "cmd-type": "basic",
+      "version": 1,
+      "uuid": "8d051b42-fa9a-46b6-8eac-68b804a0e702",
+      "memo": "",
+      "description": "日付の表示形式を変換します。異なるシステム間の日付形式統一に使用します。",
+      "tags": [
+        "日付",
+        "変換",
+        "フォーマット"
+      ],
+      "parameters": {
+        "date": "",
+        "before-format": "yyyy/mm/dd",
+        "before-custom": "",
+        "format": "yyyy/mm/dd",
+        "custom": "",
+        "variable": "変換結果"
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      }
+    },
+    {
+      "cmd": "loop_by_line",
+      "cmd-nickname": "文字抽出ループ（1行ずつ）",
+      "cmd-type": "looping",
+      "version": 1,
+      "uuid": "b5e6bd01-6200-483a-8b47-f156d0891467",
+      "memo": "",
+      "description": "テキストを1行ずつループ処理します。",
+      "tags": [
+        "ループ",
+        "テキスト",
+        "行処理"
+      ],
+      "parameters": {
+        "src-variable": "",
+        "dst-variable": "ライン"
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      },
+      "sequence": []
+    },
+    {
+      "cmd": "compare_strings_and_branch",
+      "cmd-nickname": "文字列比較",
+      "cmd-type": "branching",
+      "version": 3,
+      "uuid": "8589dad5-3a59-407c-b387-ae60b60f139a",
+      "memo": "",
+      "description": "文字列を比較し、結果により処理を分岐します。",
+      "tags": [
+        "分岐",
+        "文字列",
+        "比較"
+      ],
+      "parameters": {
+        "string1": "",
+        "string2": "",
+        "match": "full"
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      },
+      "sequence-0": [],
+      "sequence-1": []
+    },
+    {
+      "cmd": "compare_numbers_and_branch",
+      "cmd-nickname": "数値比較",
+      "cmd-type": "branching",
+      "version": 1,
+      "uuid": "984f2f88-91f7-4fb0-bb1a-cb3cfe3b1d52",
+      "memo": "",
+      "description": "数値を比較し、結果により処理を分岐します。",
+      "tags": [
+        "分岐",
+        "数値",
+        "比較"
+      ],
+      "parameters": {
+        "variable": "",
+        "number": "0",
+        "comparator": "=="
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      },
+      "sequence-0": [],
+      "sequence-1": []
+    },
+    {
+      "cmd": "compare_dates_and_branch",
+      "cmd-nickname": "日付比較",
+      "cmd-type": "branching",
+      "version": 1,
+      "uuid": "e4f2dec7-415a-4618-b845-4b7077a852bf",
+      "memo": "",
+      "description": "日付を比較し、結果により処理を分岐します。",
+      "tags": [
+        "分岐",
+        "日付",
+        "比較"
+      ],
+      "parameters": {
+        "date1": "",
+        "date2": "",
+        "format1": "yyyy-mm-dd",
+        "format2": "yyyy-mm-dd",
+        "comparator": "eq"
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      },
+      "sequence-0": [],
+      "sequence-1": []
+    },
+    {
+      "cmd": "search_file_from_directory_and_branch",
+      "cmd-nickname": "ファイル・フォルダの有/無を確認",
+      "cmd-type": "branching",
+      "version": 2,
+      "uuid": "43ee9668-a64d-4c41-a21d-03cbb5182ef9",
+      "memo": "",
+      "description": "ファイルやフォルダの存在を確認し、結果により処理を分岐します。",
+      "tags": [
+        "ファイル",
+        "検索",
+        "分岐"
+      ],
+      "parameters": {
+        "file-name": "",
+        "file-or-dir": "file",
+        "dir-path": ""
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      },
+      "sequence-0": [],
+      "sequence-1": []
+    },
+    {
+      "cmd": "find_image_and_branch",
+      "cmd-nickname": "画像を探す",
+      "cmd-type": "branching",
+      "version": 3,
+      "uuid": "9bc82dd3-c5fa-484f-ac85-b9ceccab9451",
+      "memo": "",
+      "description": "画像を探し、結果により処理を分岐します。",
+      "tags": [
+        "画像認識",
+        "分岐",
+        "検索"
+      ],
+      "parameters": {
+        "filename": "",
+        "precision": "85",
+        "interval": "5",
+        "noise-filter": "100.0",
+        "search-area-type": "screen",
+        "search-area": "(0, 0) ~ (0, 0)"
+      },
+      "flags": {
+        "checked": false,
+        "error": {
+          "flag": true,
+          "timestamp": "",
+          "msg": ""
+        }
+      },
+      "sequence-0": [],
+      "sequence-1": [],
+      "ext": {}
+    },
+    {
+      "cmd": "loop_n_times",
+      "cmd-nickname": "繰り返し",
+      "cmd-type": "looping",
+      "version": 2,
+      "uuid": "6ee4e635-29b1-488a-b6f6-aed9e179ac1c",
+      "memo": "",
+      "description": "指定回数だけループ処理を実行します。",
+      "tags": [
+        "ループ",
+        "回数指定",
+        "基本"
+      ],
+      "parameters": {
+        "count": "1",
+        "type": "times"
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      },
+      "sequence": []
+    },
+    {
+      "cmd": "break_loop",
+      "cmd-nickname": "繰り返しを抜ける",
+      "cmd-type": "basic",
+      "version": 1,
+      "uuid": "f6977094-953e-4391-add0-e4ed8ab8ff53",
+      "memo": "",
+      "description": "ループを抜けます。",
+      "tags": [
+        "ループ",
+        "制御",
+        "脱出"
+      ],
+      "parameters": {},
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      }
+    },
+    {
+      "cmd": "continue_loop",
+      "cmd-nickname": "繰り返しの最初に戻る",
+      "cmd-type": "basic",
+      "version": 1,
+      "uuid": "8ed2e6bc-de34-4240-aafb-553408324e18",
+      "memo": "",
+      "description": "ループの先頭に戻ります。",
+      "tags": [
+        "ループ",
+        "制御",
+        "継続"
+      ],
+      "parameters": {},
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      }
+    },
+    {
+      "cmd": "open_static_file_name",
+      "cmd-nickname": "ファイルを開く",
+      "cmd-type": "basic",
+      "version": 2,
+      "uuid": "57daf4fb-4cbf-43ab-90ec-2c29b705125e",
+      "memo": "",
+      "description": "指定したファイルを関連付けられたアプリケーションで開きます。",
+      "tags": [
+        "ファイル",
+        "開く",
+        "アプリ起動"
+      ],
+      "parameters": {
+        "path": "",
+        "interval": 3,
+        "maximized": true
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      }
+    },
+    {
+      "cmd": "move_fixed_file_to_fixed_directory",
+      "cmd-nickname": "ファイルを移動",
+      "cmd-type": "basic",
+      "version": 2,
+      "uuid": "0c97e843-6523-44b9-af8e-f9bd8b146bd1",
+      "memo": "",
+      "description": "ファイルを別のフォルダに移動します。",
+      "tags": [
+        "ファイル",
+        "移動",
+        "基本操作"
+      ],
+      "parameters": {
+        "src-path": "",
+        "dst-path": "",
+        "variable": ""
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      }
+    },
+    {
+      "cmd": "read_file",
+      "cmd-nickname": "テキストファイルを読み込む",
+      "cmd-type": "basic",
+      "version": 1,
+      "uuid": "f297cb95-4eae-484f-8345-df90525924a4",
+      "memo": "",
+      "description": "テキストファイルの内容を読み込み、変数に格納します。",
+      "tags": [
+        "ファイル",
+        "読み込み",
+        "テキスト"
+      ],
+      "parameters": {
+        "path": "",
+        "variable": "データ",
+        "encoding": "auto",
+        "custom-encoding": ""
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      }
+    },
+    {
+      "cmd": "write_file",
+      "cmd-nickname": "テキストファイルに書き込む",
+      "cmd-type": "basic",
+      "version": 1,
+      "uuid": "a639645f-6b57-4e64-a848-550a44e371a3",
+      "memo": "",
+      "description": "テキストファイルに文字列を書き込みます。",
+      "tags": [
+        "ファイル",
+        "書き込み",
+        "テキスト"
+      ],
+      "parameters": {
+        "string": "",
+        "path": "",
+        "mode": "create",
+        "encoding": "system-default",
+        "custom-encoding": ""
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      }
+    },
+    {
+      "cmd": "open_fixed_directory_name",
+      "cmd-nickname": "フォルダを開く",
+      "cmd-type": "basic",
+      "version": 1,
+      "uuid": "d089bbe8-7b28-4729-aab8-b844a1225ec8",
+      "memo": "",
+      "description": "指定したフォルダをエクスプローラで開きます。",
+      "tags": [
+        "ファイル",
+        "フォルダ",
+        "開く"
+      ],
+      "parameters": {
+        "path": ""
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      }
+    },
+    {
+      "cmd": "create_directory",
+      "cmd-nickname": "フォルダを作成",
+      "cmd-type": "basic",
+      "version": 2,
+      "uuid": "08d591a5-bc8e-47b7-9d3f-c480f48c1410",
+      "memo": "",
+      "description": "フォルダを作成します。",
+      "tags": [
+        "ファイル",
+        "フォルダ",
+        "作成"
+      ],
+      "parameters": {
+        "dir-path": "",
+        "dir-name": "",
+        "variable": ""
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      }
+    },
+    {
+      "cmd": "loop_directory_contents",
+      "cmd-nickname": "フォルダ内をループ",
+      "cmd-type": "looping",
+      "version": 4,
+      "uuid": "1a945d25-13ab-44a7-9df4-73affcc29917",
+      "memo": "",
+      "description": "フォルダ内のファイルをループ処理します。",
+      "tags": [
+        "ループ",
+        "ファイル",
+        "フォルダ"
+      ],
+      "parameters": {
+        "variable": "ファイル保存場所",
+        "target": "file",
+        "path": "",
+        "extension": ".txt",
+        "order": "dict_windows",
+        "case-sensitive": "case-disable"
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      },
+      "sequence": []
+    },
+    {
+      "cmd": "rename_file_or_directory",
+      "cmd-nickname": "ファイル・フォルダ名の変更",
+      "cmd-type": "basic",
+      "version": 3,
+      "uuid": "5700358f-cbd9-4ec6-9977-cacd252074e0",
+      "memo": "",
+      "description": "ファイルまたはフォルダの名前を変更します。",
+      "tags": [
+        "ファイル",
+        "名前変更",
+        "基本操作"
+      ],
+      "parameters": {
+        "src-path": "",
+        "extension-opt": "extension-yes",
+        "rename": "",
+        "act-option": "overwrite",
+        "variable": ""
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      }
+    },
+    {
+      "cmd": "copy_file_or_directory",
+      "cmd-nickname": "ファイル・フォルダをコピー",
+      "cmd-type": "basic",
+      "version": 2,
+      "uuid": "986f87d5-0fa8-4bc0-9c97-6d53b9494ffe",
+      "memo": "",
+      "description": "ファイルまたはフォルダをコピーします。",
+      "tags": [
+        "ファイル",
+        "コピー",
+        "基本操作"
+      ],
+      "parameters": {
+        "src-path": "",
+        "dst-path": "",
+        "act-check": "",
+        "variable": ""
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      }
+    },
+    {
+      "cmd": "delete_file_or_directory",
+      "cmd-nickname": "ファイル・フォルダを削除",
+      "cmd-type": "basic",
+      "version": 1,
+      "uuid": "00969582-34c3-455d-8d75-da286bb82e34",
+      "memo": "",
+      "description": "ファイルまたはフォルダを削除します。",
+      "tags": [
+        "ファイル",
+        "削除",
+        "基本操作"
+      ],
+      "parameters": {
+        "src-path": "",
+        "delete": false
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      }
+    },
+    {
+      "cmd": "compress_file_or_directory",
+      "cmd-nickname": "ファイル・フォルダを圧縮",
+      "cmd-type": "basic",
+      "version": 2,
+      "uuid": "a92cfa22-e069-4cd1-b130-0fa776ca3778",
+      "memo": "",
+      "description": "ファイルまたはフォルダを圧縮してアーカイブを作成します。",
+      "tags": [
+        "ファイル",
+        "圧縮",
+        "アーカイブ"
+      ],
+      "parameters": {
+        "compression-method": "zip",
+        "src-path": "",
+        "dst-path": "",
+        "password-type": "type-empty",
+        "password": "",
+        "variable": ""
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      }
+    },
+    {
+      "cmd": "decompress_file",
+      "cmd-nickname": "ファイル・フォルダに解凍",
+      "cmd-type": "basic",
+      "version": 2,
+      "uuid": "124a31df-0c38-4c21-93c8-5317eefdfdc1",
+      "memo": "",
+      "description": "圧縮ファイルを解凍します。",
+      "tags": [
+        "ファイル",
+        "解凍",
+        "アーカイブ"
+      ],
+      "parameters": {
+        "decompression-method": "zip",
+        "src-path": "",
+        "dst-path": "",
+        "password-type": "type-empty",
+        "password": "",
+        "variable": ""
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      }
+    },
+    {
+      "cmd": "prepend_string_to_variable_filename",
+      "cmd-nickname": "文字をファイル名に挿入",
+      "cmd-type": "basic",
+      "version": 3,
+      "uuid": "85fba685-ebbf-4519-8d49-d946369d8fea",
+      "memo": "",
+      "description": "ファイル名の先頭に文字列を追加します。",
+      "tags": [
+        "ファイル",
+        "命名",
+        "文字列"
+      ],
+      "parameters": {
+        "variable": "",
+        "string": "",
+        "position": "head",
+        "update": false
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      }
+    },
+    {
+      "cmd": "prepend_date_to_variable_filename",
+      "cmd-nickname": "日付をファイル名に挿入",
+      "cmd-type": "basic",
+      "version": 3,
+      "uuid": "04be728e-6426-4681-88b4-c89301a344e7",
+      "memo": "",
+      "description": "ファイル名の先頭に日付を追加します。",
+      "tags": [
+        "ファイル",
+        "命名",
+        "日付"
+      ],
+      "parameters": {
+        "variable": "",
+        "position": "head",
+        "update": false
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      }
+    },
+    {
+      "cmd": "prepend_variable_to_file",
+      "cmd-nickname": "参照IDをファイル名に挿入",
+      "cmd-type": "basic",
+      "version": 3,
+      "uuid": "cd5f59ad-df63-4e6c-b28f-d1910437e47b",
+      "memo": "",
+      "description": "ファイル名の先頭に変数の値を追加します。",
+      "tags": [
+        "ファイル",
+        "命名",
+        "変数"
+      ],
+      "parameters": {
+        "variable": "",
+        "path": "",
+        "position": "head",
+        "update-var": ""
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      }
+    },
+    {
+      "cmd": "run_excel",
+      "cmd-nickname": "エクセルブックを開く",
+      "cmd-type": "basic",
+      "version": 4,
+      "uuid": "6396113a-6c42-4c1f-ba35-c9efdb2b005a",
+      "memo": "",
+      "description": "Excelファイルを開きます。パスワード保護されたファイルにも対応します。",
+      "tags": [
+        "Excel",
+        "起動",
+        "ファイル操作"
+      ],
+      "parameters": {
+        "excel": "エクセル",
+        "path": "",
+        "password-type": "type-empty",
+        "ciphertext": "",
+        "nonce": "",
+        "encryption": 1,
+        "maximized": true,
+        "update-links": "ask"
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      }
+    },
+    {
+      "cmd": "remember_open_excel_book",
+      "cmd-nickname": "開いているエクセルブックを覚える",
+      "cmd-type": "basic",
+      "version": 3,
+      "uuid": "8785ab9d-dd47-4c80-b759-1699b265a816",
+      "memo": "",
+      "description": "開いているExcelブックを変数に記憶します。複数ブック操作時に使用します。",
+      "tags": [
+        "Excel",
+        "記憶",
+        "参照"
+      ],
+      "parameters": {
+        "excel": "エクセル",
+        "target": "foremost",
+        "bookname": ""
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      }
+    },
+    {
+      "cmd": "save_excel_book",
+      "cmd-nickname": "エクセルブックを保存",
+      "cmd-type": "basic",
+      "version": 1,
+      "uuid": "450730b6-756e-4646-9ccc-70f5db96fef0",
+      "memo": "",
+      "description": "Excelブックを保存します。",
+      "tags": [
+        "Excel",
+        "保存",
+        "ファイル操作"
+      ],
+      "parameters": {
+        "excel": "",
+        "overwrite": true,
+        "path": ""
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      }
+    },
+    {
+      "cmd": "close_excel_book",
+      "cmd-nickname": "エクセルブックを閉じる",
+      "cmd-type": "basic",
+      "version": 1,
+      "uuid": "33093aa1-17f5-4fb8-90fb-3a2c76429853",
+      "memo": "",
+      "description": "Excelブックを閉じます。",
+      "tags": [
+        "Excel",
+        "終了",
+        "リソース管理"
+      ],
+      "parameters": {
+        "excel": ""
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      }
+    },
+    {
+      "cmd": "create_excel_sheet",
+      "cmd-nickname": "新規エクセルシート",
+      "cmd-type": "basic",
+      "version": 1,
+      "uuid": "2896e94c-01b5-457d-a273-cf40f1f4cf49",
+      "memo": "",
+      "description": "新しいワークシートを作成します。",
+      "tags": [
+        "Excel",
+        "シート",
+        "作成"
+      ],
+      "parameters": {
+        "excel": "",
+        "sheet-name": ""
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      }
+    },
+    {
+      "cmd": "delete_excel_sheet",
+      "cmd-nickname": "エクセルシート削除",
+      "cmd-type": "basic",
+      "version": 1,
+      "uuid": "9beba920-dcf8-44bd-bd0b-2434068786e8",
+      "memo": "",
+      "description": "ワークシートを削除します。",
+      "tags": [
+        "Excel",
+        "シート",
+        "削除"
+      ],
+      "parameters": {
+        "excel": "",
+        "sheet-name": ""
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      }
+    },
+    {
+      "cmd": "switch_excel_sheet",
+      "cmd-nickname": "エクセルシート切り替え",
+      "cmd-type": "basic",
+      "version": 2,
+      "uuid": "1fd716a1-aca0-4607-a3ab-adcff86d05c3",
+      "memo": "",
+      "description": "アクティブなワークシートを切り替えます。",
+      "tags": [
+        "Excel",
+        "シート",
+        "切り替え"
+      ],
+      "parameters": {
+        "excel": "",
+        "switch": "switch-name",
+        "sheet-name": "",
+        "index": "1"
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      }
+    },
+    {
+      "cmd": "move_excel_sheet",
+      "cmd-nickname": "エクセルシート移動・コピー",
+      "cmd-type": "basic",
+      "version": 1,
+      "uuid": "2e671b90-b4f9-49c3-a0a3-7211a2056ffd",
+      "memo": "",
+      "description": "ワークシートを移動またはコピーします。別ブックへの移動も可能です。",
+      "tags": [
+        "Excel",
+        "シート",
+        "移動"
+      ],
+      "parameters": {
+        "excel": "",
+        "sheet-name": "",
+        "target-book": "",
+        "target-position": "last",
+        "target-sheet": "",
+        "copy": false,
+        "copy-name": ""
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      }
+    },
+    {
+      "cmd": "get_excel_sheet_name",
+      "cmd-nickname": "エクセルシート名取得",
+      "cmd-type": "basic",
+      "version": 1,
+      "uuid": "af37f060-b0f4-442f-be14-11bab643fded",
+      "memo": "",
+      "description": "現在のワークシート名を取得します。",
+      "tags": [
+        "Excel",
+        "取得",
+        "シート名"
+      ],
+      "parameters": {
+        "variable": "名前",
+        "excel": ""
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      }
+    },
+    {
+      "cmd": "rename_excel_sheet",
+      "cmd-nickname": "エクセルシート名変更",
+      "cmd-type": "basic",
+      "version": 1,
+      "uuid": "a9394f25-95bf-420f-9331-d72fa7347955",
+      "memo": "",
+      "description": "ワークシートの名前を変更します。",
+      "tags": [
+        "Excel",
+        "シート",
+        "名前変更"
+      ],
+      "parameters": {
+        "excel": "",
+        "sheet-name": "",
+        "rename": ""
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      }
+    },
+    {
+      "cmd": "select_excel_range",
+      "cmd-nickname": "エクセル範囲指定",
+      "cmd-type": "basic",
+      "version": 1,
+      "uuid": "a4a0afae-13cc-4189-bdaf-041c698f4259",
+      "memo": "",
+      "description": "セル範囲を選択します。",
+      "tags": [
+        "Excel",
+        "選択",
+        "セル操作"
+      ],
+      "parameters": {
+        "excel": "",
+        "range": ""
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      }
+    },
+    {
+      "cmd": "offset_excel_range",
+      "cmd-nickname": "エクセル指定範囲の移動",
+      "cmd-type": "basic",
+      "version": 1,
+      "uuid": "5134913c-41d4-445f-8ee2-c84b71adf1d6",
+      "memo": "",
+      "description": "選択範囲を指定した分だけ移動します。",
+      "tags": [
+        "Excel",
+        "範囲",
+        "オフセット"
+      ],
+      "parameters": {
+        "excel": "",
+        "offset-x": "0",
+        "offset-y": "0"
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      }
+    },
+    {
+      "cmd": "delete_excel_range",
+      "cmd-nickname": "エクセル指定範囲を削除",
+      "cmd-type": "basic",
+      "version": 1,
+      "uuid": "4f7bf8a1-b2ee-4bd3-9a1c-e8ba85b89ede",
+      "memo": "",
+      "description": "指定範囲のセルを削除し、周囲のセルをシフトします。",
+      "tags": [
+        "Excel",
+        "削除",
+        "セル操作"
+      ],
+      "parameters": {
+        "excel": "",
+        "range": "",
+        "shift-type": "up"
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      }
+    },
+    {
+      "cmd": "insert_excel_range",
+      "cmd-nickname": "エクセル指定範囲にセルを挿入",
+      "cmd-type": "basic",
+      "version": 1,
+      "uuid": "3713680a-7e08-4156-b7eb-b63868173669",
+      "memo": "",
+      "description": "指定範囲にセルを挿入し、既存のセルをシフトします。",
+      "tags": [
+        "Excel",
+        "挿入",
+        "セル操作"
+      ],
+      "parameters": {
+        "excel": "",
+        "range": "",
+        "shift-type": "down"
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      }
+    },
+    {
+      "cmd": "get_excel_values",
+      "cmd-nickname": "エクセルのセル値を取得",
+      "cmd-type": "basic",
+      "version": 2,
+      "uuid": "5930bace-cdc3-40e2-be0a-1e091bc9d85c",
+      "memo": "",
+      "description": "セル範囲の値を取得します。書式付きまたは値のみを選択可能です。",
+      "tags": [
+        "Excel",
+        "取得",
+        "値"
+      ],
+      "parameters": {
+        "excel": "",
+        "range": "",
+        "variable": "データ",
+        "type": "value-formatted"
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      }
+    },
+    {
+      "cmd": "set_excel_values",
+      "cmd-nickname": "エクセルのセル値を入力",
+      "cmd-type": "basic",
+      "version": 1,
+      "uuid": "3f65ec89-e19b-4efc-bc18-64a77342fc78",
+      "memo": "",
+      "description": "セル範囲に値を設定します。配列データの一括入力も可能です。",
+      "tags": [
+        "Excel",
+        "設定",
+        "値"
+      ],
+      "parameters": {
+        "excel": "",
+        "range": "",
+        "single-cell": "single",
+        "string": ""
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      }
+    },
+    {
+      "cmd": "copy_excel_range",
+      "cmd-nickname": "エクセルのセルをコピー",
+      "cmd-type": "basic",
+      "version": 1,
+      "uuid": "eb91bf6c-49ca-479c-a642-0c5465d9c873",
+      "memo": "",
+      "description": "セル範囲をクリップボードにコピーします。",
+      "tags": [
+        "Excel",
+        "コピー",
+        "クリップボード"
+      ],
+      "parameters": {
+        "excel": "",
+        "range": ""
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      }
+    },
+    {
+      "cmd": "paste_excel_range",
+      "cmd-nickname": "エクセルのセルを貼り付け",
+      "cmd-type": "basic",
+      "version": 2,
+      "uuid": "1bc55ea2-b366-4e96-9c94-1d325329577e",
+      "memo": "",
+      "description": "クリップボードからセル範囲に貼り付けます。形式を指定可能です。",
+      "tags": [
+        "Excel",
+        "貼り付け",
+        "クリップボード"
+      ],
+      "parameters": {
+        "excel": "",
+        "range": "",
+        "option": null
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      }
+    },
+    {
+      "cmd": "get_excel_address",
+      "cmd-nickname": "エクセルのセル位置を取得",
+      "cmd-type": "basic",
+      "version": 2,
+      "uuid": "41cd0010-e515-4a99-8360-bc5faef033a7",
+      "memo": "",
+      "description": "選択セルのアドレス（A1形式またはR1C1形式）を取得します。",
+      "tags": [
+        "Excel",
+        "取得",
+        "セル情報"
+      ],
+      "parameters": {
+        "excel": "",
+        "variable": "データ",
+        "variable2": "列",
+        "variable3": "行",
+        "var-type": "standard",
+        "format": "a1"
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      }
+    },
+    {
+      "cmd": "get_excel_last_row",
+      "cmd-nickname": "エクセル最終行取得",
+      "cmd-type": "basic",
+      "version": 1,
+      "uuid": "8c879933-4bc5-4a52-b7dd-23bea8698da3",
+      "memo": "",
+      "description": "データが入力されている最終行を取得します。特定列の最終行も取得可能です。",
+      "tags": [
+        "Excel",
+        "取得",
+        "最終行"
+      ],
+      "parameters": {
+        "excel": "",
+        "target-type": "col",
+        "target-col": "",
+        "variable": "最終行"
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      }
+    },
+    {
+      "cmd": "get_excel_last_column",
+      "cmd-nickname": "エクセル最終列取得",
+      "cmd-type": "basic",
+      "version": 1,
+      "uuid": "9860059c-72bd-4f63-a00e-cd16c34247db",
+      "memo": "",
+      "description": "データが入力されている最終列を取得します。特定行の最終列も取得可能です。",
+      "tags": [
+        "Excel",
+        "取得",
+        "最終列"
+      ],
+      "parameters": {
+        "excel": "",
+        "target-type": "row",
+        "target-row": "",
+        "variable": "最終列"
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      }
+    },
+    {
+      "cmd": "calculate_excel_column",
+      "cmd-nickname": "エクセルの列を計算",
+      "cmd-type": "basic",
+      "version": 1,
+      "uuid": "f0bbec73-1466-4cce-9dd6-ddb286afce3c",
+      "memo": "",
+      "description": "列番号の計算（加算・減算）を行います。動的な列参照に使用します。",
+      "tags": [
+        "Excel",
+        "計算",
+        "列操作"
+      ],
+      "parameters": {
+        "base-column": "",
+        "operator": "add",
+        "amount": "",
+        "variable": "計算列"
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      }
+    },
+    {
+      "cmd": "run_excel_macro",
+      "cmd-nickname": "エクセルマクロ実行",
+      "cmd-type": "basic",
+      "version": 1,
+      "uuid": "a9acf5ac-14c8-410d-8e5b-c6e613f19dfe",
+      "memo": "",
+      "description": "VBAマクロを実行します。引数の渡しも可能です。",
+      "tags": [
+        "Excel",
+        "マクロ",
+        "VBA"
+      ],
+      "parameters": {
+        "excel": "",
+        "macro-name": "",
+        "arguments": [],
+        "variable": "",
+        "is-display-alerts": false
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      }
+    },
+    {
+      "cmd": "loop_excel_row",
+      "cmd-nickname": "エクセル行ループ",
+      "cmd-type": "looping",
+      "version": 2,
+      "uuid": "841e3260-66cb-43fa-b593-0c2767ea197c",
+      "memo": "",
+      "description": "Excelの行をループ処理します。",
+      "tags": [
+        "ループ",
+        "Excel",
+        "行処理"
+      ],
+      "parameters": {
+        "excel": "",
+        "count": "1",
+        "terminate-value": "",
+        "terminate-row": "1",
+        "end-condition-type": "row",
+        "start-cell": "A1",
+        "variable": "行番号",
+        "variable2": "セル値",
+        "get-value-type": "value-formatted"
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      },
+      "sequence": []
+    },
+    {
+      "cmd": "loop_excel_col",
+      "cmd-nickname": "エクセル列ループ",
+      "cmd-type": "looping",
+      "version": 2,
+      "uuid": "5ebd2bc8-6c7c-4808-9607-16827a4c4fd5",
+      "memo": "",
+      "description": "Excelの列をループ処理します。",
+      "tags": [
+        "ループ",
+        "Excel",
+        "列処理"
+      ],
+      "parameters": {
+        "excel": "",
+        "count": "1",
+        "terminate-value": "",
+        "terminate-col": "A",
+        "end-condition-type": "col",
+        "start-cell": "A1",
+        "variable": "列名",
+        "variable2": "セル値",
+        "get-value-type": "value-formatted"
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      },
+      "sequence": []
+    },
+    {
+      "cmd": "loop_csv",
+      "cmd-nickname": "CSV読込ループ",
+      "cmd-type": "looping",
+      "version": 1,
+      "uuid": "faff9108-775e-441e-875d-46148358d3d9",
+      "memo": "",
+      "description": "CSVファイルを読み込んでループ処理します。",
+      "tags": [
+        "ループ",
+        "CSV",
+        "データ処理"
+      ],
+      "parameters": {
+        "path": "",
+        "ignore-first": true,
+        "variables": [
+          [
+            1,
+            "カラム1"
+          ]
+        ]
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      },
+      "sequence": []
+    },
+    {
+      "cmd": "create_spreadsheet",
+      "cmd-nickname": "スプレッドシートを作成",
+      "cmd-type": "basic",
+      "version": 1,
+      "uuid": "dbab0e9b-bef1-446f-be75-358bc7d6b4ac",
+      "memo": "",
+      "description": "Googleスプレッドシートなどのクラウドベースのスプレッドシートを作成します。",
+      "tags": [
+        "スプレッドシート",
+        "作成",
+        "クラウド"
+      ],
+      "parameters": {
+        "account": "",
+        "name": "",
+        "spreadsheet": "スプレッドシート"
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      }
+    },
+    {
+      "cmd": "remember_spreadsheet",
+      "cmd-nickname": "スプレッドシートを読み込む",
+      "cmd-type": "basic",
+      "version": 1,
+      "uuid": "e522a46a-b57e-4ebe-bb4a-1b3aa12bf1be",
+      "memo": "",
+      "description": "remember-spreadsheetの処理を実行します。",
+      "tags": [
+        "スプレッドシート",
+        "記憶",
+        "参照"
+      ],
+      "parameters": {
+        "account": "",
+        "spreadsheet": "スプレッドシート",
+        "method": "url",
+        "name": "",
+        "url": "",
+        "id": ""
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      }
+    },
+    {
+      "cmd": "delete_spreadsheet",
+      "cmd-nickname": "スプレッドシートを削除",
+      "cmd-type": "basic",
+      "version": 1,
+      "uuid": "31ecbfba-c08d-4930-8d71-0940a483b1b6",
+      "memo": "",
+      "description": "Googleスプレッドシートを削除します。",
+      "tags": [
+        "スプレッドシート",
+        "削除",
+        "クラウド"
+      ],
+      "parameters": {
+        "account": "",
+        "method": "url",
+        "name": "",
+        "url": "",
+        "id": ""
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      }
+    },
+    {
+      "cmd": "rename_spreadsheet",
+      "cmd-nickname": "スプレッドシート名を変更",
+      "cmd-type": "basic",
+      "version": 1,
+      "uuid": "f4f06174-475d-4d42-a625-f43b5f427106",
+      "memo": "",
+      "description": "rename-spreadsheetの処理を実行します。",
+      "tags": [
+        "スプレッドシート",
+        "名前変更",
+        "基本操作"
+      ],
+      "parameters": {
+        "account": "",
+        "method": "url",
+        "name": "",
+        "url": "",
+        "id": "",
+        "rename": ""
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      }
+    },
+    {
+      "cmd": "get_spreadsheet_url",
+      "cmd-nickname": "スプレッドシートのURL取得",
+      "cmd-type": "basic",
+      "version": 1,
+      "uuid": "f955a2ab-ccb9-48e9-9cad-57659c1a084a",
+      "memo": "",
+      "description": "スプレッドシートのURLを取得します。",
+      "tags": [
+        "スプレッドシート",
+        "取得",
+        "URL"
+      ],
+      "parameters": {
+        "variable": "url",
+        "spreadsheet": ""
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      }
+    },
+    {
+      "cmd": "create_spreadsheet_sheet",
+      "cmd-nickname": "新規シート",
+      "cmd-type": "basic",
+      "version": 1,
+      "uuid": "672b7e3b-531a-47b1-9fe8-f2da5a8cf652",
+      "memo": "",
+      "description": "スプレッドシートに新しいシートを作成します。",
+      "tags": [
+        "スプレッドシート",
+        "シート",
+        "作成"
+      ],
+      "parameters": {
+        "spreadsheet": "",
+        "sheet-name": ""
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      }
+    },
+    {
+      "cmd": "delete_spreadsheet_sheet",
+      "cmd-nickname": "シート削除",
+      "cmd-type": "basic",
+      "version": 1,
+      "uuid": "ef0b8447-0128-40e8-987e-b52c74751a7c",
+      "memo": "",
+      "description": "スプレッドシートのシートを削除します。",
+      "tags": [
+        "スプレッドシート",
+        "シート",
+        "削除"
+      ],
+      "parameters": {
+        "spreadsheet": "",
+        "sheet-name": ""
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      }
+    },
+    {
+      "cmd": "move_spreadsheet_sheet",
+      "cmd-nickname": "スプレッドシートのシート移動",
+      "cmd-type": "basic",
+      "version": 1,
+      "uuid": "41068e8c-d74a-4471-b75c-12d7d60500e8",
+      "memo": "",
+      "description": "スプレッドシートのシート位置を移動します。",
+      "tags": [
+        "スプレッドシート",
+        "シート",
+        "移動"
+      ],
+      "parameters": {
+        "spreadsheet": "",
+        "sheet-name": "",
+        "target-position": "last",
+        "target-sheet": ""
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      }
+    },
+    {
+      "cmd": "copy_spreadsheet_sheet",
+      "cmd-nickname": "スプレッドシートのシートコピー",
+      "cmd-type": "basic",
+      "version": 1,
+      "uuid": "49249aaa-e85d-4ed3-9cc2-92de3b8c66bf",
+      "memo": "",
+      "description": "スプレッドシートのシートをコピーします。",
+      "tags": [
+        "スプレッドシート",
+        "シート",
+        "コピー"
+      ],
+      "parameters": {
+        "spreadsheet": "",
+        "sheet-name": "",
+        "target-spreadsheet": "",
+        "copy-sheet-name": ""
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      }
+    },
+    {
+      "cmd": "get_spreadsheet_sheet_name",
+      "cmd-nickname": "スプレッドシートのシート名取得",
+      "cmd-type": "basic",
+      "version": 1,
+      "uuid": "b633cb61-195e-462f-a19b-1341e3715628",
+      "memo": "",
+      "description": "アクティブなスプレッドシートのシート名を取得します。",
+      "tags": [
+        "スプレッドシート",
+        "取得",
+        "シート名"
+      ],
+      "parameters": {
+        "variable": "名前",
+        "spreadsheet": "",
+        "target-position": "by-index",
+        "target-index": ""
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      }
+    },
+    {
+      "cmd": "rename_spreadsheet_sheet",
+      "cmd-nickname": "スプレッドシートのシート名変更",
+      "cmd-type": "basic",
+      "version": 1,
+      "uuid": "9a3bb551-edba-4f86-87b2-2df1c8823349",
+      "memo": "",
+      "description": "スプレッドシートのシート名を変更します。",
+      "tags": [
+        "スプレッドシート",
+        "シート",
+        "名前変更"
+      ],
+      "parameters": {
+        "spreadsheet": "",
+        "sheet-name": "",
+        "rename": ""
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      }
+    },
+    {
+      "cmd": "delete_spreadsheet_range",
+      "cmd-nickname": "スプレッドシート指定範囲を削除",
+      "cmd-type": "basic",
+      "version": 1,
+      "uuid": "ebc19956-67f3-4c01-912f-cea66d27e4d0",
+      "memo": "",
+      "description": "スプレッドシートの指定範囲を削除します。",
+      "tags": [
+        "スプレッドシート",
+        "削除",
+        "セル操作"
+      ],
+      "parameters": {
+        "spreadsheet": "",
+        "sheet-name": "",
+        "range": "",
+        "shift-type": "rows"
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      }
+    },
+    {
+      "cmd": "insert_spreadsheet_range",
+      "cmd-nickname": "スプレッドシート指定範囲にセルを挿入",
+      "cmd-type": "basic",
+      "version": 1,
+      "uuid": "2ffdd506-b2e8-492a-b2d3-30edc613658f",
+      "memo": "",
+      "description": "スプレッドシートに行や列を挿入します。",
+      "tags": [
+        "スプレッドシート",
+        "挿入",
+        "行列操作"
+      ],
+      "parameters": {
+        "spreadsheet": "",
+        "sheet-name": "",
+        "range": "",
+        "shift-type": "rows"
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      }
+    },
+    {
+      "cmd": "get_spreadsheet_values",
+      "cmd-nickname": "スプレッドシートのセル値を取得",
+      "cmd-type": "basic",
+      "version": 1,
+      "uuid": "085cb183-5630-4768-9056-f69cd0c83a5a",
+      "memo": "",
+      "description": "スプレッドシートのセル値を取得します。",
+      "tags": [
+        "スプレッドシート",
+        "取得",
+        "値"
+      ],
+      "parameters": {
+        "spreadsheet": "",
+        "sheet-name": "",
+        "range": "",
+        "variable": "データ",
+        "type": "formatted-value"
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      }
+    },
+    {
+      "cmd": "set_spreadsheet_values",
+      "cmd-nickname": "スプレッドシートのセル値を入力",
+      "cmd-type": "basic",
+      "version": 1,
+      "uuid": "fa7af0ff-5eb9-48f4-bbed-7297ffe86bbf",
+      "memo": "",
+      "description": "スプレッドシートのセルに値を設定します。",
+      "tags": [
+        "スプレッドシート",
+        "設定",
+        "値"
+      ],
+      "parameters": {
+        "spreadsheet": "",
+        "sheet-name": "",
+        "range": "",
+        "single-cell": "single",
+        "string": ""
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      }
+    },
+    {
+      "cmd": "copy_paste_spreadsheet",
+      "cmd-nickname": "スプレッドシートのセルをコピー・貼り付け",
+      "cmd-type": "basic",
+      "version": 1,
+      "uuid": "0f2c4134-a434-4a68-9e5a-1e016ddbfb65",
+      "memo": "",
+      "description": "スプレッドシートの範囲をコピーして貼り付けます。",
+      "tags": [
+        "スプレッドシート",
+        "コピー",
+        "貼り付け"
+      ],
+      "parameters": {
+        "spreadsheet": "",
+        "src-sheet": "",
+        "src-range": "",
+        "dst-sheet": "",
+        "dst-range": "",
+        "paste-type": "PASTE_NORMAL"
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      }
+    },
+    {
+      "cmd": "get_spreadsheet_last_row",
+      "cmd-nickname": "スプレッドシート最終行取得",
+      "cmd-type": "basic",
+      "version": 1,
+      "uuid": "022702a9-e03f-48c4-beb9-3fbd975b6002",
+      "memo": "",
+      "description": "スプレッドシートのデータ最終行を取得します。",
+      "tags": [
+        "スプレッドシート",
+        "取得",
+        "最終行"
+      ],
+      "parameters": {
+        "spreadsheet": "",
+        "sheet-name": "",
+        "target-type": "col",
+        "target-col": "",
+        "variable": "最終行"
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      }
+    },
+    {
+      "cmd": "loop_spreadsheet_row",
+      "cmd-nickname": "スプレッドシート行ループ",
+      "cmd-type": "looping",
+      "version": 1,
+      "uuid": "74c44e91-bfcd-4283-aad1-125d7207dbf2",
+      "memo": "",
+      "description": "スプレッドシートの行をループ処理します。",
+      "tags": [
+        "ループ",
+        "スプレッドシート",
+        "行処理"
+      ],
+      "parameters": {
+        "spreadsheet": "",
+        "sheet-name": "",
+        "count": "1",
+        "terminate-value": "",
+        "terminate-row": "1",
+        "end-condition-type": "row",
+        "start-cell": "A1",
+        "variable": "行番号",
+        "variable2": "セル値"
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      },
+      "sequence": []
+    },
+    {
+      "cmd": "loop_spreadsheet_col",
+      "cmd-nickname": "スプレッドシート列ループ",
+      "cmd-type": "looping",
+      "version": 1,
+      "uuid": "1cf16a74-a0ce-4f26-9714-74a6af068c9c",
+      "memo": "",
+      "description": "スプレッドシートの列をループ処理します。",
+      "tags": [
+        "ループ",
+        "スプレッドシート",
+        "列処理"
+      ],
+      "parameters": {
+        "spreadsheet": "",
+        "sheet-name": "",
+        "count": "1",
+        "terminate-value": "",
+        "terminate-col": "A",
+        "end-condition-type": "col",
+        "start-cell": "A1",
+        "variable": "列名",
+        "variable2": "セル値"
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      },
+      "sequence": []
+    },
+    {
+      "cmd": "run_browser",
+      "cmd-nickname": "ブラウザ起動",
+      "cmd-type": "basic",
+      "version": 6,
+      "uuid": "b13a5e71-7d62-499e-90d0-f51e27680262",
+      "memo": "",
+      "description": "ブラウザを起動します。",
+      "tags": [
+        "ブラウザ",
+        "起動",
+        "基本"
+      ],
+      "parameters": {
+        "vendor": "assirobo_browser",
+        "browser": "ブラウザ",
+        "path": "",
+        "arguments": "",
+        "url": "",
+        "maximized": true,
+        "plugins": true,
+        "iemode": false
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      }
+    },
+    {
+      "cmd": "run_browser_with_profile",
+      "cmd-nickname": "ブラウザ起動（ユーザ情報引継）",
+      "cmd-type": "basic",
+      "version": 2,
+      "uuid": "ce07d7b0-b064-49fb-b8b1-86e57b9c8a03",
+      "memo": "",
+      "description": "ユーザープロファイルを指定してブラウザを起動します。",
+      "tags": [
+        "ブラウザ",
+        "起動",
+        "プロファイル"
+      ],
+      "parameters": {
+        "vendor": "google_chrome_auto",
+        "browser": "ブラウザ",
+        "path": "",
+        "profile-path": "",
+        "url": "",
+        "maximized": true,
+        "plugins": false
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      }
+    },
+    {
+      "cmd": "close_browser",
+      "cmd-nickname": "ブラウザを閉じる",
+      "cmd-type": "basic",
+      "version": 1,
+      "uuid": "28e7d888-18bd-42e3-a5fa-a5fa2b00ee98",
+      "memo": "",
+      "description": "ブラウザを閉じます。",
+      "tags": [
+        "ブラウザ",
+        "終了",
+        "リソース管理"
+      ],
+      "parameters": {
+        "browser": ""
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      }
+    },
+    {
+      "cmd": "remember_focused_browser_window",
+      "cmd-nickname": "派生ブラウザ画面記憶",
+      "cmd-type": "basic",
+      "version": 1,
+      "uuid": "125f4577-7d0a-4c1c-ae2f-868abd071d86",
+      "memo": "",
+      "description": "現在のブラウザウィンドウを記憶します。",
+      "tags": [
+        "ブラウザ",
+        "記憶",
+        "ウィンドウ"
+      ],
+      "parameters": {
+        "browser": "",
+        "new-browser": "派生ブラウザ"
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      }
+    },
+    {
+      "cmd": "visit_url",
+      "cmd-nickname": "ブラウザURL移動",
+      "cmd-type": "basic",
+      "version": 1,
+      "uuid": "e5550eaf-eb7d-40f9-b810-aae7496c35d5",
+      "memo": "",
+      "description": "指定したURLにアクセスします。",
+      "tags": [
+        "ブラウザ",
+        "URL",
+        "アクセス"
+      ],
+      "parameters": {
+        "browser": "",
+        "url": ""
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      }
+    },
+    {
+      "cmd": "visit_url_with_basic_auth",
+      "cmd-nickname": "ブラウザURL移動（Basic認証）",
+      "cmd-type": "basic",
+      "version": 2,
+      "uuid": "11aeee9f-8b60-4bc5-9ee6-026c315a9591",
+      "memo": "",
+      "description": "Basic認証付きでURLにアクセスします。",
+      "tags": [
+        "ブラウザ",
+        "認証",
+        "アクセス"
+      ],
+      "parameters": {
+        "browser": "",
+        "url": "",
+        "user": "",
+        "password-type": "type-empty",
+        "ciphertext": "",
+        "nonce": "",
+        "encryption": 1
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      }
+    },
+    {
+      "cmd": "set_browser_cookie",
+      "cmd-nickname": "ブラウザCookieを追加",
+      "cmd-type": "basic",
+      "version": 1,
+      "uuid": "d3cdb5c2-c374-4d2c-851c-2a6f7988991f",
+      "memo": "",
+      "description": "ブラウザにCookieを設定します。",
+      "tags": [
+        "ブラウザ",
+        "Cookie",
+        "設定"
+      ],
+      "parameters": {
+        "browser": "",
+        "name": "",
+        "value": "",
+        "path": "",
+        "domain": "",
+        "secure": false,
+        "httpOnly": false,
+        "expiry": ""
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      }
+    },
+    {
+      "cmd": "click_html_element",
+      "cmd-nickname": "HTMLクリック",
+      "cmd-type": "basic",
+      "version": 2,
+      "uuid": "9dad815f-7f2d-4443-87ec-03c3a26b3c78",
+      "memo": "",
+      "description": "HTML要素をクリックします。",
+      "tags": [
+        "HTML",
+        "クリック",
+        "Web操作"
+      ],
+      "parameters": {
+        "browser": "",
+        "selector-type": "xpath",
+        "selector": "",
+        "click-type": "single"
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      }
+    },
+    {
+      "cmd": "type_html_hotkeys",
+      "cmd-nickname": "HTMLショートカットキーを入力",
+      "cmd-type": "basic",
+      "version": 1,
+      "uuid": "2be0c5e6-ef75-4fb9-9b3d-4dec9eb47a6a",
+      "memo": "",
+      "description": "HTML上でショートカットキーを入力します。",
+      "tags": [
+        "HTML",
+        "ショートカット",
+        "キーボード"
+      ],
+      "parameters": {
+        "browser": "",
+        "key-0": "__null__",
+        "key-1": "__null__",
+        "key-2": "__null__",
+        "key-3": ""
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      }
+    },
+    {
+      "cmd": "focus_html_element",
+      "cmd-nickname": "HTML選択",
+      "cmd-type": "basic",
+      "version": 1,
+      "uuid": "01a7a0ad-7a9a-4edb-b466-d393df7a81b7",
+      "memo": "",
+      "description": "HTML要素にフォーカスを当てます。",
+      "tags": [
+        "HTML",
+        "フォーカス",
+        "Web操作"
+      ],
+      "parameters": {
+        "browser": "",
+        "selector-type": "xpath",
+        "selector": ""
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      }
+    },
+    {
+      "cmd": "check_html_checkbox_or_radiobutton",
+      "cmd-nickname": "HTMLチェック確認",
+      "cmd-type": "branching",
+      "version": 1,
+      "uuid": "02d8d506-3766-411b-bc0e-da4b5d314d2d",
+      "memo": "",
+      "description": "チェックボックスまたはラジオボタンの状態を確認し、処理を分岐します。",
+      "tags": [
+        "HTML",
+        "フォーム",
+        "状態確認"
+      ],
+      "parameters": {
+        "browser": "",
+        "selector-type": "xpath",
+        "selector": ""
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      },
+      "sequence-0": [],
+      "sequence-1": []
+    },
+    {
+      "cmd": "send_text_to_html_element",
+      "cmd-nickname": "HTMLキーボード入力",
+      "cmd-type": "basic",
+      "version": 2,
+      "uuid": "17544f0a-d7e9-465f-ba13-72506f95b793",
+      "memo": "",
+      "description": "HTML要素にテキストを入力します。",
+      "tags": [
+        "HTML",
+        "テキスト",
+        "入力"
+      ],
+      "parameters": {
+        "browser": "",
+        "selector-type": "xpath",
+        "selector": "",
+        "text": "",
+        "reset": false
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      }
+    },
+    {
+      "cmd": "send_password_to_html_element",
+      "cmd-nickname": "HTMLキーボード入力（パスワード）",
+      "cmd-type": "basic",
+      "version": 3,
+      "uuid": "2f1e4b26-6217-406d-b422-c7b3e99fe8e6",
+      "memo": "",
+      "description": "HTML要素にパスワードを安全に入力します。",
+      "tags": [
+        "HTML",
+        "パスワード",
+        "入力"
+      ],
+      "parameters": {
+        "browser": "",
+        "selector-type": "xpath",
+        "selector": "",
+        "password-type": "type-input",
+        "ciphertext": "",
+        "nonce": "",
+        "encryption": 1,
+        "overwrite": false
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      }
+    },
+    {
+      "cmd": "set_dropdown_html_element",
+      "cmd-nickname": "HTMLドロップダウン操作",
+      "cmd-type": "basic",
+      "version": 3,
+      "uuid": "b3eb53e6-6d64-4f51-b434-77db53e984db",
+      "memo": "",
+      "description": "ドロップダウンリストの値を選択します。",
+      "tags": [
+        "HTML",
+        "ドロップダウン",
+        "選択"
+      ],
+      "parameters": {
+        "browser": "",
+        "selector-type": "xpath",
+        "selector": "",
+        "value-type": "text",
+        "value": "",
+        "multi-select": false
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      }
+    },
+    {
+      "cmd": "retrieve_text_of_html_element",
+      "cmd-nickname": "HTML文字列抽出",
+      "cmd-type": "basic",
+      "version": 1,
+      "uuid": "bf91ac38-e196-4f26-b449-ed69313b7987",
+      "memo": "",
+      "description": "HTML要素のテキストを取得します。",
+      "tags": [
+        "HTML",
+        "取得",
+        "テキスト"
+      ],
+      "parameters": {
+        "browser": "",
+        "variable": "抽出文字",
+        "selector-type": "xpath",
+        "selector": "",
+        "dropdown-all-text": false
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      }
+    },
+    {
+      "cmd": "retrieve_link_of_html_element",
+      "cmd-nickname": "HTMLリンク抽出",
+      "cmd-type": "basic",
+      "version": 1,
+      "uuid": "2118b5ba-6b97-4f6a-953d-5cd84e66940e",
+      "memo": "",
+      "description": "HTML要素のリンクURLを取得します。",
+      "tags": [
+        "HTML",
+        "取得",
+        "リンク"
+      ],
+      "parameters": {
+        "browser": "",
+        "variable": "リンク",
+        "selector-type": "xpath",
+        "selector": ""
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      }
+    },
+    {
+      "cmd": "retrieve_src_of_html_element",
+      "cmd-nickname": "HTML画像URL抽出",
+      "cmd-type": "basic",
+      "version": 1,
+      "uuid": "142b1250-065e-4ab2-b392-495deb514876",
+      "memo": "",
+      "description": "画像要素のソースURLを取得します。",
+      "tags": [
+        "HTML",
+        "取得",
+        "画像ソース"
+      ],
+      "parameters": {
+        "browser": "",
+        "variable": "画像URL",
+        "selector-type": "xpath",
+        "selector": ""
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      }
+    },
+    {
+      "cmd": "download_html_element",
+      "cmd-nickname": "HTML画像ダウンロード",
+      "cmd-type": "basic",
+      "version": 1,
+      "uuid": "167b8979-58ba-4976-a3e5-a39f19b0ee1b",
+      "memo": "",
+      "description": "HTML上の画像をダウンロードします。",
+      "tags": [
+        "HTML",
+        "ダウンロード",
+        "画像"
+      ],
+      "parameters": {
+        "browser": "",
+        "selector-type": "xpath",
+        "selector": "",
+        "path": ""
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      }
+    },
+    {
+      "cmd": "download_html_csv",
+      "cmd-nickname": "HTML表ダウンロード（CSV）",
+      "cmd-type": "basic",
+      "version": 1,
+      "uuid": "84fc786f-988d-46b8-84a5-b4f0d6d44512",
+      "memo": "",
+      "description": "HTML上の表をCSV形式でダウンロードします。",
+      "tags": [
+        "HTML",
+        "ダウンロード",
+        "CSV"
+      ],
+      "parameters": {
+        "browser": "",
+        "selector-type": "xpath",
+        "selector": "",
+        "path": ""
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      }
+    },
+    {
+      "cmd": "retrieve_attribute_of_html_element",
+      "cmd-nickname": "HTML属性抽出",
+      "cmd-type": "basic",
+      "version": 1,
+      "uuid": "52b015a4-4c1a-4936-b380-c697635a9634",
+      "memo": "",
+      "description": "HTML要素の属性値を取得します。",
+      "tags": [
+        "HTML",
+        "取得",
+        "属性"
+      ],
+      "parameters": {
+        "browser": "",
+        "selector-type": "xpath",
+        "selector": "",
+        "attribute-name": "",
+        "variable": "属性"
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      }
+    },
+    {
+      "cmd": "click_html_alert",
+      "cmd-nickname": "HTMLポップアップクリック",
+      "cmd-type": "basic",
+      "version": 1,
+      "uuid": "d43a740e-c93e-44e0-acd4-0c0e0087ed63",
+      "memo": "",
+      "description": "JavaScriptアラートをクリックして閉じます。",
+      "tags": [
+        "HTML",
+        "ダイアログ",
+        "クリック"
+      ],
+      "parameters": {
+        "browser": "",
+        "button": "OK"
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      }
+    },
+    {
+      "cmd": "retrieve_text_of_html_alert",
+      "cmd-nickname": "HTMLポップアップ内容抽出",
+      "cmd-type": "basic",
+      "version": 1,
+      "uuid": "43e99669-30a7-4d59-9eee-5a5102ca56b9",
+      "memo": "",
+      "description": "JavaScriptアラートのメッセージを取得します。",
+      "tags": [
+        "HTML",
+        "取得",
+        "アラート"
+      ],
+      "parameters": {
+        "browser": "",
+        "variable": "ポップアップ内容"
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      }
+    },
+    {
+      "cmd": "search_html_element_and_branch",
+      "cmd-nickname": "HTMLエレメント出現を待つ",
+      "cmd-type": "branching",
+      "version": 1,
+      "uuid": "e5c3b98e-5de0-4276-b893-14b55fe8f05a",
+      "memo": "",
+      "description": "HTML要素の出現を待ち、結果により処理を分岐します。",
+      "tags": [
+        "HTML",
+        "検索",
+        "分岐"
+      ],
+      "parameters": {
+        "browser": "",
+        "selector-type": "xpath",
+        "selector": "",
+        "timeout": 10
+      },
+      "flags": {
+        "checked": false,
+        "error": {
+          "flag": true,
+          "timestamp": "",
+          "msg": ""
+        }
+      },
+      "sequence-0": [],
+      "sequence-1": [],
+      "ext": {}
+    },
+    {
+      "cmd": "run_javascript_in_browser",
+      "cmd-nickname": "JavaScript実行",
+      "cmd-type": "basic",
+      "version": 1,
+      "uuid": "b4098153-db70-407e-88a8-67253863791d",
+      "memo": "",
+      "description": "ブラウザ上でJavaScriptを実行します。",
+      "tags": [
+        "ブラウザ",
+        "JavaScript",
+        "実行"
+      ],
+      "parameters": {
+        "browser": "",
+        "javascript": "",
+        "variable": ""
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      }
+    },
+    {
+      "cmd": "switch_html_iframe",
+      "cmd-nickname": "IFrameに入る",
+      "cmd-type": "basic",
+      "version": 1,
+      "uuid": "6454eff6-ef75-4f50-8e80-7e67a9a7345b",
+      "memo": "",
+      "description": "iframeに切り替えます。",
+      "tags": [
+        "HTML",
+        "iframe",
+        "切り替え"
+      ],
+      "parameters": {
+        "browser": "",
+        "iframe-id-type": "xpath",
+        "iframe-id": ""
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      }
+    },
+    {
+      "cmd": "escape_html_iframe",
+      "cmd-nickname": "IFrameから出る",
+      "cmd-type": "basic",
+      "version": 1,
+      "uuid": "d5e5092f-47d2-4805-a408-bdd52b08541d",
+      "memo": "",
+      "description": "iframeから抜け出します。",
+      "tags": [
+        "HTML",
+        "iframe",
+        "フレーム操作"
+      ],
+      "parameters": {
+        "browser": ""
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      }
+    },
+    {
+      "cmd": "send_email",
+      "cmd-nickname": "メールを送信",
+      "cmd-type": "basic",
+      "version": 6,
+      "uuid": "82ee43fe-f292-4e66-a800-bc81846d9ac9",
+      "memo": "",
+      "description": "メールを送信します。",
+      "tags": [
+        "メール",
+        "送信",
+        "基本"
+      ],
+      "parameters": {
+        "server": "",
+        "protocol": "STARTTLS",
+        "port": "587",
+        "sender": "",
+        "login": "",
+        "password-type": "type-empty",
+        "ciphertext": "",
+        "nonce": "",
+        "encryption": 1,
+        "receiver": "",
+        "receiver-cc": "",
+        "receiver-bcc": "",
+        "subject": "",
+        "body": "",
+        "attachment": [],
+        "skip-file": false
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      }
+    },
+    {
+      "cmd": "receive_emails",
+      "cmd-nickname": "メール受信",
+      "cmd-type": "looping",
+      "version": 4,
+      "uuid": "48a2de06-5d3d-4871-87ea-82a764dc0da2",
+      "memo": "",
+      "description": "メールを受信してループ処理します。",
+      "tags": [
+        "メール",
+        "受信",
+        "ループ"
+      ],
+      "parameters": {
+        "server": "",
+        "protocol": "SSL/TLS",
+        "port": "993",
+        "receiver": "",
+        "password-type": "type-empty",
+        "ciphertext": "",
+        "nonce": "",
+        "encryption": 1,
+        "filters": [],
+        "attachments-path": "",
+        "unread-only": true,
+        "mark-read": false,
+        "mark-flag": false
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      },
+      "sequence": []
+    },
+    {
+      "cmd": "send_email_gmail",
+      "cmd-nickname": "メールを送信（Gmail）",
+      "cmd-type": "basic",
+      "version": 2,
+      "uuid": "9a5b9c8c-7901-4847-9c30-ebb98e1ce9fd",
+      "memo": "",
+      "description": "Gmail経由でメールを送信します。",
+      "tags": [
+        "メール",
+        "Gmail",
+        "送信"
+      ],
+      "parameters": {
+        "login": "",
+        "receiver": "",
+        "receiver-cc": "",
+        "receiver-bcc": "",
+        "subject": "",
+        "body": "",
+        "attachment": [],
+        "skip-file": false
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      }
+    },
+    {
+      "cmd": "receive_emails_gmail",
+      "cmd-nickname": "メール受信（Gmail）",
+      "cmd-type": "looping",
+      "version": 3,
+      "uuid": "43d004b2-ce01-4be4-acc8-489de0b0516d",
+      "memo": "",
+      "description": "Gmailからメールを受信してループ処理します。",
+      "tags": [
+        "メール",
+        "Gmail",
+        "受信"
+      ],
+      "parameters": {
+        "receiver": "",
+        "filters": [],
+        "attachments-path": "",
+        "unread-only": true,
+        "mark-read": false,
+        "mark-flag": false,
+        "dl-inline": false,
+        "dl-not-multipart": true
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      },
+      "sequence": []
+    },
+    {
+      "cmd": "send_email_microsoft",
+      "cmd-nickname": "メールを送信（Microsoft）",
+      "cmd-type": "basic",
+      "version": 1,
+      "uuid": "100cf50e-aeed-44b9-a9bf-3a69d48d844d",
+      "memo": "",
+      "description": "Microsoft経由でメールを送信します。",
+      "tags": [
+        "メール",
+        "Microsoft",
+        "送信"
+      ],
+      "parameters": {
+        "login": "",
+        "receiver": "",
+        "receiver-cc": "",
+        "receiver-bcc": "",
+        "subject": "",
+        "body": "",
+        "attachment": [],
+        "skip-file": false
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      }
+    },
+    {
+      "cmd": "receive_emails_microsoft",
+      "cmd-nickname": "メール受信（Microsoft）",
+      "cmd-type": "looping",
+      "version": 1,
+      "uuid": "2506f76f-5549-441e-99c9-1b389f41ea35",
+      "memo": "",
+      "description": "Microsoftからメールを受信してループ処理します。",
+      "tags": [
+        "メール",
+        "Microsoft",
+        "受信"
+      ],
+      "parameters": {
+        "receiver": "",
+        "filters": [],
+        "attachments-path": "",
+        "unread-only": true,
+        "mark-read": false,
+        "mark-flag": false
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      },
+      "sequence": []
+    },
+    {
+      "cmd": "add_memo",
+      "cmd-nickname": "メモ",
+      "cmd-type": "static",
+      "version": 1,
+      "uuid": "1a91eb82-af36-4276-9d1d-122d48c36c55",
+      "memo": "",
+      "description": "処理にメモやコメントを追加します。デバッグや保守のための情報記録に使用します。",
+      "tags": [
+        "ドキュメント",
+        "デバッグ",
+        "保守"
+      ],
+      "parameters": {},
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      }
+    },
+    {
+      "cmd": "add_memo",
+      "cmd-nickname": "メモ",
+      "cmd-type": "static",
+      "version": 1,
+      "uuid": "1a91eb82-af36-4276-9d1d-122d48c36c55",
+      "memo": "",
+      "description": "処理にメモやコメントを追加します。デバッグや保守のための情報記録に使用します。",
+      "tags": [
+        "ドキュメント",
+        "デバッグ",
+        "保守"
+      ],
+      "parameters": {},
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      }
+    },
+    {
+      "cmd": "click_uia_element",
+      "cmd-nickname": "アプリをクリック",
+      "cmd-type": "basic",
+      "version": 1,
+      "uuid": "34a862e2-e237-45dd-974c-b12a1ba1f2e0",
+      "memo": "",
+      "description": "UIオートメーション要素をクリックします。",
+      "tags": [
+        "UIオートメーション",
+        "クリック",
+        "Windows"
+      ],
+      "parameters": {
+        "window": "__uia_focused_window__",
+        "controlType": "50000",
+        "frameworkId": "",
+        "className": "",
+        "identifier": "name",
+        "automationId": "",
+        "name": "",
+        "index": "",
+        "depth": "",
+        "ancestors": null,
+        "search-level": "1",
+        "clicktype": "click-uia"
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      }
+    },
+    {
+      "cmd": "send_text_to_uia_element",
+      "cmd-nickname": "アプリ文字入力",
+      "cmd-type": "basic",
+      "version": 1,
+      "uuid": "0ff5e07f-edfe-4de3-8edb-a9aefd63af16",
+      "memo": "",
+      "description": "UIオートメーション要素にテキストを入力します。",
+      "tags": [
+        "UIオートメーション",
+        "テキスト",
+        "入力"
+      ],
+      "parameters": {
+        "window": "__uia_focused_window__",
+        "controlType": "50000",
+        "frameworkId": "",
+        "className": "",
+        "identifier": "name",
+        "automationId": "",
+        "name": "",
+        "index": "",
+        "depth": "",
+        "ancestors": null,
+        "search-level": "1",
+        "string": ""
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      }
+    },
+    {
+      "cmd": "send_password_to_uia_element",
+      "cmd-nickname": "アプリ文字入力（パスワード）",
+      "cmd-type": "basic",
+      "version": 1,
+      "uuid": "450ca1c6-218e-492b-bd4e-dcbb72db7292",
+      "memo": "",
+      "description": "UIオートメーション要素にパスワードを入力します。",
+      "tags": [
+        "UIオートメーション",
+        "パスワード",
+        "入力"
+      ],
+      "parameters": {
+        "window": "__uia_focused_window__",
+        "controlType": "50000",
+        "frameworkId": "",
+        "className": "",
+        "identifier": "name",
+        "automationId": "",
+        "name": "",
+        "index": "",
+        "depth": "",
+        "ancestors": null,
+        "search-level": "1",
+        "password-type": "type-input",
+        "ciphertext": "",
+        "nonce": "",
+        "encryption": 1
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      }
+    },
+    {
+      "cmd": "get_uia_element_clickable_point",
+      "cmd-nickname": "アプリ座標取得",
+      "cmd-type": "basic",
+      "version": 1,
+      "uuid": "fdcecb18-0a84-4b66-9e0c-97c737066aaa",
+      "memo": "",
+      "description": "UIオートメーション要素のクリック可能な座標を取得します。",
+      "tags": [
+        "UIオートメーション",
+        "取得",
+        "座標"
+      ],
+      "parameters": {
+        "window": "__uia_focused_window__",
+        "controlType": "50000",
+        "frameworkId": "",
+        "className": "",
+        "identifier": "name",
+        "automationId": "",
+        "name": "",
+        "index": "",
+        "depth": "",
+        "ancestors": null,
+        "search-level": "1",
+        "x": "X",
+        "y": "Y"
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      }
+    },
+    {
+      "cmd": "get_text_from_uia_element",
+      "cmd-nickname": "アプリ文字取得",
+      "cmd-type": "basic",
+      "version": 1,
+      "uuid": "10ff410e-6f00-49b2-b540-606861ed3ff4",
+      "memo": "",
+      "description": "UIオートメーション要素からテキストを取得します。",
+      "tags": [
+        "UIオートメーション",
+        "取得",
+        "テキスト"
+      ],
+      "parameters": {
+        "window": "__uia_focused_window__",
+        "controlType": "50000",
+        "frameworkId": "",
+        "className": "",
+        "identifier": "name",
+        "automationId": "",
+        "name": "",
+        "index": "",
+        "depth": "",
+        "ancestors": null,
+        "search-level": "1",
+        "variable": "取得文字"
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      }
+    },
+    {
+      "cmd": "api_web",
+      "cmd-nickname": "Web API",
+      "cmd-type": "basic",
+      "version": 1,
+      "uuid": "9debd680-4f38-409b-8441-27be3b95e533",
+      "memo": "",
+      "description": "Web APIを呼び出してデータを取得・送信します。",
+      "tags": [
+        "API",
+        "データ連携",
+        "Web"
+      ],
+      "parameters": {
+        "method": "GET",
+        "services": "custom-get",
+        "url": "",
+        "queries": {},
+        "headers": {},
+        "body": "form-data",
+        "form-data": {},
+        "raw": "",
+        "json": "",
+        "timeout": "10",
+        "res-status": "[応答ステータス]",
+        "res-headers": "[応答ヘッダ]",
+        "res-data": "[応答データ]",
+        "res-content-type": "[応答コンテントタイプ]"
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      }
+    },
+    {
+      "cmd": "get_json_values",
+      "cmd-nickname": "JSON値取得",
+      "cmd-type": "basic",
+      "version": 1,
+      "uuid": "fd4daf9a-e38a-42ea-b8bb-e18446989258",
+      "memo": "",
+      "description": "JSONデータから値を取得します。",
+      "tags": [
+        "JSON",
+        "取得",
+        "データ処理"
+      ],
+      "parameters": {
+        "src-variable": "",
+        "dst-variable": "データ",
+        "type": "dict",
+        "dict": "",
+        "array": "1",
+        "custom": ""
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      }
+    },
+    {
+      "cmd": "check_json_type",
+      "cmd-nickname": "JSON型確認",
+      "cmd-type": "branching",
+      "version": 1,
+      "uuid": "15247c77-a76f-4543-89fd-6665346626a9",
+      "memo": "",
+      "description": "JSONデータの型を確認し、結果により処理を分岐します。",
+      "tags": [
+        "JSON",
+        "データ処理",
+        "型確認"
+      ],
+      "parameters": {
+        "variable": "",
+        "type": "dict",
+        "dict": "",
+        "array": "1",
+        "custom": "",
+        "check-type": "string"
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      },
+      "sequence-0": [],
+      "sequence-1": []
+    },
+    {
+      "cmd": "group_commands",
+      "cmd-nickname": "グループ",
+      "cmd-type": "grouping",
+      "version": 1,
+      "uuid": "91c50e24-3481-40d4-a640-98b7ef15dd32",
+      "memo": "",
+      "description": "複数のコマンドをグループ化して管理します。",
+      "tags": [
+        "制御",
+        "グループ",
+        "組織化"
+      ],
+      "parameters": {
+        "name": ""
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      },
+      "sequence": []
+    },
+    {
+      "cmd": "add_memo",
+      "cmd-nickname": "メモ",
+      "cmd-type": "static",
+      "version": 1,
+      "uuid": "1a91eb82-af36-4276-9d1d-122d48c36c55",
+      "memo": "",
+      "description": "処理にメモやコメントを追加します。デバッグや保守のための情報記録に使用します。",
+      "tags": [
+        "ドキュメント",
+        "デバッグ",
+        "保守"
+      ],
+      "parameters": {},
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      }
+    },
+    {
+      "cmd": "play_sound",
+      "cmd-nickname": "通知音を再生",
+      "cmd-type": "basic",
+      "version": 1,
+      "uuid": "4bf111ba-d8c2-4533-b57c-95d3fa1785e4",
+      "memo": "",
+      "description": "通知音を再生します。処理完了の通知に使用します。",
+      "tags": [
+        "通知",
+        "音声",
+        "アラート"
+      ],
+      "parameters": {
+        "sound": "Beep",
+        "path": "",
+        "count": 1,
+        "interval": 1,
+        "async": false
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      }
+    },
+    {
+      "cmd": "run_external_scenario_and_branch",
+      "cmd-nickname": "別のシナリオを実行",
+      "cmd-type": "branching",
+      "version": 2,
+      "uuid": "b07c116a-7f50-4d1b-9841-559ddca059ce",
+      "memo": "",
+      "description": "別のシナリオを実行し、結果により処理を分岐します。",
+      "tags": [
+        "シナリオ",
+        "実行",
+        "分岐"
+      ],
+      "parameters": {
+        "scenario-name": "",
+        "uuid": ""
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      },
+      "sequence-0": [],
+      "sequence-1": []
+    },
+    {
+      "cmd": "inherit_variables",
+      "cmd-nickname": "親シナリオからデータを継承",
+      "cmd-type": "basic",
+      "version": 2,
+      "uuid": "a07137a2-4294-47b9-b65d-22dae287f8b1",
+      "memo": "",
+      "description": "親シナリオから変数を継承します。",
+      "tags": [
+        "継承",
+        "変数",
+        "親シナリオ"
+      ],
+      "parameters": {
+        "uuid": "",
+        "variable": "データ",
+        "overwrite": true,
+        "scenario-name": "",
+        "type": "single",
+        "variables": []
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      }
+    },
+    {
+      "cmd": "inherit_passwords",
+      "cmd-nickname": "親シナリオからパスワードを継承",
+      "cmd-type": "basic",
+      "version": 1,
+      "uuid": "761d60bf-0d47-4f4e-89d8-913da8221442",
+      "memo": "",
+      "description": "親シナリオからパスワードを継承します。",
+      "tags": [
+        "継承",
+        "パスワード",
+        "親シナリオ"
+      ],
+      "parameters": {
+        "uuid": "",
+        "password-id": "パスワード",
+        "overwrite": true,
+        "scenario-name": "",
+        "type": "single",
+        "passwords": []
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      }
+    },
+    {
+      "cmd": "inherit_windows",
+      "cmd-nickname": "親シナリオからウィンドウを継承",
+      "cmd-type": "basic",
+      "version": 2,
+      "uuid": "81554f84-c2a3-48e8-b98f-ce95f9dd940f",
+      "memo": "",
+      "description": "親シナリオからウィンドウ情報を継承します。",
+      "tags": [
+        "継承",
+        "ウィンドウ",
+        "親シナリオ"
+      ],
+      "parameters": {
+        "uuid": "",
+        "variable": "ウィンドウ",
+        "overwrite": true,
+        "scenario-name": "",
+        "type": "single",
+        "windows": []
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      }
+    },
+    {
+      "cmd": "inherit_excel",
+      "cmd-nickname": "親シナリオからエクセルを継承",
+      "cmd-type": "basic",
+      "version": 2,
+      "uuid": "22118f2c-3ee3-4eb2-85a4-72cde74c3507",
+      "memo": "",
+      "description": "親シナリオからExcel情報を継承します。",
+      "tags": [
+        "継承",
+        "Excel",
+        "親シナリオ"
+      ],
+      "parameters": {
+        "uuid": "",
+        "excel": "エクセル",
+        "overwrite": true,
+        "scenario-name": "",
+        "type": "single",
+        "excels": []
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      }
+    },
+    {
+      "cmd": "inherit_browsers",
+      "cmd-nickname": "親シナリオからブラウザを継承",
+      "cmd-type": "basic",
+      "version": 2,
+      "uuid": "5a9fabd1-f78c-462e-b093-2df8395fb0cb",
+      "memo": "",
+      "description": "親シナリオからブラウザ情報を継承します。",
+      "tags": [
+        "継承",
+        "ブラウザ",
+        "親シナリオ"
+      ],
+      "parameters": {
+        "uuid": "",
+        "browser": "ブラウザ",
+        "overwrite": true,
+        "scenario-name": "",
+        "type": "single",
+        "browsers": []
+      },
+      "flags": {
+        "checkboxed": false,
+        "bookmarked": false
+      }
+    }
+  ]
+}
