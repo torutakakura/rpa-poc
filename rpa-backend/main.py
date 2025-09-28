@@ -888,6 +888,7 @@ async def get_latest_step_list(workflow_id: str) -> dict:
             })
 
         # response similar to generated_step_list.json
+        # フロントエンドが期待する形式に合わせる
         return {
             "version": version,
             "uuid": wf["id"],
@@ -896,6 +897,13 @@ async def get_latest_step_list(workflow_id: str) -> dict:
             "timestamp-last-modified": datetime.utcnow().strftime("%Y/%m/%d %H:%M:%S"),
             "flags": {},
             "sequence": sequence,
+            # フロントエンドが期待する generated フィールドも追加
+            "generated": {
+                "name": wf["name"] or "",
+                "description": wf["description"] or "",
+                "version": version,
+                "steps": steps if steps else []
+            }
         }
 
 @app.post("/workflow/{workflow_id}/build")
