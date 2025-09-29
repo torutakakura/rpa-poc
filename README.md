@@ -2,136 +2,144 @@
 
 RPAツールの自動化機能のPOCプロジェクト
 
-## 特徴
-
-- **ビジュアルエディタ**: ドラッグ&ドロップでRPA作成可能
-- **AI支援機能**: 操作の自動認識と最適化
-- **自動化実行**: Playwright使用でWeb自動化対応
-- **柔軟性**: カスタムステップの作成と共有が可能
 
 ## 構成
 
 ```
 rpa-poc/
 ├── rpa-backend/      # FastAPI バックエンドサーバー
-├── rpa-front/        # Next.js フロントエンドアプリケーション
-├── db/              # PostgreSQL データベース
+├── rpa-electron/     # Electron デスクトップアプリケーション
+├── rpa-agent/        # Python JSON-RPCエージェント
+├── rpa-mcp/          # MCP (Model Context Protocol) サーバー
+├── db/               # PostgreSQL データベース設定
 └── docker-compose.yaml
 ```
 
-## セットアップ
+## クイックスタート
 
 ### 前提条件
 
 - Docker & Docker Compose
-- Node.js 18+ (フロントエンド開発時)
-- Python 3.12+ (バックエンド開発時)
+- Python 3.12+
+- Node.js 23.5.0+ (Electron開発時)
+- pnpm (Electron開発時)
 
-### インストール手順
-
-#### 1. リポジトリのクローン
-
-```bash
-git clone <repository-url>
-cd rpa-poc
-```
-
-#### 2. Dockerコンテナの起動
+### データベースの起動
 
 ```bash
-# 全サービスの起動
-docker-compose up -d
+# PostgreSQLデータベースの起動
+docker-compose up -d postgres
 
-# 個別起動も可能
-docker-compose up -d db        # PostgreSQLのみ
-docker-compose up -d backend   # バックエンドのみ
-docker-compose up -d frontend  # フロントエンドのみ
+# 起動確認
+docker-compose ps
+
+# 接続テスト
+docker-compose exec postgres pg_isready -U rpa -d rpa
 ```
 
-#### 3. データベースの初期化
+データベースは以下の設定で起動します：
+- ホスト: localhost
+- ポート: 55432
+- データベース名: rpa
+- ユーザー: rpa
+- パスワード: rpa_password
 
-```bash
-# データベースマイグレーションの実行
-docker-compose exec backend python -m alembic upgrade head
+### 各サービスの起動
 
-# 初期データのシード（オプション）
-docker-compose exec backend python scripts/seed_data.py
-```
-
-### 開発
-
-#### バックエンド開発
+#### 1. バックエンドサーバー
 
 ```bash
 cd rpa-backend
-
-# 仮想環境の作成
 python -m venv venv
 source venv/bin/activate  # Windows: venv\Scripts\activate
-
-# 依存関係のインストール
 pip install -r requirements.txt
 
-# 開発サーバーの起動
+# .envファイルにOpenAI APIキーを設定
+echo "OPENAI_API_KEY=your_api_key_here" >> .env
+
+# サーバー起動
 uvicorn main:app --reload --host 0.0.0.0 --port 8000
 ```
 
-#### フロントエンド開発
+詳細は [rpa-backend/README.md](rpa-backend/README.md) を参照してください。
+
+#### 2. Electronアプリケーション
 
 ```bash
-cd rpa-front
-
-# 依存関係のインストール
-npm install
-
-# 開発サーバーの起動
-npm run dev
+cd rpa-electron
+pnpm install
+pnpm dev
 ```
 
-### アクセスURL
+詳細は [rpa-electron/README.md](rpa-electron/README.md) を参照してください。
 
-- **フロントエンド**: http://localhost:3000
+#### 3. Pythonエージェント
+
+```bash
+cd rpa-agent
+./setup.sh  # または setup.bat (Windows)
+python rpa_agent.py
+```
+
+詳細は [rpa-agent/README.md](rpa-agent/README.md) を参照してください。
+
+#### 4. MCPサーバー
+
+```bash
+cd rpa-mcp
+python -m venv venv
+source venv/bin/activate  # Windows: venv\Scripts\activate
+pip install -r requirements.txt
+python main.py --http
+```
+
+詳細は [rpa-mcp/README.md](rpa-mcp/README.md) を参照してください。
+
+## アクセスURL
+
 - **バックエンドAPI**: http://localhost:8000
 - **API ドキュメント**: http://localhost:8000/docs
+- **MCPサーバー**: (HTTPモードで起動)
 
 ## 技術スタック
 
 ### バックエンド
 - **FastAPI**: REST API フレームワーク
-- **PostgreSQL**: データベース
+- **PostgreSQL**: ベクトルデータベース (pgvector)
 - **SQLAlchemy**: ORM
 - **Playwright**: 自動化実行
 - **Pydantic**: データバリデーション
 
-### フロントエンド
-- **Next.js 15**: Reactフレームワーク
+### デスクトップアプリケーション
+- **Electron**: クロスプラットフォーム対応
+- **React 19**: UIフレームワーク
 - **TypeScript**: 型安全性
+- **Vite**: ビルドツール
 - **Tailwind CSS**: スタイリング
-- **shadcn/ui**: UIコンポーネント
 
+### エージェント
+- **Python**: JSON-RPC over stdio通信
+- **pandas**: Excel操作
+- **asyncio**: 非同期処理
 
-### Dockerコンテナの再起動
+### MCPサーバー
+- **fastmcp**: MCP実装フレームワーク
+- **Playwright**: ブラウザ自動化
+- **BeautifulSoup**: HTML解析
+
+## Docker操作
 
 ```bash
 # ログ確認
-docker-compose logs -f [service-name]
-
-# 完全な再構築
-docker-compose down
-docker-compose build --no-cache
-docker-compose up -d
-```
-
-### データベース接続
-
-```bash
-# PostgreSQLコンテナの確認
-docker-compose ps db
+docker-compose logs -f postgres
 
 # データベース接続
-docker-compose exec db psql -U postgres -d rpa_db
-```
+docker-compose exec postgres psql -U rpa -d rpa
 
+# 完全な再起動
+docker-compose down
+docker-compose up -d
+```
 
 ## 開発規約（未導入）
 
