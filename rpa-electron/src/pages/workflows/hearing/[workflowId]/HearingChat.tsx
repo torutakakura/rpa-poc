@@ -184,7 +184,17 @@ export default function HearingChat() {
                 if (!workflowId) return
                 setBuildingWorkflow(true)
                 try {
-                  const res = await axios.post(`${apiBase}/workflow/${workflowId}/build`)
+                  // ステップ1: ベクトル検索で候補を取得
+                  const searchRes = await axios.get(`${apiBase}/workflow/${workflowId}/search`)
+                  console.log('検索結果:', searchRes.data)
+                  
+                  // ステップ2: MCP エージェントでワークフロー生成（検索結果を渡す）
+                  const buildPayload = {
+                    allowed_tool_names: searchRes.data.allowed_tool_names || [],
+                    hearing_text: searchRes.data.hearing_text || ''
+                  }
+                  
+                  const res = await axios.post(`${apiBase}/workflow/${workflowId}/build`, buildPayload)
                   const buildData = res.data
                   // buildレスポンスデータを渡してWorkflowEdit画面へ遷移
                   navigate(`/workflows/edit/${workflowId}`, { state: { buildData } })

@@ -12,3 +12,4 @@ release/
 tsconfig.electron.tsbuildinfo
 .env
 .env.local
+data/

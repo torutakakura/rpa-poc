@@ -5,6 +5,7 @@ from langchain_openai import ChatOpenAI
 from langgraph.prebuilt import create_react_agent
 import os
 from tool_mapping import convert_cmd_list_to_tool_names
+from config import STEP2_LOG_PATH
 
 class RPAWorkflowBuilder:
     """RPAワークフロービルダー - MCPツールを使用してワークフローを構築"""
@@ -226,7 +227,7 @@ class RPAWorkflowBuilder:
 
         # step2.log: デバッグ情報を出力
         import json as json_module
-        with open("step2.log", "w", encoding="utf-8") as f:
+        with open(STEP2_LOG_PATH, "w", encoding="utf-8") as f:
             f.write("=== RPAワークフロービルダー デバッグ情報 ===\n\n")
             f.write(f"モデル名: {self.model_name}\n")
             f.write(f"MCPサーバーURL: {self.mcp_server_url}\n")
@@ -285,7 +286,7 @@ class RPAWorkflowBuilder:
             )
         except Exception as e:
             # エラーログを記録
-            with open("step2.log", "a", encoding="utf-8") as f:
+            with open(STEP2_LOG_PATH, "a", encoding="utf-8") as f:
                 f.write(f"\n⚠️ エージェント実行エラー: {str(e)}\n")
                 f.write(f"エラータイプ: {type(e)}\n")
             raise
@@ -294,7 +295,7 @@ class RPAWorkflowBuilder:
         workflow = self._parse_workflow_response(result)
 
         # step2.log: 実行結果を追記
-        with open("step2.log", "a", encoding="utf-8") as f:
+        with open(STEP2_LOG_PATH, "a", encoding="utf-8") as f:
             f.write("=== エージェント実行結果 ===\n")
             f.write(f"結果のタイプ: {type(result)}\n")
             if result and "messages" in result:
@@ -328,7 +329,7 @@ class RPAWorkflowBuilder:
         """エージェントの応答からワークフローを解析"""
 
         # デバッグ用ログ
-        with open("step2.log", "a", encoding="utf-8") as f:
+        with open(STEP2_LOG_PATH, "a", encoding="utf-8") as f:
             f.write("\n=== _parse_workflow_response 開始 ===\n")
             f.write(f"response タイプ: {type(response)}\n")
             f.write(f"response キー: {list(response.keys()) if isinstance(response, dict) else 'Not a dict'}\n")
@@ -354,7 +355,7 @@ class RPAWorkflowBuilder:
             content = str(last_message)
 
         # デバッグ：内容を記録
-        with open("step2.log", "a", encoding="utf-8") as f:
+        with open(STEP2_LOG_PATH, "a", encoding="utf-8") as f:
             f.write(f"\nlast_message タイプ: {type(last_message)}\n")
             f.write(f"content 長さ: {len(content) if content else 0}\n")
             f.write(f"content 最初の500文字:\n{content[:500] if content else 'Empty'}\n\n")
@@ -374,7 +375,7 @@ class RPAWorkflowBuilder:
             json_matches = re.findall(json_pattern, content, re.DOTALL)
 
             # デバッグ：JSON検索結果
-            with open("step2.log", "a", encoding="utf-8") as f:
+            with open(STEP2_LOG_PATH, "a", encoding="utf-8") as f:
                 f.write(f"JSON検索結果: {len(json_matches)} 個のJSONブロック発見\n")
                 if json_matches:
                     f.write(f"最初のJSONブロック (最初の500文字):\n{json_matches[0][:500]}\n\n")
@@ -396,11 +397,11 @@ class RPAWorkflowBuilder:
                 }
             else:
                 # JSONブロックが見つからない場合、content全体をJSONとして解析を試みる
-                with open("step2.log", "a", encoding="utf-8") as f:
+                with open(STEP2_LOG_PATH, "a", encoding="utf-8") as f:
                     f.write("JSONブロックが見つからないため、content全体をJSON解析試行\n")
                 try:
                     workflow_data = json.loads(content)
-                    with open("step2.log", "a", encoding="utf-8") as f:
+                    with open(STEP2_LOG_PATH, "a", encoding="utf-8") as f:
                         f.write(f"✅ content全体のJSON解析成功\n")
                         f.write(f"steps キーの存在: {'steps' in workflow_data}\n")
                         f.write(f"sequence キーの存在: {'sequence' in workflow_data}\n")
@@ -417,13 +418,13 @@ class RPAWorkflowBuilder:
                         "steps": steps
                     }
                 except Exception as parse_error:
-                    with open("step2.log", "a", encoding="utf-8") as f:
+                    with open(STEP2_LOG_PATH, "a", encoding="utf-8") as f:
                         f.write(f"❌ content全体のJSON解析失敗: {str(parse_error)}\n")
                     print("⚠️ JSON形式のワークフローが見つかりませんでした")
                     return default_workflow
                     
         except (json.JSONDecodeError, KeyError) as e:
-            with open("step2.log", "a", encoding="utf-8") as f:
+            with open(STEP2_LOG_PATH, "a", encoding="utf-8") as f:
                 f.write(f"❌ ワークフロー解析エラー: {str(e)}\n")
                 f.write(f"エラータイプ: {type(e)}\n")
             print(f"⚠️ ワークフローの解析中にエラーが発生しました: {e}")

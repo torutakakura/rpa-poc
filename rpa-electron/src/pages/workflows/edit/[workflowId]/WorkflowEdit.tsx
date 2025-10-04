@@ -300,13 +300,41 @@ export default function WorkflowEdit() {
     setWorkflowSteps(prev => [...prev, { id: `st-${n}`, title: `アクション ${n}`, description: '詳細設定', type: 'action' }])
   }
 
-  // ワークフローを再ビルドする関数
+  // ワークフローを再ビルドする関数（2段階API呼び出し）
   const handleRebuild = async () => {
     if (!workflowId) return
     setIsRebuilding(true)
     try {
-      const res = await axios.post(`${apiBase}/workflow/${workflowId}/build`)
-      const buildData = res.data
+      // ステップ1: ベクトル検索で候補を取得
+      const searchRes = await axios.get(`${apiBase}/workflow/${workflowId}/search`)
+      console.log('検索結果:', searchRes.data)
+      
+      // 検索結果の検証
+      if (!searchRes.data || !Array.isArray(searchRes.data.allowed_tool_names)) {
+        throw new Error(`検索結果が不正です: allowed_tool_names=${searchRes.data?.allowed_tool_names}`)
+      }
+      
+      // ステップ2: MCP エージェントでワークフロー生成（検索結果を渡す）
+      const buildPayload = {
+        allowed_tool_names: searchRes.data.allowed_tool_names || [],
+        hearing_text: searchRes.data.hearing_text || ''
+      }
+      console.log('=== ビルドリクエスト詳細 ===')
+      console.log('buildPayload:', buildPayload)
+      console.log('allowed_tool_names type:', typeof buildPayload.allowed_tool_names)
+      console.log('allowed_tool_names isArray:', Array.isArray(buildPayload.allowed_tool_names))
+      console.log('allowed_tool_names length:', buildPayload.allowed_tool_names?.length)
+      console.log('hearing_text type:', typeof buildPayload.hearing_text)
+      console.log('hearing_text length:', buildPayload.hearing_text?.length)
+      console.log('JSON stringify:', JSON.stringify(buildPayload, null, 2))
+      
+      // payloadが正しいか最終確認
+      if (!buildPayload.allowed_tool_names || !Array.isArray(buildPayload.allowed_tool_names)) {
+        throw new Error('allowed_tool_names が配列ではありません')
+      }
+      
+      const buildRes = await axios.post(`${apiBase}/workflow/${workflowId}/build`, buildPayload)
+      const buildData = buildRes.data
       const generated = buildData.generated || buildData
 
       // ワークフロー名と説明を更新
@@ -340,8 +368,11 @@ export default function WorkflowEdit() {
           setNewWorkflowViewMode('detailed')
         }
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('ワークフロー再ビルドエラー:', error)
+      console.error('エラーレスポンス:', error.response?.data)
+      const errorMsg = error.response?.data?.detail || error.message || 'ワークフローの再生成に失敗しました。'
+      alert(`エラー: ${errorMsg}`)
     } finally {
       setIsRebuilding(false)
     }
